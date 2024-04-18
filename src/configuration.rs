@@ -7,7 +7,7 @@ pub struct Settings {
     pub keybinds: Vec<KeyBind>,
 }
 
-pub fn get_configuration() -> Result<Settings, ()> {
+pub fn get_configuration() -> Settings {
     let ctrl_w = Key::bind(23);
     let ctrl_s = Key::bind(19);
     let ctrl_q = Key::bind(17);
@@ -18,5 +18,5 @@ pub fn get_configuration() -> Result<Settings, ()> {
 
     let keybinds = vec![keybind_q, keybind_s, keybind_w];
 
-    Ok(Settings { keybinds })
+    Settings { keybinds }
 }

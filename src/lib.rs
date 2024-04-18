@@ -1,5 +1,6 @@
 pub mod actions;
 pub mod configuration;
+pub mod error;
 pub mod file_access;
 pub mod keys;
 pub mod layers;

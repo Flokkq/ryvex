@@ -1,10 +1,8 @@
 use super::key::Key;
-use super::key::KeyType;
-use crate::actions;
-use crate::actions::error::Error;
+use crate::actions::error::ActionError;
 use crate::layers::layer::TerminalLayer;
 
-pub type ActionFn = fn() -> Result<(), Error>;
+pub type ActionFn = fn() -> Result<(), ActionError>;
 
 pub struct KeyBind {
     pub keys: Vec<Key>,
