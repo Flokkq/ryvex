@@ -1,6 +1,5 @@
 use std::{
     env::Args,
-    io::Result,
     io::{stdin, stdout, Read, StdoutLock, Write},
     path::PathBuf,
     str::FromStr,
@@ -18,45 +17,36 @@ pub struct OpenFile<'a> {
 
 pub fn run(
     file: &mut OpenFile,
-    /*     keybinds: Vec<KeyBind<fn() -> Result<(), actions::error::Error>>>, */
+    keybinds: Vec<KeyBind>,
     stdout: &mut StdoutLock,
-) -> Result<()> {
-    stdout.write_all(file.buffer.as_bytes())?;
-    loop {
-        let mut buffer = [0; 1];
-        stdin().read_exact(&mut buffer)?;
+) -> Result<(), actions::error::Error> {
+    stdout.write_all(file.buffer.as_bytes()).unwrap();
+    let stdin = stdin();
+    let mut handle = stdin.lock();
+    let mut buffer = [0; 1];
 
-        match buffer[0] {
-            b'\x11' => break,
-            b'\x13' | b'\x17' => {
-                FileAccess::write_to_file(&file.path, file.buffer)?;
-            }
-            b'\x08' | b'\x7f' => {
-                if !file.buffer.is_empty() {
-                    file.buffer.pop();
-                    stdout.write_all(b"\x08 \x08")?;
-                }
-            }
-            b'\n' | b'\r' => {
-                file.buffer.push('\r');
-                file.buffer.push('\n');
-                stdout.write_all(b"\r\n")?;
-            }
-            _ => {
-                if buffer[0].is_ascii_alphanumeric()
-                    || buffer[0].is_ascii_punctuation()
-                    || buffer[0] == b' '
-                {
-                    file.buffer.push(buffer[0] as char);
-                    stdout.write_all(&buffer)?;
-                }
-            }
+    loop {
+        handle.read_exact(&mut buffer).unwrap();
+        if !process_keypress(buffer[0], &keybinds).unwrap() {
+            stdout.write_all(&buffer).unwrap();
+            stdout.flush().unwrap();
         }
-        stdout.flush()?;
     }
-    Ok(())
 }
 
+fn process_keypress(
+    key: u8,
+    keybinds: &Vec<KeyBind>,
+) -> Result<bool, actions::error::Error> {
+    for keybind in keybinds {
+        if keybind.keys.iter().any(|k| k.key == key.to_string()) {
+            let action = &keybind.on_activate;
+            action()?;
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
 pub fn build(configuration: Settings, args: &mut Args) {
     let filename = args.nth(1);
 
@@ -72,11 +62,7 @@ pub fn build(configuration: Settings, args: &mut Args) {
             buffer: &mut buffer,
         };
 
-        run(
-            &mut open_file,
-            /* configuration.keybinds ,*/ &mut stdout,
-        )
-        .unwrap();
+        run(&mut open_file, configuration.keybinds, &mut stdout).unwrap();
     } else {
         eprintln!("No filename provided.");
         return;

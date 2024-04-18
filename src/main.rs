@@ -1,4 +1,4 @@
-use ryvex::configuration::{self, get_configuration};
+use ryvex::configuration::get_configuration;
 use ryvex::startup::build;
 use ryvex::terminal_guard::TerminalGuard;
 
