@@ -2,7 +2,12 @@ use super::key::Key;
 use crate::actions::error::ActionError;
 use crate::layers::layer::TerminalLayer;
 
-pub type ActionFn = fn() -> Result<(), ActionError>;
+pub enum ActionResult {
+    Continue,
+    Exit,
+}
+
+pub type ActionFn = fn() -> Result<ActionResult, ActionError>;
 
 pub struct KeyBind {
     pub keys: Vec<Key>,

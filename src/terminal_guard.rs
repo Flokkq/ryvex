@@ -30,7 +30,6 @@ impl<'a> TerminalGuard<'a> {
 
 impl<'a> Drop for TerminalGuard<'a> {
     fn drop(&mut self) {
-        println!("DROP CALLED");
         let _ = tcsetattr(self.fd, TCSANOW, &self.orig_termios);
     }
 }

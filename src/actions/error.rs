@@ -4,6 +4,7 @@ use std::fmt;
 pub enum ActionError {
     InvalidCommand,
     ExecutionFailed,
+    Unexpected,
 }
 
 impl fmt::Display for ActionError {
@@ -12,6 +13,9 @@ impl fmt::Display for ActionError {
             ActionError::InvalidCommand => write!(f, "Invalid command"),
             ActionError::ExecutionFailed => {
                 write!(f, "Failed to execute command")
+            }
+            ActionError::Unexpected => {
+                write!(f, "Unexpected Error")
             }
         }
     }

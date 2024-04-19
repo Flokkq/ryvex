@@ -34,3 +34,9 @@ impl From<std::io::Error> for Error {
         Error::Io(err)
     }
 }
+
+impl From<ActionError> for Error {
+    fn from(err: ActionError) -> Self {
+        Error::Action(err)
+    }
+}

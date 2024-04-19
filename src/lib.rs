@@ -6,5 +6,6 @@ pub mod keys;
 pub mod layers;
 pub mod parser;
 pub mod startup;
+pub mod state;
 pub mod telemetry;
 pub mod terminal_guard;

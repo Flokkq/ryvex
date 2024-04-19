@@ -28,7 +28,7 @@ impl FileAccess {
 
     pub fn write_to_file(
         path: &PathBuf,
-        buffer: &mut String,
+        buffer: &String,
     ) -> Result<(), error::Error> {
         let mut file =
             File::create(path).map_err(|err| error::Error::Io(err))?;
