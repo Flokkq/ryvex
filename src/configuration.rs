@@ -8,7 +8,7 @@ pub struct Settings {
 }
 
 pub fn get_configuration() -> Settings {
-    let ctrl_w = Key::bind(23);
+    let ctrl_w = Key::bind(23); //  MAKE THIS USE KEYCODE INSTEAD OF INT
     let ctrl_s = Key::bind(19);
     let ctrl_q = Key::bind(17);
 

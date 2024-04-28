@@ -9,7 +9,11 @@ use crate::{
     configuration::Settings,
     error::Error,
     file_access::FileAccess,
-    keys::keybind::{ActionResult, KeyBind},
+    keys::{
+        key::KeyType,
+        keybind::{ActionResult, KeyBind},
+        keycode::KeyCode,
+    },
     state::{get_global_state, set_open_file},
     telemetry::SingletonLogger,
 };
@@ -41,6 +45,7 @@ pub fn run(
         handle
             .read_exact(&mut buffer)
             .map_err(|err| Error::Io(err))?;
+        let key_code = KeyCode::from_ascii(buffer[0]);
         let mut output_update: Option<Vec<u8>> = None;
 
         {
@@ -51,21 +56,29 @@ pub fn run(
                 None => return Err(Error::Unexpected),
             };
 
-            if buffer[0] == b'\x08' || buffer[0] == b'\x7f' {
-                if !file.buffer.is_empty() {
-                    file.buffer.pop();
-                    output_update = Some(vec![b'\x08', b' ', b'\x08']);
+            match key_code {
+                Some(KeyCode::Backspace) | Some(KeyCode::Del) => {
+                    if !file.buffer.is_empty() {
+                        file.buffer.pop();
+                        output_update = Some(vec![b'\x08', b' ', b'\x08']);
+                    }
                 }
-            } else if buffer[0] == b'\n' || buffer[0] == b'\r' {
-                file.buffer.push('\r');
-                file.buffer.push('\n');
-                output_update = Some(vec![b'\r', b'\n']);
-            } else if buffer[0].is_ascii_alphanumeric()
-                || buffer[0].is_ascii_punctuation()
-                || buffer[0] == b' '
-            {
-                file.buffer.push(buffer[0] as char);
-                output_update = Some(vec![buffer[0]]);
+                Some(KeyCode::LineFeed) | Some(KeyCode::CarriageReturn) => {
+                    file.buffer.push('\r');
+                    file.buffer.push('\n');
+                    output_update = Some(vec![b'\r', b'\n']);
+                }
+                Some(kc)
+                    if kc.to_key_type() != KeyType::Unknown
+                        || kc.to_key_type() != KeyType::Control =>
+                {
+                    let char_bytes = kc.to_character();
+                    if let Some(first_byte) = char_bytes.get(0) {
+                        file.buffer.push(*first_byte as char);
+                        output_update = Some(char_bytes);
+                    }
+                }
+                _ => {}
             }
         }
 
@@ -86,7 +99,11 @@ fn process_keypress(
     keybinds: &Vec<KeyBind>,
 ) -> Result<ActionResult, ActionError> {
     for keybind in keybinds {
-        if keybind.keys.iter().any(|k| k.key == key.to_string()) {
+        if keybind
+            .keys
+            .iter()
+            .any(|k| *k.key_code.to_character().get(0).unwrap_or(&0) == key)
+        {
             let action_result = (keybind.on_activate)()?;
             return Ok(action_result);
         }
