@@ -73,9 +73,9 @@ pub fn run(
                         || kc.to_key_type() != KeyType::Control =>
                 {
                     let char_bytes = kc.to_character();
-                    if let Some(first_byte) = char_bytes.get(0) {
+                    if let Some(first_byte) = char_bytes.as_bytes().get(0) {
                         file.buffer.push(*first_byte as char);
-                        output_update = Some(char_bytes);
+                        output_update = Some(char_bytes.into());
                     }
                 }
                 _ => {}
