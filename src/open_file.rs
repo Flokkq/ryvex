@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::{cursor::Cursor, error::Error, file_access::FileAccess};
+use crate::{error::Error, file_access::FileAccess};
 
 pub struct OpenFile {
     pub path: PathBuf,
@@ -19,5 +19,16 @@ impl OpenFile {
             buffer,
             cursor,
         })
+    }
+}
+
+pub struct Cursor {
+    pub x: usize,
+    pub y: usize,
+}
+
+impl Cursor {
+    pub fn place() -> Cursor {
+        Cursor { x: 0, y: 0 }
     }
 }

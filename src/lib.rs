@@ -1,12 +1,10 @@
 pub mod actions;
 pub mod configuration;
-pub mod cursor;
 pub mod error;
 pub mod file_access;
 pub mod keys;
 pub mod layers;
 pub mod open_file;
-pub mod parser;
 pub mod simulation;
 pub mod startup;
 pub mod state;
