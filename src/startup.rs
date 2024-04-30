@@ -8,20 +8,15 @@ use crate::{
     actions::error::ActionError,
     configuration::Settings,
     error::Error,
-    file_access::FileAccess,
     keys::{
         key::KeyType,
         keybind::{ActionResult, KeyBind},
         keycode::KeyCode,
     },
+    open_file::OpenFile,
     state::{get_global_state, set_open_file},
     telemetry::SingletonLogger,
 };
-
-pub struct OpenFile {
-    pub path: PathBuf,
-    pub buffer: String,
-}
 
 pub fn run(
     keybinds: Vec<KeyBind>,
@@ -40,7 +35,6 @@ pub fn run(
             stdout.flush().map_err(|_| Error::Unexpected)?;
         }
     }
-
     loop {
         handle
             .read_exact(&mut buffer)
@@ -99,11 +93,9 @@ fn process_keypress(
     keybinds: &Vec<KeyBind>,
 ) -> Result<ActionResult, ActionError> {
     for keybind in keybinds {
-        if keybind
-            .keys
-            .iter()
-            .any(|k| *k.key_code.to_character().get(0).unwrap_or(&0) == key)
-        {
+        if keybind.keys.iter().any(|k| {
+            *k.key_code.to_character().as_bytes().get(0).unwrap_or(&0) == key
+        }) {
             let action_result = (keybind.on_activate)()?;
             return Ok(action_result);
         }
@@ -132,14 +124,5 @@ pub fn build(configuration: Settings, args: &mut Args) -> Result<(), Error> {
 
             return Err(Error::Unexpected);
         }
-    }
-}
-
-impl OpenFile {
-    pub fn open(path: PathBuf) -> Result<Self, Error> {
-        let mut buffer = String::new();
-        FileAccess::read_from_file_if_exists(&path, &mut buffer)?;
-
-        Ok(OpenFile { path, buffer })
     }
 }
