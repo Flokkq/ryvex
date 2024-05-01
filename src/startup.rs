@@ -1,6 +1,6 @@
 use std::{
     env::Args,
-    io::{stdin, stdout, Read, StdoutLock, Write},
+    io::{stdin, stdout, Read, StdinLock, StdoutLock, Write},
     path::PathBuf,
 };
 
@@ -26,53 +26,49 @@ pub fn run(
     let mut handle = stdin.lock();
     let mut buffer = [0; 1];
 
+    display_file_buffer(stdout)?;
+
     loop {
         handle.read_exact(&mut buffer).map_err(Error::Io)?;
-        let key_code = KeyCode::from_ascii(buffer[0]);
+        let key_code = match KeyCode::from_ascii(buffer[0]) {
+            Some(code) => code,
+            None => return Err(Error::Unexpected),
+        };
 
-        let action_result = process_keypress(buffer[0], &keybinds)?;
+        let action_result = process_keypress(&key_code, &keybinds)?;
         if matches!(action_result, ActionResult::Exit) {
             return Ok(());
         }
 
-        process_buffer(key_code, stdout)?;
+        process_buffer(&key_code, stdout)?;
     }
 }
 
 fn process_buffer(
-    key_code: Option<KeyCode>,
+    key_code: &KeyCode,
     stdout: &mut StdoutLock,
 ) -> Result<(), Error> {
     let global_state = get_global_state();
-    let state_guard =
-        global_state.get_state().map_err(|_| Error::Unexpected)?;
-    let mut output_update = None;
-
-    {
-        let file = state_guard.file.as_ref().ok_or(Error::Unexpected)?;
-        stdout.write_all(file.buffer.as_bytes())?;
-        stdout.flush().map_err(|_| Error::Unexpected)?;
-    }
+    let mut output_update: Option<Vec<u8>> = None;
 
     let mut state_guard =
         global_state.get_state().map_err(|_| Error::Unexpected)?;
     let file = state_guard.file.as_mut().ok_or(Error::Unexpected)?;
 
     match key_code {
-        Some(KeyCode::Backspace) | Some(KeyCode::Del) => {
+        KeyCode::Backspace | KeyCode::Del => {
             if !file.buffer.is_empty() {
                 file.buffer.pop();
                 output_update = Some(vec![b'\x08', b' ', b'\x08']);
             }
         }
-        Some(KeyCode::LineFeed) | Some(KeyCode::CarriageReturn) => {
+        KeyCode::LineFeed | KeyCode::CarriageReturn => {
             file.buffer.push('\r');
             file.buffer.push('\n');
             output_update = Some(vec![b'\r', b'\n']);
         }
-        Some(kc)
-            if kc.to_key_type() != KeyType::Unknown
-                && kc.to_key_type() != KeyType::Control =>
+        kc if kc.to_key_type() != KeyType::Unknown
+            && kc.to_key_type() != KeyType::Control =>
         {
             if let Some(char) = kc.to_character().as_bytes().get(0) {
                 file.buffer.push(*char as char);
@@ -91,22 +87,31 @@ fn process_buffer(
 }
 
 fn process_keypress(
-    key: u8,
+    key: &KeyCode,
     keybinds: &[KeyBind],
 ) -> Result<ActionResult, ActionError> {
     keybinds
         .iter()
         .find_map(|keybind| {
-            if keybind.keys.iter().any(|k| {
-                *k.key_code.to_character().as_bytes().get(0).unwrap_or(&0)
-                    == key
-            }) {
+            if keybind.keys.iter().any(|k| k.key_code == *key) {
                 Some((keybind.on_activate)())
             } else {
                 None
             }
         })
         .unwrap_or(Ok(ActionResult::Continue))
+}
+
+fn display_file_buffer(stdout: &mut StdoutLock) -> Result<(), Error> {
+    let global_state = get_global_state();
+    let state_guard =
+        global_state.get_state().map_err(|_| Error::Unexpected)?;
+
+    let file = state_guard.file.as_ref().ok_or(Error::Unexpected)?;
+    stdout.write_all(file.buffer.as_bytes())?;
+    stdout.flush().map_err(|_| Error::Unexpected)?;
+
+    Ok(())
 }
 
 pub fn build(configuration: Settings, args: &mut Args) -> Result<(), Error> {
