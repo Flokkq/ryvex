@@ -28,6 +28,7 @@ impl OpenFile {
 
         stdout.write_all("\x1B[H".as_bytes())?;
 
+        self.buffer.display(stdout)?;
         stdout.flush()?;
         Ok(())
     }

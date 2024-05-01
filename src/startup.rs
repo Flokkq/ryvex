@@ -133,7 +133,7 @@ fn display_file_buffer(stdout: &mut StdoutLock) -> Result<(), Error> {
         global_state.get_state().map_err(|_| Error::Unexpected)?;
 
     let file = state_guard.file.as_ref().ok_or(Error::Unexpected)?;
-    file.buffer.display(stdout)?;
+    file.redraw(stdout);
     stdout.flush().map_err(|_| Error::Unexpected)?;
 
     Ok(())
