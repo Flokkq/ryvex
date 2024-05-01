@@ -1,5 +1,8 @@
 use core::str;
-use std::path::PathBuf;
+use std::{
+    io::{StdoutLock, Write},
+    path::PathBuf,
+};
 
 use crate::{error::Error, file_access::FileAccess};
 
@@ -25,6 +28,22 @@ impl OpenFile {
             buffer,
             cursor,
         })
+    }
+
+    pub fn redraw(&self, stdout: &mut StdoutLock) -> Result<(), Error> {
+        stdout.write_all("\x1B[2J".as_bytes())?;
+
+        stdout.write_all("\x1B[H".as_bytes())?;
+
+        stdout.write_all(self.buffer.as_bytes())?;
+
+        let cursor_position =
+            format!("\x1B[{};{}H", self.cursor.y + 1, self.cursor.x + 1);
+
+        stdout.write_all(cursor_position.as_bytes())?;
+
+        stdout.flush()?;
+        Ok(())
     }
 }
 

@@ -11,7 +11,7 @@ use crate::{
     keys::{
         key::KeyType,
         keybind::{ActionResult, KeyBind},
-        keycode::KeyCode,
+        keycode::{EscapeSequence, KeyCode},
     },
     open_file::OpenFile,
     state::{get_global_state, set_open_file},
@@ -24,23 +24,33 @@ pub fn run(
 ) -> Result<(), Error> {
     let stdin = stdin();
     let mut handle = stdin.lock();
-    let mut buffer = [0; 1];
+    let mut buffer = [0; 3];
 
     display_file_buffer(stdout)?;
 
     loop {
-        handle.read_exact(&mut buffer).map_err(Error::Io)?;
-        let key_code = match KeyCode::from_ascii(buffer[0]) {
-            Some(code) => code,
-            None => return Err(Error::Unexpected),
-        };
+        buffer = [0; 3];
 
-        let action_result = process_keypress(&key_code, &keybinds)?;
-        if matches!(action_result, ActionResult::Exit) {
-            return Ok(());
+        let bytes_read = handle.read(&mut buffer)?;
+        if bytes_read == 0 {
+            continue;
         }
 
-        process_buffer(&key_code, stdout)?;
+        let key_code = KeyCode::from_bytes(&buffer[..bytes_read]);
+        match key_code {
+            Some(KeyCode::EscapeSequence(seq)) => {
+                handle_escape_sequence(seq, stdout)?;
+            }
+            Some(code) => {
+                let action_result = process_keypress(&code, &keybinds)?;
+                if matches!(action_result, ActionResult::Exit) {
+                    return Ok(());
+                }
+
+                process_buffer(&code, stdout)?;
+            }
+            None => return Err(Error::Unexpected),
+        }
     }
 }
 
@@ -70,7 +80,7 @@ fn process_buffer(
         kc if kc.to_key_type() != KeyType::Unknown
             && kc.to_key_type() != KeyType::Control =>
         {
-            if let Some(char) = kc.to_character().as_bytes().get(0) {
+            if let Some(char) = kc.as_str().as_bytes().get(0) {
                 file.buffer.push(*char as char);
                 output_update = Some(vec![*char]);
             }
@@ -100,6 +110,27 @@ fn process_keypress(
             }
         })
         .unwrap_or(Ok(ActionResult::Continue))
+}
+
+fn handle_escape_sequence(
+    seq: EscapeSequence,
+    stdout: &mut StdoutLock,
+) -> Result<(), Error> {
+    let global_state = get_global_state();
+    let mut state_guard =
+        global_state.get_state().map_err(|_| Error::Unexpected)?;
+    let file = state_guard.file.as_mut().ok_or(Error::Unexpected)?;
+
+    match seq {
+        EscapeSequence::ArrowUp => file.cursor.move_up(&file.buffer),
+        EscapeSequence::ArrowDown => file.cursor.move_down(&file.buffer),
+        EscapeSequence::ArrowRight => file.cursor.move_right(&file.buffer),
+        EscapeSequence::ArrowLeft => file.cursor.move_left(),
+    }
+
+    // Redraw or reposition cursor as needed
+    file.redraw(stdout)?;
+    Ok(())
 }
 
 fn display_file_buffer(stdout: &mut StdoutLock) -> Result<(), Error> {
