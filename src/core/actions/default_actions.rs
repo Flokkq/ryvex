@@ -1,5 +1,8 @@
 use crate::{
-    core::keys::keybind::ActionResult, core::state::get_global_state,
+    core::{
+        keys::keybind::ActionResult, state::get_global_state,
+        ui::overlay::Overlay,
+    },
     file_access::FileAccess,
 };
 
@@ -14,6 +17,8 @@ pub fn save_file() -> Result<ActionResult, ActionError> {
     if let Some(file) = &state.file {
         FileAccess::write_to_file(&file.path, &file.buffer.get_content())
             .map_err(|_| ActionError::Unexpected)?;
+
+        Overlay::show_top_right("Buffer saved :)".to_string());
     }
 
     Ok(ActionResult::Continue)
