@@ -1,6 +1,6 @@
 use super::key::Key;
-use crate::actions::error::ActionError;
-use crate::layers::layer::TerminalLayer;
+use crate::core::actions::error::ActionError;
+use crate::core::layers::layer::TerminalLayer;
 
 pub enum ActionResult {
     Continue,

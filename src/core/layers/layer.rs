@@ -1,4 +1,4 @@
-use crate::keys::key::KeyType;
+use crate::core::keys::key::KeyType;
 
 pub enum TerminalLayer {
     Insert,

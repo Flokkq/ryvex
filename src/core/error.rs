@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::actions::error::ActionError;
+use crate::core::actions::error::ActionError;
 
 #[derive(Debug)]
 pub enum Error {

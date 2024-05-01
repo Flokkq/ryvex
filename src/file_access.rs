@@ -4,7 +4,7 @@ use std::{
     path::PathBuf,
 };
 
-use crate::error;
+use crate::core::error;
 
 pub struct FileAccess;
 

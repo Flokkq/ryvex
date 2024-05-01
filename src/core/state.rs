@@ -1,7 +1,7 @@
 use std::sync::MutexGuard;
 use std::sync::{Mutex, OnceLock};
 
-use crate::open_file::OpenFile;
+use crate::core::open_file::OpenFile;
 
 pub struct AppState {
     pub file: Option<OpenFile>,

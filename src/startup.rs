@@ -1,21 +1,22 @@
 use std::{
     env::Args,
-    io::{stdin, stdout, Read, StdinLock, StdoutLock, Write},
+    io::{stdin, stdout, Read, StdoutLock, Write},
     path::PathBuf,
 };
 
 use crate::{
-    actions::error::ActionError,
-    configuration::Settings,
-    error::Error,
-    keys::{
-        key::KeyType,
-        keybind::{ActionResult, KeyBind},
-        keycode::{EscapeSequence, KeyCode},
+    core::{
+        actions::error::ActionError,
+        error::Error,
+        keys::{
+            key::KeyType,
+            keybind::{ActionResult, KeyBind},
+            keycode::{EscapeSequence, KeyCode},
+        },
+        open_file::OpenFile,
+        state::{get_global_state, set_open_file},
     },
-    open_file::OpenFile,
-    state::{get_global_state, set_open_file},
-    telemetry::SingletonLogger,
+    {configuration::Settings, telemetry::SingletonLogger},
 };
 
 pub fn run(
@@ -24,12 +25,11 @@ pub fn run(
 ) -> Result<(), Error> {
     let stdin = stdin();
     let mut handle = stdin.lock();
-    let mut buffer = [0; 3];
 
     display_file_buffer(stdout)?;
 
     loop {
-        buffer = [0; 3];
+        let mut buffer = [0; 3];
 
         let bytes_read = handle.read(&mut buffer)?;
         if bytes_read == 0 {
@@ -68,20 +68,20 @@ fn process_buffer(
     match key_code {
         KeyCode::Backspace | KeyCode::Del => {
             if !file.buffer.is_empty() {
-                file.buffer.pop();
+                file.buffer.delete();
                 output_update = Some(vec![b'\x08', b' ', b'\x08']);
             }
         }
         KeyCode::LineFeed | KeyCode::CarriageReturn => {
-            file.buffer.push('\r');
-            file.buffer.push('\n');
+            file.buffer.insert('\r');
+            file.buffer.insert('\n');
             output_update = Some(vec![b'\r', b'\n']);
         }
         kc if kc.to_key_type() != KeyType::Unknown
             && kc.to_key_type() != KeyType::Control =>
         {
             if let Some(char) = kc.as_str().as_bytes().get(0) {
-                file.buffer.push(*char as char);
+                file.buffer.insert(*char as char);
                 output_update = Some(vec![*char]);
             }
         }
@@ -121,14 +121,8 @@ fn handle_escape_sequence(
         global_state.get_state().map_err(|_| Error::Unexpected)?;
     let file = state_guard.file.as_mut().ok_or(Error::Unexpected)?;
 
-    match seq {
-        EscapeSequence::ArrowUp => file.cursor.move_up(&file.buffer),
-        EscapeSequence::ArrowDown => file.cursor.move_down(&file.buffer),
-        EscapeSequence::ArrowRight => file.cursor.move_right(&file.buffer),
-        EscapeSequence::ArrowLeft => file.cursor.move_left(),
-    }
+    file.buffer.move_cursor(seq);
 
-    // Redraw or reposition cursor as needed
     file.redraw(stdout)?;
     Ok(())
 }
@@ -139,7 +133,7 @@ fn display_file_buffer(stdout: &mut StdoutLock) -> Result<(), Error> {
         global_state.get_state().map_err(|_| Error::Unexpected)?;
 
     let file = state_guard.file.as_ref().ok_or(Error::Unexpected)?;
-    stdout.write_all(file.buffer.as_bytes())?;
+    file.buffer.display(stdout)?;
     stdout.flush().map_err(|_| Error::Unexpected)?;
 
     Ok(())

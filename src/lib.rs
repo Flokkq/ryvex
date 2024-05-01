@@ -1,12 +1,7 @@
-pub mod actions;
 pub mod configuration;
-pub mod error;
+pub mod core;
 pub mod file_access;
-pub mod keys;
-pub mod layers;
-pub mod open_file;
 pub mod simulation;
 pub mod startup;
-pub mod state;
 pub mod telemetry;
 pub mod terminal_guard;

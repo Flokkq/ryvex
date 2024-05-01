@@ -1,6 +1,6 @@
 use std::io::{stdin, stdout, Read, Write};
 
-use crate::error::{self, Error};
+use crate::core::error::{self, Error};
 
 pub fn start() -> Result<(), error::Error> {
     let mut buf = [0; 1];

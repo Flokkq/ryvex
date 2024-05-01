@@ -18,6 +18,12 @@ Cargo.lock
 
 /target
 
-# Added by Flokkq
-INFO.md
+# Ignore application logs
 /logs
+
+# Ignore all Markdown files
+*.md
+
+# But keep these specific ones
+!README.md
+!ROADMAP.md

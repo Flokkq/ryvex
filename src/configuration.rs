@@ -1,6 +1,6 @@
 use crate::{
-    actions::default_actions::{exit_application, save_file},
-    keys::{key::Key, keybind::KeyBind, keycode::KeyCode},
+    core::actions::default_actions::{exit_application, save_file},
+    core::keys::{key::Key, keybind::KeyBind, keycode::KeyCode},
 };
 
 pub struct Settings {
