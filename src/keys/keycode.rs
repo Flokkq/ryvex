@@ -1,7 +1,27 @@
 use super::key::KeyType;
 
 #[derive(PartialEq)]
+pub enum EscapeSequence {
+    ArrowUp,
+    ArrowDown,
+    ArrowRight,
+    ArrowLeft,
+}
+
+impl EscapeSequence {
+    pub fn as_str(&self) -> &str {
+        match self {
+            EscapeSequence::ArrowUp => "\x1B[A",
+            EscapeSequence::ArrowDown => "\x1B[B",
+            EscapeSequence::ArrowRight => "\x1B[C",
+            EscapeSequence::ArrowLeft => "\x1B[D",
+        }
+    }
+}
+
+#[derive(PartialEq)]
 pub enum KeyCode {
+    EscapeSequence(EscapeSequence),
     Nul,
     Soh,
     Stx,
@@ -134,12 +154,13 @@ pub enum KeyCode {
 
 impl KeyCode {
     pub fn to_key_type(&self) -> KeyType {
-        let ascii_char = self.to_character();
+        let ascii_char = self.as_str();
         KeyType::char_to_key_type(ascii_char)
     }
 
-    pub fn to_character(&self) -> &str {
+    pub fn as_str(&self) -> &str {
         match self {
+            KeyCode::EscapeSequence(seq) => seq.as_str(),
             KeyCode::Nul => "\x00",
             KeyCode::Soh => "\x01",
             KeyCode::Stx => "\x02",
