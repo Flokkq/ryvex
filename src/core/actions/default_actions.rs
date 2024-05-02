@@ -1,7 +1,8 @@
 use crate::{
     core::{
-        keys::keybind::ActionResult, state::get_global_state,
-        ui::overlay::Overlay,
+        keys::keybind::ActionResult,
+        state::get_global_state,
+        ui::overlay::{Overlay, OverlayPosition},
     },
     file_access::FileAccess,
 };
@@ -18,7 +19,14 @@ pub fn save_file() -> Result<ActionResult, ActionError> {
         FileAccess::write_to_file(&file.path, &file.buffer.get_content())
             .map_err(|_| ActionError::Unexpected)?;
 
-        Overlay::show_top_right("Buffer saved :)".to_string());
+        Overlay::show(
+            String::from("Buffer saved to left"),
+            OverlayPosition::MidLeft,
+        );
+        Overlay::show(
+            String::from("Buffer saved to right"),
+            OverlayPosition::MidRight,
+        );
     }
 
     Ok(ActionResult::Continue)
