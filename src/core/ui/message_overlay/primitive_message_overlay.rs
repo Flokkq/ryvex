@@ -1,5 +1,7 @@
 use std::io::{stdout, StdoutLock, Write};
 
+use crate::core::ui::overlay::Overlay;
+
 use super::MessageLevel;
 
 pub struct PrimitiveMessageOverlay;
@@ -13,7 +15,7 @@ impl PrimitiveMessageOverlay {
         let stdout = stdout();
         let mut handle = stdout.lock();
 
-        Self::save_cursor_position(&mut handle);
+        Overlay::save_cursor_position(&mut handle);
 
         let (_, text_color) = level.to_color();
 
@@ -27,15 +29,7 @@ impl PrimitiveMessageOverlay {
         write!(handle, "\x1B[{};1H", rows).unwrap();
         write!(handle, "{}{}\x1b[0m", text_color, final_message).unwrap();
 
-        Self::restore_cursor_position(&mut handle);
+        Overlay::restore_cursor_position(&mut handle);
         handle.flush().unwrap();
-    }
-
-    fn save_cursor_position(handle: &mut StdoutLock) {
-        handle.write_all(b"\x1b[s").unwrap();
-    }
-
-    fn restore_cursor_position(handle: &mut StdoutLock) {
-        handle.write_all(b"\x1b[u").unwrap();
     }
 }

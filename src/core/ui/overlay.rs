@@ -1,5 +1,5 @@
 use libc::{ioctl, winsize, TIOCGWINSZ};
-use std::io::{self};
+use std::io::{self, StdoutLock, Write};
 use std::os::unix::io::AsRawFd;
 
 use super::message_overlay::{
@@ -45,5 +45,13 @@ impl Overlay {
         }
 
         (wsize.ws_col, wsize.ws_row)
+    }
+
+    pub(super) fn save_cursor_position(handle: &mut StdoutLock) {
+        handle.write_all(b"\x1b[s").unwrap();
+    }
+
+    pub(super) fn restore_cursor_position(handle: &mut StdoutLock) {
+        handle.write_all(b"\x1b[u").unwrap();
     }
 }

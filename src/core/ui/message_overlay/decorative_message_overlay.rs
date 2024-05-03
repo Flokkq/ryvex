@@ -2,6 +2,8 @@ use std::io::stdout;
 use std::io::StdoutLock;
 use std::io::Write;
 
+use crate::core::ui::overlay::Overlay;
+
 use super::MessageLevel;
 
 pub struct DecorativeMessageOverlay;
@@ -56,7 +58,7 @@ impl DecorativeMessageOverlay {
         let stdout = stdout();
         let mut handle = stdout.lock();
 
-        Self::save_cursor_position(&mut handle);
+        Overlay::save_cursor_position(&mut handle);
 
         let (border_color, text_color) = level.to_color();
         write!(handle, "{}", border_color).unwrap();
@@ -109,7 +111,7 @@ impl DecorativeMessageOverlay {
 
         write!(handle, "\x1b[0m").unwrap();
 
-        Self::restore_cursor_position(&mut handle);
+        Overlay::restore_cursor_position(&mut handle);
         handle.flush().unwrap();
     }
 
@@ -117,21 +119,13 @@ impl DecorativeMessageOverlay {
         let stdout = stdout();
         let mut handle = stdout.lock();
 
-        Self::save_cursor_position(&mut handle);
+        Overlay::save_cursor_position(&mut handle);
         for i in 0..=Self::MAX_MESSAGE_HEIGHT + 2 {
             write!(handle, "\x1b[{};{}H\x1b[K", x + i, y).unwrap();
         }
 
-        Self::restore_cursor_position(&mut handle);
+        Overlay::restore_cursor_position(&mut handle);
         handle.flush().unwrap();
-    }
-
-    fn save_cursor_position(handle: &mut StdoutLock) {
-        handle.write_all(b"\x1b[s").unwrap();
-    }
-
-    fn restore_cursor_position(handle: &mut StdoutLock) {
-        handle.write_all(b"\x1b[u").unwrap();
     }
 }
 
