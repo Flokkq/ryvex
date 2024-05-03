@@ -29,7 +29,7 @@ impl Overlay {
             MessageOverlayPosition::BottomLeft => (
                 rows.saturating_sub(
                     Self::MAX_MESSAGE_HEIGHT + vertical_padding + 3,
-                ), // Account for top and bottom frame
+                ),
                 horizontal_padding,
             ),
             MessageOverlayPosition::BottomRight => (
@@ -55,7 +55,7 @@ impl Overlay {
 
         Self::save_cursor_position(&mut handle);
 
-        let (border_color, _) = level.to_color();
+        let (border_color, text_color) = level.to_color();
         write!(handle, "{}", border_color).unwrap();
 
         write!(handle, "\x1b[{};{}H\x1b[K", x, y).unwrap();
@@ -88,7 +88,7 @@ impl Overlay {
                 .unwrap();
             write!(
                 handle,
-                "│ {:>pad_start$}{}{:>pad_end$} │",
+                "{border_color}│{text_color} {:>pad_start$}{}{:>pad_end$} {border_color}│",
                 "",
                 line,
                 "",
