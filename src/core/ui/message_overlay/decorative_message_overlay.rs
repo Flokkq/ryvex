@@ -2,9 +2,11 @@ use std::io::stdout;
 use std::io::StdoutLock;
 use std::io::Write;
 
-pub struct MessageOverlay;
+use super::MessageLevel;
 
-impl MessageOverlay {
+pub struct DecorativeMessageOverlay;
+
+impl DecorativeMessageOverlay {
     pub const MAX_MESSAGE_WIDTH: u16 = 30;
     pub const MAX_MESSAGE_HEIGHT: u16 = 10;
 
@@ -17,7 +19,7 @@ impl MessageOverlay {
         let horizontal_padding = 2;
         let vertical_padding = 1;
 
-        let box_width = MessageOverlay::MAX_MESSAGE_WIDTH + horizontal_padding;
+        let box_width = Self::MAX_MESSAGE_WIDTH + horizontal_padding;
         let (x, y) = match position {
             MessageOverlayPosition::TopLeft => {
                 (1 + vertical_padding, horizontal_padding)
@@ -28,23 +30,20 @@ impl MessageOverlay {
             ),
             MessageOverlayPosition::BottomLeft => (
                 rows.saturating_sub(
-                    MessageOverlay::MAX_MESSAGE_HEIGHT + vertical_padding + 3,
+                    Self::MAX_MESSAGE_HEIGHT + vertical_padding + 3,
                 ),
                 horizontal_padding,
             ),
             MessageOverlayPosition::BottomRight => (
                 rows.saturating_sub(
-                    MessageOverlay::MAX_MESSAGE_HEIGHT + vertical_padding + 3,
+                    Self::MAX_MESSAGE_HEIGHT + vertical_padding + 3,
                 ),
                 cols.saturating_sub(box_width + horizontal_padding),
             ),
         };
 
         Self::display_message(&message, level, x, y, box_width);
-
-        // I will make this async later and wait like 3s before removing
-
-        Self::remove_message(x, y);
+        /*         Self::remove_message(x, y); */
     }
 
     fn display_message(
@@ -68,15 +67,15 @@ impl MessageOverlay {
         let mut line_start = 0;
         let mut current_line = 0;
         while line_start < message.len()
-            && current_line < MessageOverlay::MAX_MESSAGE_HEIGHT
+            && current_line < Self::MAX_MESSAGE_HEIGHT
         {
             let line_end = std::cmp::min(
-                line_start + MessageOverlay::MAX_MESSAGE_WIDTH as usize,
+                line_start + Self::MAX_MESSAGE_WIDTH as usize,
                 message.len(),
             );
             let mut line = &message[line_start..line_end];
 
-            if line.len() == MessageOverlay::MAX_MESSAGE_WIDTH as usize
+            if line.len() == Self::MAX_MESSAGE_WIDTH as usize
                 && line_end < message.len()
             {
                 if let Some(last_space) = line.rfind(' ') {
@@ -119,7 +118,7 @@ impl MessageOverlay {
         let mut handle = stdout.lock();
 
         Self::save_cursor_position(&mut handle);
-        for i in 0..=MessageOverlay::MAX_MESSAGE_HEIGHT + 2 {
+        for i in 0..=Self::MAX_MESSAGE_HEIGHT + 2 {
             write!(handle, "\x1b[{};{}H\x1b[K", x + i, y).unwrap();
         }
 
@@ -141,22 +140,4 @@ pub enum MessageOverlayPosition {
     TopRight,
     BottomLeft,
     BottomRight,
-}
-
-pub enum MessageLevel {
-    Info,
-    Warning,
-    Error,
-}
-
-impl MessageLevel {
-    pub fn to_color(&self) -> (&str, &str) {
-        let (border_color, text_color) = match self {
-            MessageLevel::Info => ("\x1b[34m", "\x1b[0m"), // blue border, default text color
-            MessageLevel::Warning => ("\x1b[33m", "\x1b[0m"), // yellow border, default text color
-            MessageLevel::Error => ("\x1b[31m", "\x1b[0m"), // red border, default text color
-        };
-
-        return (border_color, text_color);
-    }
 }

@@ -2,21 +2,31 @@ use libc::{ioctl, winsize, TIOCGWINSZ};
 use std::io::{self};
 use std::os::unix::io::AsRawFd;
 
-use super::message_overlay::MessageOverlay;
+use super::message_overlay::{
+    DecorativeMessageOverlay, PrimitiveMessageOverlay,
+};
 use super::{MessageLevel, MessageOverlayPosition};
 
 pub struct Overlay;
 
 impl Overlay {
-    pub fn render_message(
+    pub fn render_decorative_message(
         message: String,
         position: MessageOverlayPosition,
         level: MessageLevel,
     ) {
-        MessageOverlay::render_message(
+        DecorativeMessageOverlay::render_message(
             Self::determine_window_size(),
             message,
             position,
+            level,
+        );
+    }
+
+    pub fn render_primitive_message(message: String, level: MessageLevel) {
+        PrimitiveMessageOverlay::render_message(
+            Self::determine_window_size(),
+            message,
             level,
         );
     }
