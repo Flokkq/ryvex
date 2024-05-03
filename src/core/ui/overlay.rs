@@ -41,6 +41,7 @@ impl Overlay {
         };
 
         Self::display_message(&message, level, x, y, box_width);
+        Self::remove_message(x, y);
     }
 
     fn display_message(
@@ -105,6 +106,19 @@ impl Overlay {
         write!(handle, "╰{:─<1$}╯", "", box_width as usize).unwrap();
 
         write!(handle, "\x1b[0m").unwrap();
+
+        Self::restore_cursor_position(&mut handle);
+        handle.flush().unwrap();
+    }
+
+    pub fn remove_message(x: u16, y: u16) {
+        let stdout = io::stdout();
+        let mut handle = stdout.lock();
+
+        Self::save_cursor_position(&mut handle);
+        for i in 0..=Self::MAX_MESSAGE_HEIGHT + 2 {
+            write!(handle, "\x1b[{};{}H\x1b[K", x + i, y).unwrap();
+        }
 
         Self::restore_cursor_position(&mut handle);
         handle.flush().unwrap();
