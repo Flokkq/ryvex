@@ -2,7 +2,7 @@ use crate::{
     core::{
         keys::keybind::ActionResult,
         state::get_global_state,
-        ui::overlay::{MessageOverlayPosition, Overlay},
+        ui::overlay::{MessageLevel, MessageOverlayPosition, Overlay},
     },
     file_access::FileAccess,
 };
@@ -17,12 +17,20 @@ pub fn save_file() -> Result<ActionResult, ActionError> {
 
     if let Some(file) = &state.file {
         FileAccess::write_to_file(&file.path, &file.buffer.get_content())
-            .map_err(|_| ActionError::Unexpected)?;
+            .map_err(|_| {
+                Overlay::show_message(
+                    String::from("Could not save buffer"),
+                    MessageOverlayPosition::TopRight,
+                    MessageLevel::Error,
+                );
+                ActionError::Unexpected
+            })?;
     }
 
     Overlay::show_message(
-        String::from("Buffer saved and im proud to announce my cool text editor and yeah that so crazy man"),
+        String::from("Buffer saved"),
         MessageOverlayPosition::TopRight,
+        MessageLevel::Info,
     );
 
     Ok(ActionResult::Continue)

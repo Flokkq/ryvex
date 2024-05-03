@@ -8,7 +8,11 @@ impl Overlay {
     const MAX_MESSAGE_WIDTH: u16 = 30;
     const MAX_MESSAGE_HEIGHT: u16 = 10;
 
-    pub fn show_message(message: String, position: MessageOverlayPosition) {
+    pub fn show_message(
+        message: String,
+        position: MessageOverlayPosition,
+        level: MessageLevel,
+    ) {
         let (cols, rows) = Self::determine_window_size();
         let horizontal_padding = 2;
         let vertical_padding = 1;
@@ -36,14 +40,23 @@ impl Overlay {
             ),
         };
 
-        Self::display_message(&message, x, y, box_width);
+        Self::display_message(&message, level, x, y, box_width);
     }
 
-    fn display_message(message: &str, x: u16, y: u16, box_width: u16) {
+    fn display_message(
+        message: &str,
+        level: MessageLevel,
+        x: u16,
+        y: u16,
+        box_width: u16,
+    ) {
         let stdout = io::stdout();
         let mut handle = stdout.lock();
 
         Self::save_cursor_position(&mut handle);
+
+        let (border_color, _) = level.to_color();
+        write!(handle, "{}", border_color).unwrap();
 
         write!(handle, "\x1b[{};{}H\x1b[K", x, y).unwrap();
         write!(handle, "╭{:─<1$}╮", "", box_width as usize).unwrap();
@@ -91,6 +104,8 @@ impl Overlay {
         write!(handle, "\x1b[{};{}H\x1b[K", x + 1 + current_line, y).unwrap();
         write!(handle, "╰{:─<1$}╯", "", box_width as usize).unwrap();
 
+        write!(handle, "\x1b[0m").unwrap();
+
         Self::restore_cursor_position(&mut handle);
         handle.flush().unwrap();
     }
@@ -125,4 +140,22 @@ pub enum MessageOverlayPosition {
     TopRight,
     BottomLeft,
     BottomRight,
+}
+
+pub enum MessageLevel {
+    Info,
+    Warning,
+    Error,
+}
+
+impl MessageLevel {
+    pub fn to_color(&self) -> (&str, &str) {
+        let (border_color, text_color) = match self {
+            MessageLevel::Info => ("\x1b[34m", "\x1b[0m"), // blue border, default text color
+            MessageLevel::Warning => ("\x1b[33m", "\x1b[0m"), // yellow border, default text color
+            MessageLevel::Error => ("\x1b[31m", "\x1b[0m"), // red border, default text color
+        };
+
+        return (border_color, text_color);
+    }
 }
