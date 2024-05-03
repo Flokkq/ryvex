@@ -1,4 +1,7 @@
-use std::io::{stdout, StdoutLock, Write};
+use std::{
+    io::{stdout, Write},
+    usize,
+};
 
 use crate::core::ui::overlay::Overlay;
 
@@ -19,15 +22,34 @@ impl PrimitiveMessageOverlay {
 
         let (_, text_color) = level.to_color();
 
-        let mut final_message = message;
-        if final_message.len() as u16 > cols {
-            final_message =
-                final_message.chars().take((cols - 3) as usize).collect();
-            final_message.push_str("...");
+        let mut line_start = 0;
+        let mut lines: Vec<String> = Vec::new();
+
+        while line_start < message.len() {
+            let line_end =
+                std::cmp::min(line_start + (cols / 2) as usize, message.len());
+            let mut line = message[line_start..line_end].to_string();
+
+            if line.len() == cols as usize && line_end < message.len() {
+                if let Some(last_space) = line.rfind(' ') {
+                    line = line[..last_space].to_string();
+                }
+            }
+
+            lines.push(line);
+            line_start += lines.last().unwrap().len() + 1;
         }
 
-        write!(handle, "\x1B[{};1H", rows).unwrap();
-        write!(handle, "{}{}\x1b[0m", text_color, final_message).unwrap();
+        let start_line = if lines.len() <= rows as usize {
+            rows - lines.len() as u16 + 1
+        } else {
+            1
+        };
+
+        for (i, line) in lines.iter().enumerate() {
+            write!(handle, "\x1B[{};1H", start_line + i as u16).unwrap();
+            write!(handle, "{}{}\x1b[0m", text_color, line).unwrap();
+        }
 
         Overlay::restore_cursor_position(&mut handle);
         handle.flush().unwrap();
