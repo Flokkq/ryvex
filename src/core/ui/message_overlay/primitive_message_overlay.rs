@@ -15,8 +15,7 @@ impl PrimitiveMessageOverlay {
         message: String,
         level: MessageLevel,
     ) {
-        let stdout = stdout();
-        let mut handle = stdout.lock();
+        let mut handle = stdout().lock();
 
         Overlay::save_cursor_position(&mut handle);
 
@@ -30,7 +29,7 @@ impl PrimitiveMessageOverlay {
                 std::cmp::min(line_start + (cols / 2) as usize, message.len());
             let mut line = message[line_start..line_end].to_string();
 
-            if line.len() == cols as usize && line_end < message.len() {
+            if line.len() == (cols / 2) as usize && line_end < message.len() {
                 if let Some(last_space) = line.rfind(' ') {
                     line = line[..last_space].to_string();
                 }
