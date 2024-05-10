@@ -1,5 +1,4 @@
 use std::io::stdout;
-use std::io::StdoutLock;
 use std::io::Write;
 
 use crate::core::ui::overlay::Overlay;
@@ -110,19 +109,6 @@ impl DecorativeMessageOverlay {
         write!(handle, "╰{:─<1$}╯", "", box_width as usize).unwrap();
 
         write!(handle, "\x1b[0m").unwrap();
-
-        Overlay::restore_cursor_position(&mut handle);
-        handle.flush().unwrap();
-    }
-
-    fn remove_message(x: u16, y: u16) {
-        let stdout = stdout();
-        let mut handle = stdout.lock();
-
-        Overlay::save_cursor_position(&mut handle);
-        for i in 0..=Self::MAX_MESSAGE_HEIGHT + 2 {
-            write!(handle, "\x1b[{};{}H\x1b[K", x + i, y).unwrap();
-        }
 
         Overlay::restore_cursor_position(&mut handle);
         handle.flush().unwrap();

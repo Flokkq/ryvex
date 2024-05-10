@@ -8,7 +8,7 @@ use crate::core::{
     ui::{error::OverlayError, overlay::Overlay},
 };
 
-use super::MessageLevel;
+use super::{message_overlay::remove_message, MessageLevel};
 
 pub struct PrimitiveMessageOverlay;
 
@@ -80,6 +80,12 @@ impl PrimitiveMessageOverlay {
                                 || key_code == KeyCode::LineFeed
                                 || key_code == KeyCode::Esc
                             {
+                                remove_message(
+                                    start_line,
+                                    1,
+                                    lines.len() as u16,
+                                );
+                                Overlay::restore_cursor_position(&mut handle);
                                 break;
                             }
                         }
