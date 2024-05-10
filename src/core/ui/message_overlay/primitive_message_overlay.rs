@@ -3,12 +3,9 @@ use std::{
     usize,
 };
 
-use crate::{
-    core::{
-        keys::keycode::KeyCode,
-        ui::{error::OverlayError, overlay::Overlay},
-    },
-    telemetry::SingletonLogger,
+use crate::core::{
+    keys::keycode::KeyCode,
+    ui::{error::OverlayError, overlay::Overlay},
 };
 
 use super::MessageLevel;
@@ -30,19 +27,31 @@ impl PrimitiveMessageOverlay {
         let mut line_start = 0;
         let mut lines: Vec<String> = Vec::new();
 
+        let allow_multiline = matches!(level, MessageLevel::Error);
+        let max_width = if allow_multiline { cols / 2 } else { cols };
+
         while line_start < message.len() {
             let line_end =
-                std::cmp::min(line_start + (cols / 2) as usize, message.len());
+                std::cmp::min(line_start + max_width as usize, message.len());
             let mut line = message[line_start..line_end].to_string();
 
-            if line.len() == (cols / 2) as usize && line_end < message.len() {
-                if let Some(last_space) = line.rfind(' ') {
-                    line = line[..last_space].to_string();
+            if line.len() == max_width as usize && line_end < message.len() {
+                if allow_multiline {
+                    if let Some(last_space) = line.rfind(' ') {
+                        line = line[..last_space].to_string();
+                    }
+                } else {
+                    line = message[line_start..max_width as usize].to_string();
+                    lines.push(line);
+                    break;
                 }
             }
 
             lines.push(line);
             line_start += lines.last().unwrap().len() + 1;
+            if !allow_multiline {
+                break;
+            }
         }
 
         let start_line = if lines.len() <= rows as usize {
@@ -57,7 +66,7 @@ impl PrimitiveMessageOverlay {
         }
 
         handle.flush().unwrap();
-        if lines.len() > 1 {
+        if lines.len() > 1 && allow_multiline {
             let mut stdin = stdin().lock();
 
             loop {
