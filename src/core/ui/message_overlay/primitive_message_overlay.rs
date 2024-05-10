@@ -1,9 +1,15 @@
 use std::{
-    io::{stdout, Write},
+    io::{stdin, stdout, Read, Write},
     usize,
 };
 
-use crate::core::ui::overlay::Overlay;
+use crate::{
+    core::{
+        keys::keycode::KeyCode,
+        ui::{error::OverlayError, overlay::Overlay},
+    },
+    telemetry::SingletonLogger,
+};
 
 use super::MessageLevel;
 
@@ -14,7 +20,7 @@ impl PrimitiveMessageOverlay {
         (cols, rows): (u16, u16),
         message: String,
         level: MessageLevel,
-    ) {
+    ) -> Result<(), OverlayError> {
         let mut handle = stdout().lock();
 
         Overlay::save_cursor_position(&mut handle);
@@ -50,7 +56,38 @@ impl PrimitiveMessageOverlay {
             write!(handle, "{}{}\x1b[0m", text_color, line).unwrap();
         }
 
+        handle.flush().unwrap();
+        if lines.len() > 1 {
+            let mut stdin = stdin().lock();
+
+            loop {
+                let mut buffer = [0; 3];
+                match stdin.read(&mut buffer) {
+                    Ok(bytes_read) if bytes_read > 0 => {
+                        if let Some(key_code) =
+                            KeyCode::from_bytes(&buffer[..bytes_read])
+                        {
+                            if key_code == KeyCode::CarriageReturn
+                                || key_code == KeyCode::LineFeed
+                                || key_code == KeyCode::Esc
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    Ok(_) => {
+                        continue;
+                    }
+                    Err(e) => {
+                        return Err(OverlayError::Io(e));
+                    }
+                }
+            }
+        }
+
         Overlay::restore_cursor_position(&mut handle);
         handle.flush().unwrap();
+
+        Ok(())
     }
 }
