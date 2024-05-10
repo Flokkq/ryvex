@@ -24,7 +24,7 @@ impl Overlay {
     }
 
     pub fn render_primitive_message(message: String, level: MessageLevel) {
-        PrimitiveMessageOverlay::render_message(
+        PrimitiveMessageOverlay::display_message(
             Self::determine_window_size(),
             message,
             level,
