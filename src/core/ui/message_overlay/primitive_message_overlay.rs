@@ -69,7 +69,8 @@ impl PrimitiveMessageOverlay {
                         line_start += last_space + 1;
                     }
                 } else {
-                    line_start += max_width as usize;
+                    lines.push(line);
+                    break;
                 }
             } else {
                 line_start = line_end;
