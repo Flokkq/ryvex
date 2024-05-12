@@ -42,10 +42,12 @@ impl Buffer {
             self.cursor_pos_to_index(self.cursor.get_x(), self.cursor.get_y());
 
         if insert_pos < self.content.len() {
-            // move everything one to the right
+            let (before, after) = self.content.split_at(insert_pos);
+            self.content = format!("{}{}{}", before, ch, after);
+        } else {
+            self.content.push(ch);
         }
 
-        self.content.insert(insert_pos, ch);
         self.cursor.move_right(&self.content);
         self.record_state();
     }
