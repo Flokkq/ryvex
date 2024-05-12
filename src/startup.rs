@@ -59,7 +59,6 @@ fn process_buffer(
     stdout: &mut StdoutLock,
 ) -> Result<(), Error> {
     let global_state = get_global_state();
-    let mut output_update: Option<Vec<u8>> = None;
 
     let mut state_guard =
         global_state.get_state().map_err(|_| Error::Unexpected)?;
@@ -69,28 +68,22 @@ fn process_buffer(
         KeyCode::Backspace | KeyCode::Del => {
             if !file.is_empty() {
                 file.delete();
-                output_update = Some(vec![b'\x08', b' ', b'\x08']);
             }
         }
         KeyCode::LineFeed | KeyCode::CarriageReturn => {
             file.insert_newline();
-            output_update = Some(vec![b'\r', b'\n']);
         }
         kc if kc.to_key_type() != KeyType::Unknown
             && kc.to_key_type() != KeyType::Control =>
         {
             if let Some(char) = kc.as_str().as_bytes().get(0) {
                 file.insert(*char as char);
-                output_update = Some(vec![*char]);
             }
         }
-        _ => {}
+        _ => return Ok(()),
     }
 
-    if let Some(data) = output_update {
-        stdout.write_all(&data)?;
-        stdout.flush().map_err(|_| Error::Unexpected)?;
-    }
+    file.redraw(stdout)?;
 
     Ok(())
 }
