@@ -1,8 +1,12 @@
 use std::cmp;
 use std::io::{stdout, Write};
+use std::time::Duration;
+
+use tokio::time;
 
 use crate::core::ui::{error::OverlayError, overlay::Overlay};
 
+use super::message_overlay::remove_message;
 use super::MessageLevel;
 
 pub enum MessageOverlayPosition {
@@ -18,7 +22,7 @@ impl DecorativeMessageOverlay {
     pub const MAX_MESSAGE_WIDTH: u16 = 30;
     pub const MAX_MESSAGE_HEIGHT: u16 = 10;
 
-    pub fn display_message(
+    pub async fn display_message(
         (cols, rows): (u16, u16),
         message: String,
         position: MessageOverlayPosition,
@@ -54,6 +58,10 @@ impl DecorativeMessageOverlay {
         Overlay::save_cursor_position(&mut handle);
 
         Self::render_message(&message, level, x, y, box_width, &mut handle)?;
+
+        time::sleep(Duration::from_secs(3)).await;
+
+        remove_message(x, y, Self::MAX_MESSAGE_HEIGHT + 2);
 
         Overlay::restore_cursor_position(&mut handle);
         handle.flush()?;

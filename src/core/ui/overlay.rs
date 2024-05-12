@@ -2,7 +2,6 @@ use libc::{ioctl, winsize, TIOCGWINSZ};
 use std::io::{self, StdoutLock, Write};
 use std::os::unix::io::AsRawFd;
 
-use super::error::OverlayError;
 use super::message_overlay::{
     DecorativeMessageOverlay, PrimitiveMessageOverlay,
 };
@@ -11,30 +10,26 @@ use super::{MessageLevel, MessageOverlayPosition};
 pub struct Overlay;
 
 impl Overlay {
-    pub fn display_decorative_message(
+    pub async fn display_decorative_message(
         message: String,
         position: MessageOverlayPosition,
         level: MessageLevel,
-    ) -> Result<(), OverlayError> {
-        DecorativeMessageOverlay::display_message(
+    ) {
+        let _ = DecorativeMessageOverlay::display_message(
             Self::determine_window_size(),
             message,
             position,
             level,
-        )?;
-        Ok(())
+        )
+        .await;
     }
 
-    pub fn display_primitive_message(
-        message: String,
-        level: MessageLevel,
-    ) -> Result<(), OverlayError> {
-        PrimitiveMessageOverlay::display_message(
+    pub fn display_primitive_message(message: String, level: MessageLevel) {
+        let _ = PrimitiveMessageOverlay::display_message(
             Self::determine_window_size(),
             message,
             level,
-        )?;
-        Ok(())
+        );
     }
 
     fn determine_window_size() -> (u16, u16) {
