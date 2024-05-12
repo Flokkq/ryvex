@@ -23,18 +23,18 @@ pub fn run(
     keybinds: Vec<KeyBind>,
     stdout: &mut StdoutLock,
 ) -> Result<(), Error> {
-    let stdin = stdin();
-    let mut handle = stdin.lock();
-
     display_file_buffer(stdout)?;
 
     loop {
+        let mut handle = stdin().lock();
         let mut buffer = [0; 3];
 
         let bytes_read = handle.read(&mut buffer)?;
         if bytes_read == 0 {
             continue;
         }
+
+        drop(handle);
 
         let key_code = KeyCode::from_bytes(&buffer[..bytes_read]);
         match key_code {

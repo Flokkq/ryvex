@@ -6,3 +6,4 @@ pub mod keys;
 pub mod layers;
 pub mod open_file;
 pub mod state;
+pub mod ui;
