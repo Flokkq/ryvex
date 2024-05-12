@@ -10,7 +10,7 @@ use super::{MessageLevel, MessageOverlayPosition};
 pub struct Overlay;
 
 impl Overlay {
-    pub async fn display_decorative_message(
+    pub fn display_decorative_message(
         message: String,
         position: MessageOverlayPosition,
         level: MessageLevel,
@@ -20,8 +20,7 @@ impl Overlay {
             message,
             position,
             level,
-        )
-        .await;
+        );
     }
 
     pub fn display_primitive_message(message: String, level: MessageLevel) {
