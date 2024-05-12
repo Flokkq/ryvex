@@ -53,16 +53,32 @@ impl Buffer {
     }
 
     pub fn delete(&mut self) {
-        if !self.content.is_empty() {
-            let delete_pos = self
-                .cursor_pos_to_index(self.cursor.get_x(), self.cursor.get_y());
+        if self.content.is_empty() {
+            return;
+        }
 
-            if delete_pos > 0 {
-                self.content.remove(delete_pos - 1);
-                self.cursor.move_left();
-                self.record_state();
+        let delete_pos =
+            self.cursor_pos_to_index(self.cursor.get_x(), self.cursor.get_y());
+
+        if delete_pos == 0 {
+            return;
+        }
+
+        let prev_char_pos = delete_pos - 1;
+        let mut deleted_len = 1;
+
+        if self.content.chars().nth(prev_char_pos).unwrap() == '\n' {
+            // If the character to delete is a newline, adjust the deleted length
+            // and check if merging with the next line is needed
+            if let Some(next_line_end) = self.content[delete_pos..].find('\n') {
+                deleted_len += next_line_end + 1;
             }
         }
+
+        self.content.drain(prev_char_pos..delete_pos);
+
+        self.cursor.move_left_n(deleted_len);
+        self.record_state();
     }
 
     fn cursor_pos_to_index(&self, x: usize, y: usize) -> usize {

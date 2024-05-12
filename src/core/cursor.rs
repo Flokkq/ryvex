@@ -44,6 +44,36 @@ impl Cursor {
         }
     }
 
+    pub fn move_left_n(&mut self, n: usize) {
+        if self.x >= n {
+            self.x -= n;
+        } else {
+            self.x = 0;
+        }
+    }
+
+    pub fn move_right_n(&mut self, n: usize, buffer: &String) {
+        let line_length =
+            buffer.lines().nth(self.y).map_or(0, |line| line.len());
+        if self.x + n <= line_length {
+            self.x += n;
+        } else {
+            self.x = line_length;
+        }
+    }
+
+    pub fn move_up_n(&mut self, n: usize, buffer: &String) {
+        for _ in 0..n {
+            self.move_up(buffer);
+        }
+    }
+
+    pub fn move_down_n(&mut self, n: usize, buffer: &String) {
+        for _ in 0..n {
+            self.move_down(buffer);
+        }
+    }
+
     pub fn get_position(&self) -> (usize, usize) {
         (self.get_x(), self.get_y())
     }
