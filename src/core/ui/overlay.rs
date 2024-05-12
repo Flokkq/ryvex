@@ -20,8 +20,7 @@ impl Overlay {
             message,
             position,
             level,
-        )
-        .await;
+        );
     }
 
     pub fn display_primitive_message(message: String, level: MessageLevel) {
