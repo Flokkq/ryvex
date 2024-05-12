@@ -41,6 +41,10 @@ impl Buffer {
         let insert_pos =
             self.cursor_pos_to_index(self.cursor.get_x(), self.cursor.get_y());
 
+        if insert_pos < self.content.len() {
+            // move everything one to the right
+        }
+
         self.content.insert(insert_pos, ch);
         self.cursor.move_right(&self.content);
         self.record_state();
@@ -84,10 +88,40 @@ impl Buffer {
 
     pub fn move_cursor(&mut self, direction: EscapeSequence) {
         match direction {
-            EscapeSequence::ArrowUp => self.cursor.move_up(&self.content),
-            EscapeSequence::ArrowDown => self.cursor.move_down(&self.content),
-            EscapeSequence::ArrowRight => self.cursor.move_right(&self.content),
-            EscapeSequence::ArrowLeft => self.cursor.move_left(),
+            EscapeSequence::ArrowUp => {
+                if self.cursor.get_y() > 0 {
+                    self.cursor.move_up(&self.content);
+                }
+            }
+            EscapeSequence::ArrowDown => {
+                let num_lines = self.content.lines().count();
+                if self.cursor.get_y() + 1 < num_lines {
+                    self.cursor.move_down(&self.content);
+                }
+            }
+            EscapeSequence::ArrowRight => {
+                let current_line =
+                    self.content.lines().nth(self.cursor.get_y()).unwrap_or("");
+                if self.cursor.get_x() + 1 < current_line.len() {
+                    self.cursor.move_right(&self.content);
+                } else if self.cursor.get_y() + 1 < self.content.lines().count()
+                {
+                    self.cursor.move_to(0, self.cursor.get_y() + 1);
+                }
+            }
+            EscapeSequence::ArrowLeft => {
+                if self.cursor.get_x() > 0 {
+                    self.cursor.move_left();
+                } else if self.cursor.get_y() > 0 {
+                    let prev_line_len = self
+                        .content
+                        .lines()
+                        .nth(self.cursor.get_y() - 1)
+                        .unwrap_or("")
+                        .len();
+                    self.cursor.move_to(prev_line_len, self.cursor.get_y() - 1);
+                }
+            }
         }
     }
 

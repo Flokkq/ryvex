@@ -10,6 +10,11 @@ impl Cursor {
         Self { x, y }
     }
 
+    pub fn move_to(&mut self, x: usize, y: usize) {
+        self.x = x;
+        self.y = y;
+    }
+
     pub fn move_up(&mut self, buffer: &String) {
         if self.y > 0 {
             self.y -= 1;

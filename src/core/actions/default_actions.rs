@@ -27,7 +27,7 @@ pub fn save_file() -> Result<ActionResult, ActionError> {
 
         Overlay::display_primitive_message(
             String::from("Buffer saved"),
-            MessageLevel::Error,
+            MessageLevel::Info,
         );
     }
 
