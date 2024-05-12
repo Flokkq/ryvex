@@ -52,6 +52,12 @@ impl Buffer {
         self.record_state();
     }
 
+    pub fn insert_newline(&mut self) {
+        self.insert('\n');
+        self.cursor.move_down(&self.content);
+        self.cursor.move_to(0, self.cursor.get_y());
+    }
+
     pub fn delete(&mut self) {
         if self.content.is_empty() {
             return;
@@ -144,15 +150,24 @@ impl Buffer {
     }
 
     pub fn display(&self, stdout: &mut StdoutLock) -> Result<(), Error> {
-        stdout.write_all(self.content.as_bytes())?;
+        let mut lines = self.content.lines();
+
+        if let Some(line) = lines.next() {
+            stdout.write_all(line.as_bytes())?;
+        }
+
+        for line in lines {
+            stdout.write_all(b"\r\n")?;
+            stdout.write_all(line.as_bytes())?;
+        }
 
         let cursor_position = format!(
             "\x1B[{};{}H",
             self.cursor.get_y() + 1,
             self.cursor.get_x() + 1
         );
-
         stdout.write_all(cursor_position.as_bytes())?;
+        stdout.flush()?;
         Ok(())
     }
 }

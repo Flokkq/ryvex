@@ -73,8 +73,7 @@ fn process_buffer(
             }
         }
         KeyCode::LineFeed | KeyCode::CarriageReturn => {
-            file.buffer.insert('\r');
-            file.buffer.insert('\n');
+            file.buffer.insert_newline();
             output_update = Some(vec![b'\r', b'\n']);
         }
         kc if kc.to_key_type() != KeyType::Unknown
