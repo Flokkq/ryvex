@@ -67,20 +67,20 @@ fn process_buffer(
 
     match key_code {
         KeyCode::Backspace | KeyCode::Del => {
-            if !file.buffer.is_empty() {
-                file.buffer.delete();
+            if !file.is_empty() {
+                file.delete();
                 output_update = Some(vec![b'\x08', b' ', b'\x08']);
             }
         }
         KeyCode::LineFeed | KeyCode::CarriageReturn => {
-            file.buffer.insert_newline();
+            file.insert_newline();
             output_update = Some(vec![b'\r', b'\n']);
         }
         kc if kc.to_key_type() != KeyType::Unknown
             && kc.to_key_type() != KeyType::Control =>
         {
             if let Some(char) = kc.as_str().as_bytes().get(0) {
-                file.buffer.insert(*char as char);
+                file.insert(*char as char);
                 output_update = Some(vec![*char]);
             }
         }
@@ -120,7 +120,7 @@ fn handle_escape_sequence(
         global_state.get_state().map_err(|_| Error::Unexpected)?;
     let file = state_guard.file.as_mut().ok_or(Error::Unexpected)?;
 
-    file.buffer.move_cursor(seq);
+    file.move_cursor(seq);
 
     file.redraw(stdout)?;
     Ok(())

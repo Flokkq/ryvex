@@ -5,7 +5,7 @@ use std::{
 
 use crate::{core::error::Error, file_access::FileAccess};
 
-use super::buffer::Buffer;
+use super::{buffer::Buffer, keys::keycode::EscapeSequence};
 
 pub struct OpenFile {
     pub path: PathBuf,
@@ -21,6 +21,26 @@ impl OpenFile {
             path,
             buffer: Buffer::new(buffer),
         })
+    }
+
+    pub fn is_empty(&mut self) -> bool {
+        self.buffer.is_empty()
+    }
+
+    pub fn insert(&mut self, ch: char) {
+        self.buffer.insert(ch);
+    }
+
+    pub fn insert_newline(&mut self) {
+        self.buffer.insert_newline();
+    }
+
+    pub fn delete(&mut self) {
+        self.buffer.delete();
+    }
+
+    pub fn move_cursor(&mut self, direction: EscapeSequence) {
+        self.buffer.move_cursor(direction);
     }
 
     pub fn redraw(&self, stdout: &mut StdoutLock) -> Result<(), Error> {
