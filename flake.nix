@@ -1,5 +1,5 @@
 {
-  description = "Basic Rust flake for ryvex";
+  description = "Basic Rust flake";
 
   inputs = {
     nixpkgs.url      = "github:NixOS/nixpkgs/nixos-unstable";
@@ -7,7 +7,7 @@
     flake-utils.url  = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, rust-overlay, flake-utils, ... }:
+  outputs = { nixpkgs, rust-overlay, flake-utils, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         overlays = [ (import rust-overlay) ];
@@ -17,16 +17,18 @@
       in
       with pkgs;
       {
+        packages.default = rust-bin.selectLatestNightlyWith(toolchain: toolchain.default.override {
+          extensions= [ "rust-src" "rust-analyzer" ];
+          targets = [];
+        });
+
         devShells.default = mkShell rec {
           buildInputs = [
-            (rust-bin.selectLatestNightlyWith( toolchain: toolchain.default.override {
-              extensions= [ "rust-src" "rust-analyzer" ];
-              targets = [];
-            }))
-
+            packages.default
             pkg-config
             openssl
-          ] ++ pkgs.lib.optionals pkg.stdenv.isDarwin [
+            bunyan-rs
+          ] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
             darwin.apple_sdk.frameworks.SystemConfiguration
           ];
 
