@@ -55,9 +55,11 @@ pub fn run(
                 );
             }
             Some(KeyCode::LowerI) => {
-                if ![TerminalLayer::Insert, TerminalLayer::Replace]
-                    .contains(&file.buffer.layer())
-                {
+                if &TerminalLayer::Insert == file.buffer.layer() {
+                    drop(state_guard);
+                    process_buffer(&KeyCode::LowerI, stdout)?;
+                } else if &TerminalLayer::Replace == file.buffer.layer() {
+                } else {
                     file.buffer.change_layer(TerminalLayer::Insert);
 
                     Overlay::display_primitive_message(
@@ -92,34 +94,27 @@ pub fn run(
                 );
             }
             Some(KeyCode::EscapeSequence(seq)) => {
+                drop(state_guard);
                 handle_escape_sequence(seq, stdout)?;
             }
-            Some(code) => {
-                let global_state = get_global_state();
+            Some(code) => match file.buffer.layer() {
+                TerminalLayer::Insert => {
+                    drop(state_guard);
+                    process_buffer(&code, stdout)?;
+                }
+                TerminalLayer::Replace => {
+                    todo!()
+                }
+                _ => {
+                    drop(state_guard);
 
-                let mut state_guard =
-                    global_state.get_state().map_err(|_| Error::Unexpected)?;
-                let file =
-                    state_guard.file.as_mut().ok_or(Error::Unexpected)?;
-
-                match file.buffer.layer() {
-                    TerminalLayer::Insert => {
-                        process_buffer(&code, stdout)?;
-                    }
-                    TerminalLayer::Replace => {
-                        todo!()
-                    }
-                    _ => {
-                        drop(state_guard);
-
-                        let action_result = process_keypress(&code, &keybinds)?;
-                        if matches!(action_result, ActionResult::Exit) {
-                            return Ok(());
-                        }
+                    let action_result = process_keypress(&code, &keybinds)?;
+                    if matches!(action_result, ActionResult::Exit) {
+                        return Ok(());
                     }
                 }
-            }
-            None => return Err(Error::Unexpected),
+            },
+            _ => return Err(Error::Unexpected),
         }
     }
 }
