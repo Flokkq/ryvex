@@ -11,9 +11,10 @@ pub type ActionFn = fn() -> Result<ActionResult, ActionError>;
 pub struct KeyBind {
     pub key: Key,
     pub operation: Operation,
-    pub callback: Option<ActionFn>, // Use the type alias here
+    pub callback: Option<ActionFn>,
 }
 
+#[derive(PartialEq)]
 pub enum Operation {
     IO(IOOperation),
     Find,
@@ -23,6 +24,7 @@ pub enum Operation {
     Count,
 }
 
+#[derive(PartialEq)]
 pub enum IOOperation {
     Write,
     Read,
@@ -34,6 +36,11 @@ impl KeyBind {
         operation: Operation,
         callback: Option<ActionFn>,
     ) -> Self {
+        assert!(
+            !(matches!(operation, Operation::IO(_)) && callback.is_none()),
+            "KeyBind with IO operation must have a callback"
+        );
+
         Self {
             key,
             operation,
