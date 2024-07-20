@@ -95,8 +95,12 @@ fn process_keypress(
     keybinds
         .iter()
         .find_map(|keybind| {
-            if keybind.keys.iter().any(|k| k.key_code == *key) {
-                Some((keybind.on_activate)())
+            if keybind.key.key_code == *key {
+                if let Some(callback) = keybind.callback {
+                    Some(callback())
+                } else {
+                    None
+                }
             } else {
                 None
             }
