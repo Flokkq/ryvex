@@ -5,6 +5,7 @@ use std::{
 };
 
 use crate::{
+    configuration::Settings,
     core::{
         actions::error::ActionError,
         error::Error,
@@ -13,10 +14,12 @@ use crate::{
             keybind::{ActionResult, KeyBind},
             keycode::{EscapeSequence, KeyCode},
         },
+        layers::layer::{TerminalLayer, VisualLayer},
         open_file::OpenFile,
         state::{get_global_state, set_open_file},
+        ui::{overlay::Overlay, MessageLevel, MessageOverlayPosition},
     },
-    {configuration::Settings, telemetry::SingletonLogger},
+    telemetry::SingletonLogger,
 };
 
 pub fn run(
@@ -26,6 +29,12 @@ pub fn run(
     display_file_buffer(stdout)?;
 
     loop {
+        let global_state = get_global_state();
+
+        let mut state_guard =
+            global_state.get_state().map_err(|_| Error::Unexpected)?;
+        let file = state_guard.file.as_mut().ok_or(Error::Unexpected)?;
+
         let mut handle = stdin().lock();
         let mut buffer = [0; 3];
 
@@ -38,16 +47,77 @@ pub fn run(
 
         let key_code = KeyCode::from_bytes(&buffer[..bytes_read]);
         match key_code {
+            Some(KeyCode::Esc) => {
+                file.buffer.change_layer(TerminalLayer::Normal);
+                Overlay::display_primitive_message(
+                    "NORMAL".to_string(),
+                    MessageLevel::Info,
+                );
+            }
+            Some(KeyCode::LowerI) => {
+                if ![TerminalLayer::Insert, TerminalLayer::Replace]
+                    .contains(&file.buffer.layer())
+                {
+                    file.buffer.change_layer(TerminalLayer::Insert);
+
+                    Overlay::display_primitive_message(
+                        "INSERT".to_string(),
+                        MessageLevel::Info,
+                    );
+                }
+            }
+            Some(KeyCode::LowerV) => {
+                file.buffer
+                    .change_layer(TerminalLayer::Visual(VisualLayer::Block));
+                Overlay::display_primitive_message(
+                    "VISUAL".to_string(),
+                    MessageLevel::Info,
+                );
+            }
+            Some(KeyCode::UpperV) => {
+                file.buffer
+                    .change_layer(TerminalLayer::Visual(VisualLayer::Line));
+
+                Overlay::display_primitive_message(
+                    "VISUAL-LINE".to_string(),
+                    MessageLevel::Info,
+                );
+            }
+            Some(KeyCode::UpperR) => {
+                file.buffer.change_layer(TerminalLayer::Replace);
+
+                Overlay::display_primitive_message(
+                    "REPLACE".to_string(),
+                    MessageLevel::Info,
+                );
+            }
             Some(KeyCode::EscapeSequence(seq)) => {
                 handle_escape_sequence(seq, stdout)?;
             }
             Some(code) => {
-                let action_result = process_keypress(&code, &keybinds)?;
-                if matches!(action_result, ActionResult::Exit) {
-                    return Ok(());
-                }
+                let global_state = get_global_state();
 
-                process_buffer(&code, stdout)?;
+                let mut state_guard =
+                    global_state.get_state().map_err(|_| Error::Unexpected)?;
+                let file =
+                    state_guard.file.as_mut().ok_or(Error::Unexpected)?;
+
+                match file.buffer.layer() {
+                    TerminalLayer::Insert => {
+                        process_buffer(&code, stdout)?;
+                    }
+                    TerminalLayer::Replace => {
+                        todo!()
+                    }
+                    _ => {
+                        drop(state_guard);
+
+                        let action_result = process_keypress(&code, &keybinds)?;
+                        if matches!(action_result, ActionResult::Exit) {
+                            return Ok(());
+                        }
+                    }
+                }
             }
             None => return Err(Error::Unexpected),
         }

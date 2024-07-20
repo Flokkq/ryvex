@@ -16,14 +16,15 @@ pub fn save_file() -> Result<ActionResult, ActionError> {
         .map_err(|_| ActionError::Unexpected)?;
 
     if let Some(file) = &state.file {
-        FileAccess::write_to_file(&file.path, &file.buffer.get_content())
-            .map_err(|err| {
+        FileAccess::write_to_file(&file.path, &file.buffer.content()).map_err(
+            |err| {
                 Overlay::display_primitive_message(
                     String::from(&format!("Could not save buffer {}", err)),
                     MessageLevel::Error,
                 );
                 ActionError::Unexpected
-            })?;
+            },
+        )?;
 
         Overlay::display_primitive_message(
             String::from("Buffer saved"),

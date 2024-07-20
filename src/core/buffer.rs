@@ -4,11 +4,15 @@ use std::{
     usize,
 };
 
-use super::{cursor::Cursor, error::Error, keys::keycode::EscapeSequence};
+use super::{
+    cursor::Cursor, error::Error, keys::keycode::EscapeSequence,
+    layers::layer::TerminalLayer,
+};
 
 pub struct Buffer {
     content: String,
     cursor: Cursor,
+    layer: TerminalLayer,
     history: VecDeque<BufferState>,
     _selection: Option<(usize, usize)>,
 }
@@ -24,17 +28,26 @@ impl Buffer {
         Buffer {
             content,
             cursor: Cursor::place(x, y),
+            layer: TerminalLayer::Normal,
             history: VecDeque::new(),
             _selection: None,
         }
     }
 
-    pub fn is_empty(&self) -> bool {
-        return self.content.is_empty();
+    pub fn change_layer(&mut self, layer: TerminalLayer) {
+        self.layer = layer;
     }
 
-    pub fn get_content(&self) -> &String {
-        return &self.content;
+    pub fn layer(&self) -> &TerminalLayer {
+        &self.layer
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.content.is_empty()
+    }
+
+    pub fn content(&self) -> &String {
+        &self.content
     }
 
     pub fn insert(&mut self, ch: char) {

@@ -1,16 +1,13 @@
-use crate::core::keys::key::KeyType;
-
+#[derive(PartialEq)]
 pub enum TerminalLayer {
     Insert,
     Normal,
-    Visual,
+    Replace,
+    Visual(VisualLayer),
 }
 
-impl From<&KeyType> for TerminalLayer {
-    fn from(value: &KeyType) -> Self {
-        match value {
-            KeyType::Escape | KeyType::Leader => TerminalLayer::Normal,
-            _ => TerminalLayer::Insert,
-        }
-    }
+#[derive(PartialEq)]
+pub enum VisualLayer {
+    Line,
+    Block,
 }
