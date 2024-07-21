@@ -5,7 +5,7 @@ use std::{
 
 use crate::{core::error::Error, file_access::FileAccess};
 
-use super::{buffer::Buffer, keys::keycode::EscapeSequence};
+use super::buffer::{Buffer, Direction};
 
 pub struct OpenFile {
     pub path: PathBuf,
@@ -39,7 +39,7 @@ impl OpenFile {
         self.buffer.delete();
     }
 
-    pub fn move_cursor(&mut self, direction: EscapeSequence) {
+    pub fn move_cursor(&mut self, direction: Direction) {
         self.buffer.move_cursor(direction);
     }
 

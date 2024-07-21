@@ -9,6 +9,7 @@ use crate::{
     core::{
         self,
         actions::{action::ActionResult, error::ActionError},
+        buffer::Direction,
         error::Error,
         keys::{
             key::KeyType,
@@ -73,6 +74,7 @@ pub fn run(
             Some(KeyCode::LowerV) => {
                 file.buffer
                     .change_layer(TerminalLayer::Visual(VisualLayer::Block));
+
                 Overlay::display_primitive_message(
                     "VISUAL".to_string(),
                     MessageLevel::Info,
@@ -115,6 +117,7 @@ pub fn run(
                 _ => {
                     if code == KeyCode::Colon {
                         drop(state_guard);
+
                         let action_result = Overlay::display_command_overlay(
                             &custom_commands,
                             None,
@@ -181,6 +184,11 @@ fn process_keypress(
         .find_map(|keybind| {
             if keybind.key.key_code == *key {
                 keybind.callback.map(|callback| callback())
+
+            /* Overlay::display_primitive_message(
+                format!("{}", key.as_str()),
+                MessageLevel::Info,
+            ); */
             } else {
                 None
             }
@@ -197,7 +205,7 @@ fn handle_escape_sequence(
         global_state.get_state().map_err(|_| Error::Unexpected)?;
     let file = state_guard.file.as_mut().ok_or(Error::Unexpected)?;
 
-    file.move_cursor(seq);
+    file.move_cursor(Direction::from(seq));
 
     file.redraw(stdout)?;
     Ok(())

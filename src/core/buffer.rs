@@ -14,7 +14,25 @@ pub struct Buffer {
     cursor: Cursor,
     layer: TerminalLayer,
     history: VecDeque<BufferState>,
-    _selection: Option<(usize, usize)>,
+    selection: Option<(usize, usize)>,
+}
+
+pub enum Direction {
+    Left,
+    Right,
+    Up,
+    Down,
+}
+
+impl From<EscapeSequence> for Direction {
+    fn from(value: EscapeSequence) -> Self {
+        match value {
+            EscapeSequence::ArrowLeft => Direction::Left,
+            EscapeSequence::ArrowRight => Direction::Right,
+            EscapeSequence::ArrowUp => Direction::Up,
+            EscapeSequence::ArrowDown => Direction::Down,
+        }
+    }
 }
 
 impl Buffer {
@@ -30,7 +48,7 @@ impl Buffer {
             cursor: Cursor::place(x, y),
             layer: TerminalLayer::Normal,
             history: VecDeque::new(),
-            _selection: None,
+            selection: None,
         }
     }
 
@@ -123,20 +141,20 @@ impl Buffer {
         });
     }
 
-    pub fn move_cursor(&mut self, direction: EscapeSequence) {
+    pub fn move_cursor(&mut self, direction: Direction) {
         match direction {
-            EscapeSequence::ArrowUp => {
+            Direction::Up => {
                 if self.cursor.get_y() > 0 {
                     self.cursor.move_up(&self.content);
                 }
             }
-            EscapeSequence::ArrowDown => {
+            Direction::Down => {
                 let num_lines = self.content.lines().count();
                 if self.cursor.get_y() + 1 < num_lines {
                     self.cursor.move_down(&self.content);
                 }
             }
-            EscapeSequence::ArrowRight => {
+            Direction::Right => {
                 let current_line =
                     self.content.lines().nth(self.cursor.get_y()).unwrap_or("");
                 if self.cursor.get_x() + 1 < current_line.len() {
@@ -146,7 +164,7 @@ impl Buffer {
                     self.cursor.move_to(0, self.cursor.get_y() + 1);
                 }
             }
-            EscapeSequence::ArrowLeft => {
+            Direction::Left => {
                 if self.cursor.get_x() > 0 {
                     self.cursor.move_left();
                 } else if self.cursor.get_y() > 0 {
