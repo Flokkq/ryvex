@@ -13,14 +13,11 @@ impl FileAccess {
         path: &PathBuf,
         buffer: &mut String,
     ) -> Result<(), error::Error> {
-        match fs::metadata(path) {
-            Ok(_metadata) => {
-                let mut file =
-                    File::open(path).map_err(|err| error::Error::Io(err))?;
-                file.read_to_string(buffer)
-                    .map_err(|err| error::Error::Io(err))?;
-            }
-            Err(_) => {}
+        if let Ok(_metadata) = fs::metadata(path) {
+            let mut file =
+                File::open(path).map_err(error::Error::Io)?;
+            file.read_to_string(buffer)
+                .map_err(error::Error::Io)?;
         }
 
         Ok(())
@@ -31,10 +28,10 @@ impl FileAccess {
         buffer: &String,
     ) -> Result<(), error::Error> {
         let mut file =
-            File::create(path).map_err(|err| error::Error::Io(err))?;
+            File::create(path).map_err(error::Error::Io)?;
 
         file.write_all(buffer.as_bytes())
-            .map_err(|err| error::Error::Io(err))?;
+            .map_err(error::Error::Io)?;
 
         Ok(())
     }

@@ -8,7 +8,7 @@ use crate::core::{
     ui::{error::OverlayError, overlay::Overlay},
 };
 
-use super::{message_overlay::remove_message, MessageLevel};
+use super::MessageLevel;
 
 pub struct PrimitiveMessageOverlay;
 
@@ -34,7 +34,7 @@ impl PrimitiveMessageOverlay {
 
         let start_line = Self::calculate_start_line(rows, lines.len() as u16);
 
-        Self::display_lines(&lines, start_line, &text_color, &mut handle)?;
+        Self::display_lines(&lines, start_line, text_color, &mut handle)?;
 
         if allow_multiline && lines.len() > 1 {
             Self::wait_for_user_action(
@@ -116,7 +116,7 @@ impl PrimitiveMessageOverlay {
                 if [KeyCode::CarriageReturn, KeyCode::LineFeed, KeyCode::Esc]
                     .contains(&key_code)
                 {
-                    remove_message(start_line, 1, num_lines);
+                    Overlay::remove_text(start_line, 1, num_lines)?;
                     Overlay::restore_cursor_position(handle);
                     break;
                 }

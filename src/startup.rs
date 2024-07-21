@@ -17,7 +17,7 @@ use crate::{
         layers::layer::{TerminalLayer, VisualLayer},
         open_file::OpenFile,
         state::{get_global_state, set_open_file},
-        ui::{overlay::Overlay, MessageLevel, MessageOverlayPosition},
+        ui::{overlay::Overlay, MessageLevel},
     },
     telemetry::SingletonLogger,
 };
@@ -106,11 +106,15 @@ pub fn run(
                     todo!()
                 }
                 _ => {
-                    drop(state_guard);
+                    if code == KeyCode::Colon {
+                        Overlay::display_command_overlay(None);
+                    } else {
+                        drop(state_guard);
 
-                    let action_result = process_keypress(&code, &keybinds)?;
-                    if matches!(action_result, ActionResult::Exit) {
-                        return Ok(());
+                        let action_result = process_keypress(&code, &keybinds)?;
+                        if matches!(action_result, ActionResult::Exit) {
+                            return Ok(());
+                        }
                     }
                 }
             },
@@ -141,7 +145,7 @@ fn process_buffer(
         kc if kc.to_key_type() != KeyType::Unknown
             && kc.to_key_type() != KeyType::Control =>
         {
-            if let Some(char) = kc.as_str().as_bytes().get(0) {
+            if let Some(char) = kc.as_str().as_bytes().first() {
                 file.insert(*char as char);
             }
         }
@@ -161,11 +165,7 @@ fn process_keypress(
         .iter()
         .find_map(|keybind| {
             if keybind.key.key_code == *key {
-                if let Some(callback) = keybind.callback {
-                    Some(callback())
-                } else {
-                    None
-                }
+                keybind.callback.map(|callback| callback())
             } else {
                 None
             }
@@ -219,7 +219,7 @@ pub fn build(configuration: Settings, args: &mut Args) -> Result<(), Error> {
             let logger = SingletonLogger::get_instance();
             logger.error("No filename provided when starting");
 
-            return Err(Error::Unexpected);
+            Err(Error::Unexpected)
         }
     }
 }

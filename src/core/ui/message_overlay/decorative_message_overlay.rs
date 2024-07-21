@@ -1,10 +1,7 @@
+use crate::core::ui::{error::OverlayError, overlay::Overlay};
 use std::cmp;
 use std::io::{stdout, Write};
-use std::time::Duration;
 
-use crate::core::ui::{error::OverlayError, overlay::Overlay};
-
-use super::message_overlay::remove_message;
 use super::MessageLevel;
 
 pub enum MessageOverlayPosition {

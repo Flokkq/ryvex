@@ -11,6 +11,12 @@ pub struct GlobalState {
     state: Mutex<AppState>,
 }
 
+impl Default for GlobalState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GlobalState {
     pub fn new() -> Self {
         let initial_state = AppState { file: None };

@@ -8,7 +8,7 @@ pub fn start() -> Result<(), error::Error> {
     let mut stdout = stdout().lock();
 
     loop {
-        stdin.read_exact(&mut buf).map_err(|err| Error::Io(err))?;
+        stdin.read_exact(&mut buf).map_err(Error::Io)?;
 
         if buf[0] == b'\x11' {
             return Ok(());

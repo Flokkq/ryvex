@@ -1,3 +1,4 @@
+mod command_overlay;
 pub mod error;
 mod message_overlay;
 pub mod overlay;

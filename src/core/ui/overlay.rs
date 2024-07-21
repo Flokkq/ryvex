@@ -1,7 +1,9 @@
 use libc::{ioctl, winsize, TIOCGWINSZ};
-use std::io::{self, StdoutLock, Write};
+use std::io::{self, stdout, StdoutLock, Write};
 use std::os::unix::io::AsRawFd;
 
+use super::command_overlay::CommandOverlay;
+use super::error::OverlayError;
 use super::message_overlay::{
     DecorativeMessageOverlay, PrimitiveMessageOverlay,
 };
@@ -10,7 +12,14 @@ use super::{MessageLevel, MessageOverlayPosition};
 pub struct Overlay;
 
 impl Overlay {
-    pub async fn display_decorative_message(
+    pub fn display_command_overlay(input: Option<&str>) {
+        let _ = CommandOverlay::display_overlay(
+            Self::determine_window_size(),
+            input.unwrap_or(":"),
+        );
+    }
+
+    pub fn display_decorative_message(
         message: String,
         position: MessageOverlayPosition,
         level: MessageLevel,
@@ -45,6 +54,21 @@ impl Overlay {
         }
 
         (wsize.ws_col, wsize.ws_row)
+    }
+
+    pub(super) fn remove_text(
+        x: u16,
+        y: u16,
+        lines: u16,
+    ) -> Result<(), OverlayError> {
+        let stdout = stdout();
+        let mut handle = stdout.lock();
+
+        for i in 0..=lines {
+            write!(handle, "\x1b[{};{}H\x1b[K", x + i, y).unwrap();
+        }
+
+        Ok(handle.flush()?)
     }
 
     pub(super) fn save_cursor_position(handle: &mut StdoutLock) {

@@ -14,7 +14,7 @@ impl<'a> TerminalGuard<'a> {
         let stdin_fd = stdin.as_raw_fd();
         let orig_termios = Termios::from_fd(stdin_fd)?;
 
-        let mut termios = orig_termios.clone();
+        let mut termios = orig_termios;
 
         // Sets flags to disable all input and output processing.
         cfmakeraw(&mut termios);

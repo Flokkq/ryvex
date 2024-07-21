@@ -8,7 +8,7 @@ fn main() {
 
     let _guard = TerminalGuard::spawn().unwrap();
 
-    if args.get(1).unwrap().to_string() == "-s" {
+    if *args.get(1).unwrap() == "-s" {
         let _ = start();
         drop(_guard);
         std::process::exit(0);
