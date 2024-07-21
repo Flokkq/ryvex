@@ -20,6 +20,7 @@ impl PrimitiveMessageOverlay {
     ) -> Result<(), OverlayError> {
         let mut handle = stdout().lock();
 
+        Overlay::remove_text(rows, 1, 1)?;
         Overlay::save_cursor_position(&mut handle);
 
         let (_, text_color) = level.to_color();
