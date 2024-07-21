@@ -88,12 +88,17 @@ pub fn run(
                 );
             }
             Some(KeyCode::UpperR) => {
-                file.buffer.change_layer(TerminalLayer::Replace);
+                if !(file.buffer.layer() == &TerminalLayer::Normal) {
+                    drop(state_guard);
+                    process_buffer(&KeyCode::LowerI, stdout)?;
+                } else {
+                    file.buffer.change_layer(TerminalLayer::Replace);
 
-                Overlay::display_primitive_message(
-                    "REPLACE".to_string(),
-                    MessageLevel::Info,
-                );
+                    Overlay::display_primitive_message(
+                        "REPLACE".to_string(),
+                        MessageLevel::Info,
+                    );
+                }
             }
             Some(KeyCode::EscapeSequence(seq)) => {
                 drop(state_guard);
@@ -109,10 +114,15 @@ pub fn run(
                 }
                 _ => {
                     if code == KeyCode::Colon {
-                        Overlay::display_command_overlay(
+                        drop(state_guard);
+                        let action_result = Overlay::display_command_overlay(
                             &custom_commands,
                             None,
-                        );
+                        )?;
+
+                        if matches!(action_result, ActionResult::Exit) {
+                            return Ok(());
+                        }
                     } else {
                         drop(state_guard);
 

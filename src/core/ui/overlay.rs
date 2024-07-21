@@ -3,6 +3,7 @@ use std::io::{self, stdout, StdoutLock, Write};
 use std::os::unix::io::AsRawFd;
 
 use crate::core;
+use crate::core::actions::action::ActionResult;
 
 use super::command_overlay::CommandOverlay;
 use super::error::OverlayError;
@@ -17,12 +18,12 @@ impl Overlay {
     pub fn display_command_overlay(
         custom_commands: &Vec<core::command::Command>,
         input: Option<&str>,
-    ) {
-        let _ = CommandOverlay::display_overlay(
+    ) -> Result<ActionResult, OverlayError> {
+        CommandOverlay::display_overlay(
             Self::determine_window_size(),
             custom_commands,
             input.unwrap_or(":"),
-        );
+        )
     }
 
     pub fn display_decorative_message(

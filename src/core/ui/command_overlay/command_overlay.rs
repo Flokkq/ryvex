@@ -4,6 +4,7 @@ use std::{
 };
 
 use crate::core::{
+    actions::{action::ActionResult, error::ActionError},
     buffer::Buffer,
     command::Command,
     keys::keycode::KeyCode,
@@ -17,9 +18,10 @@ impl CommandOverlay {
         (_cols, rows): (u16, u16),
         custom_commands: &Vec<Command>,
         input: &str,
-    ) -> Result<(), OverlayError> {
+    ) -> Result<ActionResult, OverlayError> {
         let mut handle: StdoutLock = stdout().lock();
         let mut buf = Buffer::new(input.to_string());
+        let mut result = ActionResult::Continue;
 
         Overlay::save_cursor_position(&mut handle);
 
@@ -40,8 +42,9 @@ impl CommandOverlay {
                     break;
                 }
                 Some(KeyCode::LineFeed) | Some(KeyCode::CarriageReturn) => {
-                    let _ =
-                        Self::execute_command(custom_commands, buf.content());
+                    result =
+                        Self::execute_command(custom_commands, buf.content())
+                            .map_err(OverlayError::CommandError)?;
                     break;
                 }
                 Some(code) => match code {
@@ -69,13 +72,13 @@ impl CommandOverlay {
 
         Overlay::restore_cursor_position(&mut handle);
         handle.flush()?;
-        Ok(())
+        Ok(result)
     }
 
     fn execute_command(
         custom_commands: &Vec<Command>,
         input: &String,
-    ) -> Result<(), OverlayError> {
+    ) -> Result<ActionResult, ActionError> {
         let content = input.strip_prefix(":").unwrap_or("");
 
         if let Some(first_char) = content.chars().nth(0) {
@@ -92,15 +95,10 @@ impl CommandOverlay {
                         .stdin(Stdio::null())
                         .stdout(Stdio::null())
                         .status()
-                        .map_err(OverlayError::CommandExecutionError)?;
+                        .map_err(|_| ActionError::ExecutionFailed)?;
 
                     if !status.success() {
-                        return Err(OverlayError::CommandExecutionError(
-                            std::io::Error::new(
-                                std::io::ErrorKind::Other,
-                                "Command did not execute successfully",
-                            ),
-                        ));
+                        return Err(ActionError::ExecutionFailed);
                     }
                 }
             } else {
@@ -108,14 +106,15 @@ impl CommandOverlay {
                     custom_commands.iter().find(|cmd| cmd.alias == content)
                 {
                     // display_overlay_message returns an ActionResult...
-                    let _ = (custom_command.callback)();
+                    let res = (custom_command.callback)()?;
+                    return Ok(res);
                 } else {
                     Overlay::display_primitive_message(
                         format!("`{}` is not a valid command", input),
                         crate::core::ui::MessageLevel::Error,
                     );
 
-                    return Err(OverlayError::Unexpected);
+                    return Err(ActionError::Unexpected);
                 }
             }
         } else {
@@ -124,9 +123,9 @@ impl CommandOverlay {
                 crate::core::ui::MessageLevel::Error,
             );
 
-            return Err(OverlayError::Unexpected);
+            return Err(ActionError::Unexpected);
         }
 
-        Ok(())
+        Ok(ActionResult::Continue)
     }
 }
