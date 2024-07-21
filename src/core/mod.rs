@@ -1,5 +1,6 @@
 pub mod actions;
 pub mod buffer;
+pub mod command;
 pub mod cursor;
 pub mod error;
 pub mod keys;

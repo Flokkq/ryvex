@@ -1,12 +1,6 @@
+use crate::core::actions::action::ActionFn;
+
 use super::key::Key;
-use crate::core::actions::error::ActionError;
-
-pub enum ActionResult {
-    Continue,
-    Exit,
-}
-
-pub type ActionFn = fn() -> Result<ActionResult, ActionError>;
 
 pub struct KeyBind {
     pub key: Key,

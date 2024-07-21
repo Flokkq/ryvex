@@ -1,10 +1,11 @@
 use std::{
     io::{stdin, stdout, Read, StdoutLock, Write},
-    process::{Command, Stdio},
+    process::{Command as OSCommand, Stdio},
 };
 
 use crate::core::{
     buffer::Buffer,
+    command::Command,
     keys::keycode::KeyCode,
     ui::{error::OverlayError, overlay::Overlay},
 };
@@ -14,6 +15,7 @@ pub struct CommandOverlay;
 impl CommandOverlay {
     pub fn display_overlay(
         (_cols, rows): (u16, u16),
+        custom_commands: &Vec<Command>,
         input: &str,
     ) -> Result<(), OverlayError> {
         let mut handle: StdoutLock = stdout().lock();
@@ -38,7 +40,8 @@ impl CommandOverlay {
                     break;
                 }
                 Some(KeyCode::LineFeed) | Some(KeyCode::CarriageReturn) => {
-                    let _ = Self::execute_command(buf.content());
+                    let _ =
+                        Self::execute_command(custom_commands, buf.content());
                     break;
                 }
                 Some(code) => match code {
@@ -69,12 +72,14 @@ impl CommandOverlay {
         Ok(())
     }
 
-    fn execute_command(input: &String) -> Result<(), OverlayError> {
+    fn execute_command(
+        custom_commands: &Vec<Command>,
+        input: &String,
+    ) -> Result<(), OverlayError> {
         let content = input.strip_prefix(":").unwrap_or("");
+
         if let Some(first_char) = content.chars().nth(0) {
-            if let Some(KeyCode::Exclamation) =
-                KeyCode::from_ascii(first_char as u8)
-            {
+            if first_char == '!' {
                 let command = &content[1..];
                 let parts: Vec<&str> = command.split_whitespace().collect();
 
@@ -82,7 +87,7 @@ impl CommandOverlay {
                     let program = parts[0];
                     let args = &parts[1..];
 
-                    let status = Command::new(program)
+                    let status = OSCommand::new(program)
                         .args(args)
                         .stdin(Stdio::null())
                         .stdout(Stdio::null())
@@ -99,12 +104,19 @@ impl CommandOverlay {
                     }
                 }
             } else {
-                Overlay::display_primitive_message(
-                    format!("`{}` is not a valid command", input),
-                    crate::core::ui::MessageLevel::Error,
-                );
+                if let Some(custom_command) =
+                    custom_commands.iter().find(|cmd| cmd.alias == content)
+                {
+                    // display_overlay_message returns an ActionResult...
+                    let _ = (custom_command.callback)();
+                } else {
+                    Overlay::display_primitive_message(
+                        format!("`{}` is not a valid command", input),
+                        crate::core::ui::MessageLevel::Error,
+                    );
 
-                return Err(OverlayError::Unexpected);
+                    return Err(OverlayError::Unexpected);
+                }
             }
         } else {
             Overlay::display_primitive_message(

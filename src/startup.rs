@@ -7,11 +7,12 @@ use std::{
 use crate::{
     configuration::Settings,
     core::{
-        actions::error::ActionError,
+        self,
+        actions::{action::ActionResult, error::ActionError},
         error::Error,
         keys::{
             key::KeyType,
-            keybind::{ActionResult, KeyBind},
+            keybind::KeyBind,
             keycode::{EscapeSequence, KeyCode},
         },
         layers::layer::{TerminalLayer, VisualLayer},
@@ -24,6 +25,7 @@ use crate::{
 
 pub fn run(
     keybinds: Vec<KeyBind>,
+    custom_commands: Vec<core::command::Command>,
     stdout: &mut StdoutLock,
 ) -> Result<(), Error> {
     display_file_buffer(stdout)?;
@@ -107,7 +109,10 @@ pub fn run(
                 }
                 _ => {
                     if code == KeyCode::Colon {
-                        Overlay::display_command_overlay(None);
+                        Overlay::display_command_overlay(
+                            &custom_commands,
+                            None,
+                        );
                     } else {
                         drop(state_guard);
 
@@ -212,7 +217,11 @@ pub fn build(configuration: Settings, args: &mut Args) -> Result<(), Error> {
 
             set_open_file(open_file);
 
-            run(configuration.keybinds, &mut stdout)?;
+            run(
+                configuration.keybinds,
+                configuration.custom_commands,
+                &mut stdout,
+            )?;
             Ok(())
         }
         None => {

@@ -2,6 +2,8 @@ use libc::{ioctl, winsize, TIOCGWINSZ};
 use std::io::{self, stdout, StdoutLock, Write};
 use std::os::unix::io::AsRawFd;
 
+use crate::core;
+
 use super::command_overlay::CommandOverlay;
 use super::error::OverlayError;
 use super::message_overlay::{
@@ -12,9 +14,13 @@ use super::{MessageLevel, MessageOverlayPosition};
 pub struct Overlay;
 
 impl Overlay {
-    pub fn display_command_overlay(input: Option<&str>) {
+    pub fn display_command_overlay(
+        custom_commands: &Vec<core::command::Command>,
+        input: Option<&str>,
+    ) {
         let _ = CommandOverlay::display_overlay(
             Self::determine_window_size(),
+            custom_commands,
             input.unwrap_or(":"),
         );
     }

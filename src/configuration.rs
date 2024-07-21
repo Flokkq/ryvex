@@ -1,29 +1,29 @@
 use crate::core::{
-    actions::default_actions::{exit_application, save_file},
-    keys::{
-        key::Key,
-        keybind::{IOOperation, KeyBind, Operation},
-        keycode::KeyCode,
-    },
+    self,
+    actions::default_actions::{exit_application, save_and_exit, save_file},
+    keys::keybind::KeyBind,
 };
 
 pub struct Settings {
     pub keybinds: Vec<KeyBind>,
+    pub custom_commands: Vec<core::command::Command>,
 }
 
 pub fn get_configuration() -> Settings {
-    let ctrl_c = Key::bind(KeyCode::Etx);
-    let ctrl_s = Key::bind(KeyCode::Dc3);
+    Settings {
+        keybinds: get_keybinds(),
+        custom_commands: get_commands(),
+    }
+}
 
-    let keybind_c =
-        KeyBind::new(ctrl_c, Operation::Count, Some(exit_application));
-    let keybind_s = KeyBind::new(
-        ctrl_s,
-        Operation::IO(IOOperation::Write),
-        Some(save_file),
-    );
+fn get_keybinds() -> Vec<KeyBind> {
+    vec![]
+}
 
-    let keybinds = vec![keybind_c, keybind_s];
+fn get_commands() -> Vec<core::command::Command> {
+    let save = core::command::Command::new("w", save_file);
+    let exit = core::command::Command::new("q", exit_application);
+    let save_and_exit = core::command::Command::new("wq", save_and_exit);
 
-    Settings { keybinds }
+    vec![save, exit, save_and_exit]
 }

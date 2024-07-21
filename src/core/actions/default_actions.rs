@@ -1,13 +1,12 @@
 use crate::{
     core::{
-        keys::keybind::ActionResult,
         state::get_global_state,
         ui::{overlay::Overlay, MessageLevel},
     },
     file_access::FileAccess,
 };
 
-use super::error::ActionError;
+use super::{action::ActionResult, error::ActionError};
 
 pub fn save_file() -> Result<ActionResult, ActionError> {
     let global_state = get_global_state();
@@ -37,4 +36,9 @@ pub fn save_file() -> Result<ActionResult, ActionError> {
 
 pub fn exit_application() -> Result<ActionResult, ActionError> {
     Ok(ActionResult::Exit)
+}
+
+pub fn save_and_exit() -> Result<ActionResult, ActionError> {
+    save_file()?;
+    exit_application()
 }
