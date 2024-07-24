@@ -227,7 +227,7 @@ impl Buffer {
             }
 
             self.selection = Some((start, end.clone()));
-            // self.cursor = end;
+            self.cursor = end;
         }
     }
 
@@ -271,17 +271,71 @@ impl Buffer {
     }
 
     pub fn display(&self, stdout: &mut StdoutLock) -> Result<(), Error> {
-        let mut lines = self.content.lines();
+        // ANSI escape codes for background color (light gray)
+        const SELECTED_BG_COLOR: &str = "\x1B[48;5;252m"; // Light gray background
+        const RESET_COLOR: &str = "\x1B[0m"; // Reset to default color
 
-        if let Some(line) = lines.next() {
-            stdout.write_all(line.as_bytes())?;
-        }
+        let lines = self.content.lines();
+        let num_lines = self.content.lines().count();
+
+        let mut current_line_index = 0;
+
+        let (start_cursor, end_cursor) =
+            if let TerminalLayer::Visual(_) = self.layer {
+                self.selection
+                    .clone()
+                    .unwrap_or((self.cursor.clone(), self.cursor.clone()))
+            } else {
+                (self.cursor.clone(), self.cursor.clone())
+            };
 
         for line in lines {
-            stdout.write_all(b"\r\n")?;
-            stdout.write_all(line.as_bytes())?;
+            if current_line_index >= start_cursor.get_y()
+                && current_line_index <= end_cursor.get_y()
+            {
+                let line_start_index =
+                    if current_line_index == start_cursor.get_y() {
+                        start_cursor.get_x()
+                    } else {
+                        0
+                    };
+
+                let line_end_index = if current_line_index == end_cursor.get_y()
+                {
+                    end_cursor.get_x()
+                } else {
+                    line.len()
+                };
+
+                // Print the line before the selection
+                if line_start_index > 0 {
+                    stdout.write_all(&line[..line_start_index].as_bytes())?;
+                }
+
+                // Print the selected part with background color
+                if line_end_index > line_start_index {
+                    stdout.write_all(SELECTED_BG_COLOR.as_bytes())?;
+                    stdout.write_all(
+                        &line[line_start_index..line_end_index].as_bytes(),
+                    )?;
+                    stdout.write_all(RESET_COLOR.as_bytes())?;
+                }
+
+                // Print the rest of the line
+                if line_end_index < line.len() {
+                    stdout.write_all(&line[line_end_index..].as_bytes())?;
+                }
+            } else {
+                stdout.write_all(line.as_bytes())?;
+            }
+
+            if current_line_index < num_lines - 1 {
+                stdout.write_all(b"\r\n")?;
+            }
+            current_line_index += 1;
         }
 
+        // print correct cursor in visual mode
         let cursor_position = format!(
             "\x1B[{};{}H",
             self.cursor.get_y() + 1,
