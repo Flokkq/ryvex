@@ -5,8 +5,10 @@ use std::{
 };
 
 use super::{
-    cursor::Cursor, error::Error, keys::keycode::EscapeSequence,
-    layers::layer::TerminalLayer,
+    cursor::Cursor,
+    error::Error,
+    keys::keycode::EscapeSequence,
+    layers::layer::{TerminalLayer, VisualLayer},
 };
 
 pub struct Buffer {
@@ -14,7 +16,7 @@ pub struct Buffer {
     cursor: Cursor,
     layer: TerminalLayer,
     history: VecDeque<BufferState>,
-    selection: Option<(usize, usize)>,
+    selection: Option<(Cursor, Cursor)>,
 }
 
 pub enum Direction {
@@ -118,6 +120,10 @@ impl Buffer {
         self.record_state();
     }
 
+    pub fn reset_selection(&mut self) {
+        self.selection = None;
+    }
+
     fn cursor_pos_to_index(&self, x: usize, y: usize) -> usize {
         if y >= self.content.lines().count() {
             return self.content.len();
@@ -142,6 +148,90 @@ impl Buffer {
     }
 
     pub fn move_cursor(&mut self, direction: Direction) {
+        match self.layer {
+            TerminalLayer::Visual(_) => self.move_cursor_visual(direction),
+            _ => self.move_cursor_normal(direction),
+        }
+    }
+
+    // in VISUAL mode
+    // .0 cursor moves to the left and up
+    // .1 cursor moves to the righ and down
+    // cursors cannot surpass the default cursor in the opposite direction
+    // if a cursor would surpass the default cursor it get the pos of the default cursor
+    // and the overflow gets applied to the cursor that goes into the other direction
+    fn move_cursor_visual(&mut self, direction: Direction) {
+        if self.selection.is_none() {
+            self.selection = Some((self.cursor.clone(), self.cursor.clone()));
+        }
+
+        if let Some((mut start, mut end)) = self.selection.to_owned() {
+            match direction {
+                Direction::Up => {
+                    if end.get_y() > 0 {
+                        end.move_up(&self.content);
+                    }
+                    if end.get_y() < start.get_y()
+                        || (end.get_y() == start.get_y()
+                            && end.get_x() < start.get_x())
+                    {
+                        start = end.clone();
+                    }
+                }
+                Direction::Down => {
+                    let num_lines = self.content.lines().count();
+                    if end.get_y() + 1 < num_lines {
+                        end.move_down(&self.content);
+                    }
+                    if end.get_y() > start.get_y()
+                        || (end.get_y() == start.get_y()
+                            && end.get_x() > start.get_x())
+                    {
+                        start = end.clone();
+                    }
+                }
+                Direction::Right => {
+                    let current_line =
+                        self.content.lines().nth(end.get_y()).unwrap_or("");
+                    if end.get_x() + 1 < current_line.len() {
+                        end.move_right(&self.content);
+                    } else if end.get_y() + 1 < self.content.lines().count() {
+                        end.move_to(0, end.get_y() + 1);
+                    }
+                    if end.get_y() > start.get_y()
+                        || (end.get_y() == start.get_y()
+                            && end.get_x() > start.get_x())
+                    {
+                        start = end.clone();
+                    }
+                }
+                Direction::Left => {
+                    if end.get_x() > 0 {
+                        end.move_left();
+                    } else if end.get_y() > 0 {
+                        let prev_line_len = self
+                            .content
+                            .lines()
+                            .nth(end.get_y() - 1)
+                            .unwrap_or("")
+                            .len();
+                        end.move_to(prev_line_len, end.get_y() - 1);
+                    }
+                    if end.get_y() < start.get_y()
+                        || (end.get_y() == start.get_y()
+                            && end.get_x() < start.get_x())
+                    {
+                        start = end.clone();
+                    }
+                }
+            }
+
+            self.selection = Some((start, end.clone()));
+            // self.cursor = end;
+        }
+    }
+
+    fn move_cursor_normal(&mut self, direction: Direction) {
         match direction {
             Direction::Up => {
                 if self.cursor.get_y() > 0 {

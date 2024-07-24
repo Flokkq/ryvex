@@ -1,5 +1,6 @@
 use std::usize;
 
+#[derive(Clone)]
 pub struct Cursor {
     x: usize,
     y: usize,
