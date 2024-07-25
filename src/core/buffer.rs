@@ -8,7 +8,7 @@ use super::{
     cursor::Cursor,
     error::Error,
     keys::keycode::EscapeSequence,
-    layers::layer::{TerminalLayer, VisualLayer},
+    layer::{TerminalLayer, VisualLayer},
 };
 
 pub struct Buffer {

@@ -16,7 +16,7 @@ use crate::{
             keybind::KeyBind,
             keycode::{EscapeSequence, KeyCode},
         },
-        layers::layer::{TerminalLayer, VisualLayer},
+        layer::{TerminalLayer, VisualLayer},
         open_file::OpenFile,
         state::{get_global_state, set_open_file},
         ui::{overlay::Overlay, MessageLevel},
