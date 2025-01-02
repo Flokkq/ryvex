@@ -1,5 +1,7 @@
 # ryvex
 
+REWRITE SOON :tm:
+
 ryvex is a lightweight, Vim-like text editor built in Rust. This project aims to provide a simple yet powerful text editing experience in the terminal, drawing inspiration from the classic Vim editor.
 
 ## Dependencies
