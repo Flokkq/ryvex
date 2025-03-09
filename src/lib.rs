@@ -1,6 +1,7 @@
 pub mod configuration;
 pub mod core;
 pub mod file_access;
+pub mod keybind;
 pub mod simulation;
 pub mod startup;
 pub mod telemetry;
