@@ -60,8 +60,8 @@ impl Buffer {
         self.save()
     }
 
-    pub fn insert(&mut self, ch: char) {
-        self.content.insert_at_current_index(&ch.to_string());
+    pub fn insert(&mut self, ch: char) -> bool {
+        self.content.insert_at_current_index(&ch.to_string())
     }
 
     pub fn yank(&mut self, range: Range) -> Option<&str> {
@@ -79,32 +79,28 @@ impl Buffer {
         range: Range,
     ) -> Option<std::ops::Range<usize>> {
         match range {
-            Range::Inside(scope) => self.scope_to_range(scope),
+            Range::Inside(scope) => {
+                let range = self.scope_to_range(scope)?;
+                Some(range.start + 1..range.end - 1)
+            }
             Range::Around(scope) | Range::Percent(scope) => {
-                let mut range = self.scope_to_range(scope)?;
-
-                assert!(
-                    range.start > 0,
-                    "The scope character must be to the left of the selected content."
-                );
-
-                range.start += 1;
-                range.end += 1;
-
-                Some(range)
+                self.scope_to_range(scope)
             }
             Range::ForwardTo(ch) => self.content.find_next_range(ch),
             Range::ForwardTill(ch) => {
                 let range = self.content.find_next_range(ch)?;
                 Some(range.start..range.end + 1)
             }
-            Range::BackwardsTo(ch) => self.content.find_previous_range(ch),
-            Range::BackwardsTill(ch) => {
+            Range::BackwardsTo(ch) => {
                 let range = self.content.find_previous_range(ch)?;
-                Some(range.start - 1..range.end)
+                Some(range.start + 1..range.end)
             }
+            Range::BackwardsTill(ch) => self.content.find_previous_range(ch),
             Range::Word => self.content.find_next_range(' '),
-            Range::Line => self.content.find_block("\n", "\n"),
+            Range::Line => {
+                let range = self.content.find_block("\n", "\n")?;
+                Some(range.start..range.end - 1)
+            }
             Range::SentenceEnd => todo!(),
             Range::SentenceStart => todo!(),
             Range::GoToLine(_) => todo!(),
@@ -129,5 +125,174 @@ impl Buffer {
             Scope::Word => self.content.find_block(" ", " "),
             Scope::Paragraph => self.content.find_block("\n\n", "\n\n"),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::motion::{Range, Scope};
+    use super::*;
+
+    #[test]
+    fn test_insert_single_char() {
+        let mut buffer = Buffer::scratch();
+        assert_eq!(buffer.content.inner(), "");
+
+        buffer.insert('h');
+        assert_eq!(buffer.content.inner(), "h");
+
+        buffer.insert('i');
+        assert_eq!(buffer.content.inner(), "hi");
+    }
+
+    #[test]
+    fn test_insert_multiple_chars() {
+        let mut buffer = Buffer::scratch();
+        for ch in "hello world".chars() {
+            buffer.insert(ch);
+        }
+        assert_eq!(buffer.content.inner(), "hello world");
+    }
+
+    #[test]
+    fn test_delete_inside_parentheses() {
+        let mut buffer = Buffer {
+            content: BufferContent::new("function(param) another".to_string()),
+            path: None,
+        };
+
+        let open_paren_index = buffer.content.inner().find('(').unwrap() + 1;
+        buffer.content.update_index_to(open_paren_index);
+
+        let deleted = buffer.delete(Range::Inside(Scope::Parentheses));
+        assert_eq!(deleted, Some("param".to_string()));
+        assert_eq!(buffer.content.inner(), "function() another");
+    }
+
+    #[test]
+    fn test_delete_around_parentheses() {
+        let mut buffer = Buffer {
+            content: BufferContent::new("function(param) another".to_string()),
+            path: None,
+        };
+
+        let open_paren_index = buffer.content.inner().find('(').unwrap() + 1;
+        buffer.content.update_index_to(open_paren_index);
+
+        let deleted = buffer.delete(Range::Around(Scope::Parentheses));
+        assert_eq!(deleted, Some("(param)".to_string()));
+        assert_eq!(buffer.content.inner(), "function another");
+    }
+
+    #[test]
+    fn test_yank_inside_quotes() {
+        let mut buffer = Buffer {
+            content: BufferContent::new(r#"Hello "there" friend"#.to_string()),
+            path: None,
+        };
+
+        let quote_index = buffer.content.inner().find('"').unwrap() + 1;
+        buffer.content.update_index_to(quote_index);
+
+        let yanked = buffer.yank(Range::Inside(Scope::DoubleQuote));
+        assert_eq!(yanked, Some("there"));
+        assert_eq!(buffer.content.inner(), r#"Hello "there" friend"#);
+    }
+
+    #[test]
+    fn test_delete_around_quotes() {
+        let mut buffer = Buffer {
+            content: BufferContent::new(r#"Hello "there" friend"#.to_string()),
+            path: None,
+        };
+
+        let quote_index = buffer.content.inner().find('"').unwrap() + 1;
+        buffer.content.update_index_to(quote_index);
+
+        let deleted = buffer.delete(Range::Around(Scope::DoubleQuote));
+        assert_eq!(deleted, Some(r#""there""#.to_string()));
+        assert_eq!(buffer.content.inner(), "Hello  friend");
+    }
+
+    #[test]
+    fn test_yank_word() {
+        let mut buffer = Buffer {
+            content: BufferContent::new("one two three".to_string()),
+            path: None,
+        };
+
+        let yanked = buffer.yank(Range::Word);
+        assert_eq!(yanked, Some("one"));
+        assert_eq!(buffer.content.inner(), "one two three");
+    }
+
+    #[test]
+    fn test_delete_line() {
+        let mut buffer = Buffer {
+            content: BufferContent::new("line1\nline2\nline3".to_string()),
+            path: None,
+        };
+
+        let index = buffer.content.inner().find('2').unwrap();
+        buffer.content.update_index_to(index);
+
+        let deleted = buffer.delete(Range::Line);
+        assert_eq!(deleted, Some("\nline2".to_string()));
+        assert_eq!(buffer.content.inner(), "line1\nline3");
+    }
+
+    #[test]
+    fn test_delete_forward_till_char() {
+        let mut buffer = Buffer {
+            content: BufferContent::new("abc def".to_string()),
+            path: None,
+        };
+
+        let deleted = buffer.delete(Range::ForwardTill('c'));
+        assert_eq!(deleted, Some("abc".to_string()));
+        assert_eq!(buffer.content.inner(), " def");
+    }
+
+    #[test]
+    fn test_delete_backwards_till_char() {
+        let mut buffer = Buffer {
+            content: BufferContent::new("abc def".to_string()),
+            path: None,
+        };
+
+        if let Some(c_index) = buffer.content.inner().find('c') {
+            buffer.content.update_index_to(c_index);
+        }
+
+        let deleted = buffer.delete(Range::BackwardsTill('a'));
+        assert_eq!(deleted, Some("ab".to_string()));
+        assert_eq!(buffer.content.inner(), "c def");
+    }
+
+    #[test]
+    fn test_delete_forward_to_char() {
+        let mut buffer = Buffer {
+            content: BufferContent::new("abcdef".to_string()),
+            path: None,
+        };
+
+        let deleted = buffer.delete(Range::ForwardTo('c'));
+        assert_eq!(deleted, Some("ab".to_string()));
+        assert_eq!(buffer.content.inner(), "cdef");
+    }
+
+    #[test]
+    fn test_delete_backwards_to_char() {
+        let mut buffer = Buffer {
+            content: BufferContent::new("abcdef".to_string()),
+            path: None,
+        };
+
+        let f_index = buffer.content.inner().find('f').unwrap() + 1;
+        buffer.content.update_index_to(f_index);
+
+        let deleted = buffer.delete(Range::BackwardsTo('c'));
+        assert_eq!(deleted, Some("def".to_string()));
+        assert_eq!(buffer.content.inner(), "abc");
     }
 }

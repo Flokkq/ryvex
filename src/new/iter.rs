@@ -180,8 +180,8 @@ impl BufferContent {
         &mut self,
         ch: char,
     ) -> Option<std::ops::Range<usize>> {
-        let start = self.get_index();
-        let end = self.find_previous(&ch.to_string())?;
+        let end = self.get_index();
+        let start = self.find_previous(&ch.to_string())?;
         Some(start..end)
     }
 
