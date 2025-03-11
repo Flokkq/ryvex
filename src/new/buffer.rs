@@ -73,4 +73,61 @@ impl Buffer {
         let range = self.motion_range_to_range(range)?;
         self.content.delete(range)
     }
+
+    fn motion_range_to_range(
+        &mut self,
+        range: Range,
+    ) -> Option<std::ops::Range<usize>> {
+        match range {
+            Range::Inside(scope) => self.scope_to_range(scope),
+            Range::Around(scope) | Range::Percent(scope) => {
+                let mut range = self.scope_to_range(scope)?;
+
+                assert!(
+                    range.start > 0,
+                    "The scope character must be to the left of the selected content."
+                );
+
+                range.start += 1;
+                range.end += 1;
+
+                Some(range)
+            }
+            Range::ForwardTo(ch) => self.content.find_next_range(ch),
+            Range::ForwardTill(ch) => {
+                let range = self.content.find_next_range(ch)?;
+                Some(range.start..range.end + 1)
+            }
+            Range::BackwardsTo(ch) => self.content.find_previous_range(ch),
+            Range::BackwardsTill(ch) => {
+                let range = self.content.find_previous_range(ch)?;
+                Some(range.start - 1..range.end)
+            }
+            Range::Word => self.content.find_next_range(' '),
+            Range::Line => self.content.find_block("\n", "\n"),
+            Range::SentenceEnd => todo!(),
+            Range::SentenceStart => todo!(),
+            Range::GoToLine(_) => todo!(),
+            Range::Mark(_) => todo!(),
+            Range::ForwardSearch(_) => todo!(),
+            Range::BackwardSearch(_) => todo!(),
+        }
+    }
+
+    fn scope_to_range(
+        &mut self,
+        scope: Scope,
+    ) -> Option<std::ops::Range<usize>> {
+        match scope {
+            Scope::Parentheses => self.content.find_block("(", ")"),
+            Scope::Brackets => self.content.find_block("[", "]"),
+            Scope::Braces => self.content.find_block("{", "}"),
+            Scope::AngleBrackets => self.content.find_block("<", ">"),
+            Scope::SingleQuote => self.content.find_block("'", "'"),
+            Scope::DoubleQuote => self.content.find_block("\"", "\""),
+            Scope::Backtick => self.content.find_block("`", "`"),
+            Scope::Word => self.content.find_block(" ", " "),
+            Scope::Paragraph => self.content.find_block("\n\n", "\n\n"),
+        }
+    }
 }

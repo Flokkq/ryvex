@@ -45,7 +45,7 @@ impl BufferContent {
     }
 
     pub fn delete(&mut self, range: Range<usize>) -> Option<String> {
-        if let Some(removed) = self.content.get(range.clone()) {
+        if let Some(removed) = self.yank(range.clone()) {
             let removed_str = removed.to_string();
             self.content.replace_range(range.clone(), "");
 
@@ -71,6 +71,10 @@ impl BufferContent {
         }
 
         true
+    }
+
+    pub fn insert_at_current_index(&mut self, text: &str) -> bool {
+        self.insert(self.get_index(), text)
     }
 
     pub fn peek(&self) -> Option<Range<usize>> {
@@ -161,6 +165,34 @@ impl BufferContent {
 
     pub fn find_previous(&self, pattern: &str) -> Option<usize> {
         self.content[..self.index].find(pattern)
+    }
+
+    pub fn find_next_range(
+        &mut self,
+        ch: char,
+    ) -> Option<std::ops::Range<usize>> {
+        let start = self.get_index();
+        let end = self.find_next(&ch.to_string())?;
+        Some(start..end)
+    }
+
+    pub fn find_previous_range(
+        &mut self,
+        ch: char,
+    ) -> Option<std::ops::Range<usize>> {
+        let start = self.get_index();
+        let end = self.find_previous(&ch.to_string())?;
+        Some(start..end)
+    }
+
+    pub fn find_block(&self, begin: &str, end: &str) -> Option<Range<usize>> {
+        let start = self.find_previous(begin);
+        let end = self.find_next(end);
+        if let (Some(start), Some(end)) = (start, end) {
+            Some(start..(end + 1))
+        } else {
+            None
+        }
     }
 
     pub fn peek_line_ahead(&self) -> Option<Range<usize>> {
