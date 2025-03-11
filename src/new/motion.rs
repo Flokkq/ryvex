@@ -1,4 +1,4 @@
-enum Range {
+pub enum Range {
     Inside(Scope),
     Around(Scope),
     ForwardTo(char),
@@ -12,21 +12,23 @@ enum Range {
     Mark(char),
     Percent(Scope),
     GoToLine(GoToLine),
+    SentenceEnd,
+    SentenceStart,
 }
 
-enum GoToLine {
+pub enum GoToLine {
     First,
     Last,
     Number(u32),
 }
 
-enum MotionType {
+pub enum MotionType {
     Delete,
     Yank,
     Change,
 }
 
-enum Scope {
+pub enum Scope {
     Parentheses,
     Brackets,
     Braces,
@@ -35,14 +37,10 @@ enum Scope {
     DoubleQuote,
     Backtick,
     Word,
-    Sentence,
     Paragraph,
-    Tag,
-    Block,
-    Line,
 }
 
-struct Motion {
+pub struct Motion {
     motion_type: MotionType,
     count: u32,
     range: Option<Range>,

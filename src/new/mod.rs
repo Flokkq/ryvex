@@ -1,3 +1,3 @@
 mod buffer;
 mod iter;
-mod keybind;
+mod motion;
