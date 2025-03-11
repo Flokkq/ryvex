@@ -1,9 +1,12 @@
 use crate::core::error;
-use std::path::PathBuf;
+use std::{path::PathBuf, usize};
 
 use crate::file_access::FileAccess;
 
-use super::iter::BufferContent;
+use super::{
+    iter::BufferContent,
+    motion::{Range, Scope},
+};
 
 struct Buffer {
     content: BufferContent,
@@ -55,5 +58,19 @@ impl Buffer {
     ) -> Result<(), error::Error> {
         self.path = Some(path);
         self.save()
+    }
+
+    pub fn insert(&mut self, ch: char) {
+        self.content.insert_at_current_index(&ch.to_string());
+    }
+
+    pub fn yank(&mut self, range: Range) -> Option<&str> {
+        let range = self.motion_range_to_range(range)?;
+        self.content.yank(range)
+    }
+
+    pub fn delete(&mut self, range: Range) -> Option<String> {
+        let range = self.motion_range_to_range(range)?;
+        self.content.delete(range)
     }
 }
