@@ -5,7 +5,7 @@ use crate::file_access::FileAccess;
 
 use super::{
     iter::BufferContent,
-    motion::{Range, Scope},
+    motion::{NavigationMotion, Range, Scope},
 };
 
 struct Buffer {
@@ -64,13 +64,29 @@ impl Buffer {
         self.content.insert_at_current_index(&ch.to_string())
     }
 
-    pub fn yank(&mut self, range: Range) -> Option<&str> {
+    pub fn yank_range(&mut self, range: Range) -> Option<&str> {
         let range = self.motion_range_to_range(range)?;
         self.content.yank(range)
     }
 
-    pub fn delete(&mut self, range: Range) -> Option<String> {
+    pub fn yank_navigation_motion(
+        &mut self,
+        motion: NavigationMotion,
+    ) -> Option<&str> {
+        let range = self.navigation_motion_to_range(motion)?;
+        self.content.yank(range)
+    }
+
+    pub fn delete_range(&mut self, range: Range) -> Option<String> {
         let range = self.motion_range_to_range(range)?;
+        self.content.delete(range)
+    }
+
+    pub fn delete_navigation_motion(
+        &mut self,
+        motion: NavigationMotion,
+    ) -> Option<String> {
+        let range = self.navigation_motion_to_range(motion)?;
         self.content.delete(range)
     }
 
@@ -126,6 +142,42 @@ impl Buffer {
             Scope::Paragraph => self.content.find_block("\n\n", "\n\n"),
         }
     }
+
+    fn navigation_motion_to_range(
+        &mut self,
+        motion: NavigationMotion,
+    ) -> Option<std::ops::Range<usize>> {
+        match motion {
+            NavigationMotion::CharForward => self.content.find_next_range(' '),
+            NavigationMotion::CharBackward => {
+                self.content.find_previous_range(' ')
+            }
+            NavigationMotion::LineForward => {
+                self.content.find_block("\n", "\n")
+            }
+            NavigationMotion::LineBackward => {
+                self.content.find_block("\n", "\n")
+            }
+            NavigationMotion::WordForward => self.content.find_block(" ", " "),
+            NavigationMotion::WordBackward => self.content.find_block(" ", " "),
+            NavigationMotion::EndOfWordForward => {
+                self.content.find_block(" ", " ")
+            }
+            NavigationMotion::EndOfWordBackward => {
+                self.content.find_block(" ", " ")
+            }
+            NavigationMotion::LineEnd => self.content.find_block("\n", "\n"),
+            NavigationMotion::LineStart => self.content.find_block("\n", "\n"),
+            NavigationMotion::EmptyLineAbove => {
+                self.content.find_block("\n", "\n")
+            }
+            NavigationMotion::EmptyLineBelow => {
+                self.content.find_block("\n", "\n")
+            }
+            NavigationMotion::Bottom => self.content.find_block("\n", "\n"),
+            NavigationMotion::Top => self.content.find_block("\n", "\n"),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -164,7 +216,7 @@ mod tests {
         let open_paren_index = buffer.content.inner().find('(').unwrap() + 1;
         buffer.content.update_index_to(open_paren_index);
 
-        let deleted = buffer.delete(Range::Inside(Scope::Parentheses));
+        let deleted = buffer.delete_range(Range::Inside(Scope::Parentheses));
         assert_eq!(deleted, Some("param".to_string()));
         assert_eq!(buffer.content.inner(), "function() another");
     }
@@ -179,7 +231,7 @@ mod tests {
         let open_paren_index = buffer.content.inner().find('(').unwrap() + 1;
         buffer.content.update_index_to(open_paren_index);
 
-        let deleted = buffer.delete(Range::Around(Scope::Parentheses));
+        let deleted = buffer.delete_range(Range::Around(Scope::Parentheses));
         assert_eq!(deleted, Some("(param)".to_string()));
         assert_eq!(buffer.content.inner(), "function another");
     }
@@ -194,7 +246,7 @@ mod tests {
         let quote_index = buffer.content.inner().find('"').unwrap() + 1;
         buffer.content.update_index_to(quote_index);
 
-        let yanked = buffer.yank(Range::Inside(Scope::DoubleQuote));
+        let yanked = buffer.yank_range(Range::Inside(Scope::DoubleQuote));
         assert_eq!(yanked, Some("there"));
         assert_eq!(buffer.content.inner(), r#"Hello "there" friend"#);
     }
@@ -209,7 +261,7 @@ mod tests {
         let quote_index = buffer.content.inner().find('"').unwrap() + 1;
         buffer.content.update_index_to(quote_index);
 
-        let deleted = buffer.delete(Range::Around(Scope::DoubleQuote));
+        let deleted = buffer.delete_range(Range::Around(Scope::DoubleQuote));
         assert_eq!(deleted, Some(r#""there""#.to_string()));
         assert_eq!(buffer.content.inner(), "Hello  friend");
     }
@@ -221,7 +273,7 @@ mod tests {
             path: None,
         };
 
-        let yanked = buffer.yank(Range::Word);
+        let yanked = buffer.yank_range(Range::Word);
         assert_eq!(yanked, Some("one"));
         assert_eq!(buffer.content.inner(), "one two three");
     }
@@ -236,7 +288,7 @@ mod tests {
         let index = buffer.content.inner().find('2').unwrap();
         buffer.content.update_index_to(index);
 
-        let deleted = buffer.delete(Range::Line);
+        let deleted = buffer.delete_range(Range::Line);
         assert_eq!(deleted, Some("\nline2".to_string()));
         assert_eq!(buffer.content.inner(), "line1\nline3");
     }
@@ -248,7 +300,7 @@ mod tests {
             path: None,
         };
 
-        let deleted = buffer.delete(Range::ForwardTill('c'));
+        let deleted = buffer.delete_range(Range::ForwardTill('c'));
         assert_eq!(deleted, Some("abc".to_string()));
         assert_eq!(buffer.content.inner(), " def");
     }
@@ -264,7 +316,7 @@ mod tests {
             buffer.content.update_index_to(c_index);
         }
 
-        let deleted = buffer.delete(Range::BackwardsTill('a'));
+        let deleted = buffer.delete_range(Range::BackwardsTill('a'));
         assert_eq!(deleted, Some("ab".to_string()));
         assert_eq!(buffer.content.inner(), "c def");
     }
@@ -276,7 +328,7 @@ mod tests {
             path: None,
         };
 
-        let deleted = buffer.delete(Range::ForwardTo('c'));
+        let deleted = buffer.delete_range(Range::ForwardTo('c'));
         assert_eq!(deleted, Some("ab".to_string()));
         assert_eq!(buffer.content.inner(), "cdef");
     }
@@ -291,7 +343,7 @@ mod tests {
         let f_index = buffer.content.inner().find('f').unwrap() + 1;
         buffer.content.update_index_to(f_index);
 
-        let deleted = buffer.delete(Range::BackwardsTo('c'));
+        let deleted = buffer.delete_range(Range::BackwardsTo('c'));
         assert_eq!(deleted, Some("def".to_string()));
         assert_eq!(buffer.content.inner(), "abc");
     }

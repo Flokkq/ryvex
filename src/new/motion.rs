@@ -1,3 +1,69 @@
+/// The one “master” enum that covers every valid combination.
+///
+/// - `NavigationOnly { nav, count }`: user typed something like `3w` (no operator).
+/// - `OperatedNavigation { motion_type, nav, count }`: user typed something like `d3w`, `cw`.
+/// - `OperatedRange { motion_type, range, count }`: user typed e.g. `di(`, `y%`, etc.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Motion {
+    NavigationOnly {
+        nav: NavigationMotion,
+        count: u32,
+    },
+    OperatedNavigation {
+        motion_type: MotionType,
+        nav: NavigationMotion,
+        count: u32,
+    },
+    OperatedRange {
+        motion_type: MotionType,
+        range: Range,
+        count: u32,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MotionType {
+    Visual,
+    Delete,
+    Yank,
+    Change,
+    Meta(MetaOperator),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MetaOperator {
+    Uppercase,  // gU
+    Lowercase,  // gu
+    Format,     // gq
+    Rot13,      // g?
+    ToggleCase, // g~
+}
+
+/// Motions that purely move the cursor (like 'w', 'b', 'e', etc.).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NavigationMotion {
+    CharForward,
+    CharBackward,
+    LineForward,
+    LineBackward,
+
+    WordForward,
+    WordBackward,
+    EndOfWordForward,
+    EndOfWordBackward,
+
+    LineEnd,
+    LineStart,
+
+    EmptyLineAbove,
+    EmptyLineBelow,
+
+    Bottom,
+    Top,
+}
+
+/// Text-object or advanced motions (like 'i(', 'a(', '%', 'f<char>', etc.).
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Range {
     Inside(Scope),
     Around(Scope),
@@ -16,18 +82,14 @@ pub enum Range {
     SentenceStart,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GoToLine {
     First,
     Last,
     Number(u32),
 }
 
-pub enum MotionType {
-    Delete,
-    Yank,
-    Change,
-}
-
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Scope {
     Parentheses,
     Brackets,
@@ -38,10 +100,4 @@ pub enum Scope {
     Backtick,
     Word,
     Paragraph,
-}
-
-pub struct Motion {
-    motion_type: MotionType,
-    count: u32,
-    range: Option<Range>,
 }
