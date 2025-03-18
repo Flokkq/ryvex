@@ -148,34 +148,39 @@ impl Buffer {
         motion: NavigationMotion,
     ) -> Option<std::ops::Range<usize>> {
         match motion {
-            NavigationMotion::CharForward => self.content.find_next_range(' '),
-            NavigationMotion::CharBackward => {
-                self.content.find_previous_range(' ')
+            NavigationMotion::CharForward => self.content.next(),
+            NavigationMotion::CharBackward => self.content.prev(),
+
+            NavigationMotion::WordForward
+            | NavigationMotion::EndOfWordForward => self
+                .content
+                .find_next_range(' ')
+                .or_else(|| Some(self.content.get_index()..self.content.len())),
+            NavigationMotion::WordBackward
+            | NavigationMotion::EndOfWordBackward => self
+                .content
+                .find_previous_range(' ')
+                .or_else(|| Some(0..self.content.get_index())),
+
+            NavigationMotion::LineForward => self.content.peek_line_ahead(),
+            NavigationMotion::LineBackward => self.content.peek_line_behind(),
+            NavigationMotion::LineStart => {
+                self.content.find_previous_range('\n')
             }
-            NavigationMotion::LineForward => {
-                self.content.find_block("\n", "\n")
+            NavigationMotion::LineEnd => self.content.find_next_range('\n'),
+            NavigationMotion::Top => {
+                self.content.update_index_to(0);
+                self.content.peek_line_ahead()
             }
-            NavigationMotion::LineBackward => {
-                self.content.find_block("\n", "\n")
+            NavigationMotion::Bottom => {
+                let idx = self.content.len();
+                self.content.update_index_to(idx);
+                self.content
+                    .find_previous_range('\n')
+                    .or_else(|| self.content.get_substring_from(0))
             }
-            NavigationMotion::WordForward => self.content.find_block(" ", " "),
-            NavigationMotion::WordBackward => self.content.find_block(" ", " "),
-            NavigationMotion::EndOfWordForward => {
-                self.content.find_block(" ", " ")
-            }
-            NavigationMotion::EndOfWordBackward => {
-                self.content.find_block(" ", " ")
-            }
-            NavigationMotion::LineEnd => self.content.find_block("\n", "\n"),
-            NavigationMotion::LineStart => self.content.find_block("\n", "\n"),
-            NavigationMotion::EmptyLineAbove => {
-                self.content.find_block("\n", "\n")
-            }
-            NavigationMotion::EmptyLineBelow => {
-                self.content.find_block("\n", "\n")
-            }
-            NavigationMotion::Bottom => self.content.find_block("\n", "\n"),
-            NavigationMotion::Top => self.content.find_block("\n", "\n"),
+            NavigationMotion::EmptyLineAbove => todo!(),
+            NavigationMotion::EmptyLineBelow => todo!(),
         }
     }
 }
@@ -346,5 +351,146 @@ mod tests {
         let deleted = buffer.delete_range(Range::BackwardsTo('c'));
         assert_eq!(deleted, Some("def".to_string()));
         assert_eq!(buffer.content.inner(), "abc");
+    }
+
+    #[test]
+    fn test_navigation_char_forward() {
+        let mut buffer = Buffer::scratch();
+        buffer.content = BufferContent::new("abcdef".to_string());
+        buffer.content.update_index_to(0);
+        assert_eq!(
+            buffer.yank_navigation_motion(NavigationMotion::CharForward),
+            Some("a")
+        );
+    }
+
+    #[test]
+    fn test_navigation_char_backward() {
+        let mut buffer = Buffer::scratch();
+        buffer.content = BufferContent::new("abcdef".to_string());
+        let len = buffer.content.inner().len();
+        buffer.content.update_index_to(len);
+        assert_eq!(
+            buffer.yank_navigation_motion(NavigationMotion::CharBackward),
+            Some("f")
+        );
+    }
+
+    #[test]
+    fn test_navigation_word_forward() {
+        let mut buffer = Buffer::scratch();
+        buffer.content = BufferContent::new("hello world".to_string());
+        buffer.content.update_index_to(0);
+        assert_eq!(
+            buffer.yank_navigation_motion(NavigationMotion::WordForward),
+            Some("hello")
+        );
+    }
+
+    #[test]
+    fn test_navigation_word_backward() {
+        let mut buffer = Buffer::scratch();
+        buffer.content = BufferContent::new("hello world".to_string());
+        let len = buffer.content.inner().len();
+        buffer.content.update_index_to(len);
+        assert_eq!(
+            buffer.yank_navigation_motion(NavigationMotion::WordBackward),
+            Some("world")
+        );
+    }
+
+    #[test]
+    fn test_navigation_end_of_word_forward() {
+        let mut buffer = Buffer::scratch();
+        buffer.content = BufferContent::new("hello world".to_string());
+        buffer.content.update_index_to(0);
+        assert_eq!(
+            buffer.yank_navigation_motion(NavigationMotion::EndOfWordForward),
+            Some("hello")
+        );
+    }
+
+    #[test]
+    fn test_navigation_end_of_word_backward() {
+        let mut buffer = Buffer::scratch();
+        buffer.content = BufferContent::new("hello world".to_string());
+        let len = buffer.content.inner().len();
+        buffer.content.update_index_to(len);
+        assert_eq!(
+            buffer.yank_navigation_motion(NavigationMotion::EndOfWordBackward),
+            Some("world")
+        );
+    }
+
+    #[test]
+    fn test_navigation_line_start() {
+        let mut buffer = Buffer::scratch();
+        buffer.content = BufferContent::new("line1\nline2\nline3".to_string());
+        let idx = buffer.content.inner().find("line2").unwrap() + 2;
+        buffer.content.update_index_to(idx);
+        assert_eq!(
+            buffer.yank_navigation_motion(NavigationMotion::LineStart),
+            Some("\nline2")
+        );
+    }
+
+    #[test]
+    fn test_navigation_line_end() {
+        let mut buffer = Buffer::scratch();
+        buffer.content = BufferContent::new("line1\nline2\nline3".to_string());
+        let idx = buffer.content.inner().find("line2").unwrap() + 2;
+        buffer.content.update_index_to(idx);
+        assert_eq!(
+            buffer.yank_navigation_motion(NavigationMotion::LineEnd),
+            Some("\nline2")
+        );
+    }
+
+    #[test]
+    fn test_navigation_top() {
+        let mut buffer = Buffer::scratch();
+        buffer.content = BufferContent::new("line1\nline2\nline3".to_string());
+        let idx = buffer.content.inner().find("line2").unwrap();
+        let _ = buffer.content.update_index_to(idx);
+
+        assert_eq!(
+            buffer.yank_navigation_motion(NavigationMotion::Top),
+            Some("line1")
+        );
+    }
+
+    #[test]
+    fn test_navigation_bottom() {
+        let mut buffer = Buffer::scratch();
+        buffer.content = BufferContent::new("line1\nline2\nline3".to_string());
+        let idx = buffer.content.inner().find("line2").unwrap();
+        buffer.content.update_index_to(idx);
+        assert_eq!(
+            buffer.yank_navigation_motion(NavigationMotion::Bottom),
+            Some("line3")
+        );
+    }
+
+    #[test]
+    fn test_navigation_line_forward() {
+        let mut buffer = Buffer::scratch();
+        buffer.content = BufferContent::new("line1\nline2\nline3".to_string());
+        buffer.content.update_index_to(0);
+        assert_eq!(
+            buffer.yank_navigation_motion(NavigationMotion::LineForward),
+            Some("line1")
+        );
+    }
+
+    #[test]
+    fn test_navigation_line_backward() {
+        let mut buffer = Buffer::scratch();
+        buffer.content = BufferContent::new("line1\nline2\nline3".to_string());
+        let idx = buffer.content.inner().find("line3").unwrap();
+        buffer.content.update_index_to(idx);
+        assert_eq!(
+            buffer.yank_navigation_motion(NavigationMotion::LineBackward),
+            Some("line2")
+        );
     }
 }

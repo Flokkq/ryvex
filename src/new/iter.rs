@@ -36,6 +36,27 @@ impl BufferContent {
         &self.content
     }
 
+    pub fn prev(&mut self) -> Option<Range<usize>> {
+        if self.index == 0 {
+            return None;
+        }
+
+        let old_index = self.index;
+        for i in 1..=4 {
+            if self.index >= i && self.content.is_char_boundary(self.index - i)
+            {
+                let new_index = self.index - i;
+                self.index = new_index;
+                return Some(new_index..old_index);
+            }
+        }
+        None
+    }
+
+    pub fn len(&mut self) -> usize {
+        self.content.len()
+    }
+
     pub fn update_index_to(&mut self, i: usize) {
         self.index = i;
     }
@@ -205,6 +226,16 @@ impl BufferContent {
         }
     }
 
+    pub fn peek_line_behind(&self) -> Option<Range<usize>> {
+        if let Some(prev_newline_idx) = self.find_previous("\n") {
+            let start = self.content[..prev_newline_idx]
+                .rfind("\n")
+                .map_or(0, |pos| pos + 1);
+            Some(start..(prev_newline_idx + 1))
+        } else {
+            None
+        }
+    }
     pub fn consume_line_ahead(&mut self) -> Option<Range<usize>> {
         if let Some(newline_index) = self.find_next("\n") {
             let ret_range = self.index..(newline_index + 1);
