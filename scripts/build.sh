@@ -1,11 +1,11 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 args_for_binary=()
 clear_terminal=false
 
 for arg in "$@"
 do 
-    if [ "$arg" = "-v" ]; then
+    if [ "$arg" = "--clear" ]; then
         clear_terminal=true
     else 
         args_for_binary+=("$arg")

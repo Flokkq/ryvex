@@ -3,8 +3,14 @@ name = "ryvex"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[profile.dev]
+incremental = true
+opt-level = 2
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+opt-level = 3
 
 [dependencies]
-termios = "0.3.3"
-libc = "0.2.154"
