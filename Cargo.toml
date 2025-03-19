@@ -3,6 +3,10 @@ name = "ryvex"
 version = "0.1.0"
 edition = "2021"
 
+[workspace]
+resolver = "2"
+members = [".", "ryvex-os"]
+
 [profile.dev]
 incremental = true
 opt-level = 2
@@ -14,3 +18,4 @@ opt-level = 3
 opt-level = 3
 
 [dependencies]
+ryvex-os = { path = "ryvex-os" }

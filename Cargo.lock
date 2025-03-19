@@ -5,3 +5,10 @@ version = 3
 [[package]]
 name = "ryvex"
 version = "0.1.0"
+dependencies = [
+ "ryvex-os",
+]
+
+[[package]]
+name = "ryvex-os"
+version = "0.1.0"
