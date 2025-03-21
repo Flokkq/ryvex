@@ -4,24 +4,24 @@ args_for_binary=()
 clear_terminal=false
 
 for arg in "$@"
-do 
+do
     if [ "$arg" = "--clear" ]; then
         clear_terminal=true
-    else 
+    else
         args_for_binary+=("$arg")
-    fi 
+    fi
 done
 
 if $clear_terminal; then
     cargo build > /dev/null 2>&1
-else 
+else
     cargo build
-fi 
+fi
 
 if [ $? -eq 0 ]; then
     echo "Build succeeded"
-    clear 
-    ./target/debug/ryvex "${args_for_binary[@]}"
-else 
+    clear
+    ./target/debug/ryvex "${args_for_binary[@]}" 2> err.log
+else
     echo "Build failed"
-fi 
+fi
