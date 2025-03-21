@@ -1,7 +1,7 @@
 # ryvex
 
 - modern
-- dependency free
+- dependency free (temporary logging dependency is present :shush: )
 - terminal based
 - vim-like
 
