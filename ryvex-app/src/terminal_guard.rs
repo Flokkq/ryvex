@@ -3,6 +3,7 @@ use std::{
 	os::fd::AsRawFd,
 };
 
+use crate::error::Result;
 use ryvex_os::termios::Termios;
 
 pub struct TerminalGuard<'a> {
@@ -12,7 +13,7 @@ pub struct TerminalGuard<'a> {
 }
 
 impl<'a> TerminalGuard<'a> {
-	pub fn spawn() -> Result<Self, std::io::Error> {
+	pub fn spawn() -> Result<Self> {
 		let stdin = stdin();
 		let stdin_fd = stdin.as_raw_fd();
 

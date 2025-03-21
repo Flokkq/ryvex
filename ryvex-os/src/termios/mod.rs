@@ -6,6 +6,7 @@ use std::{
 };
 
 use self::unix::target::os::TCSANOW;
+use crate::error::Result;
 
 mod unix;
 
@@ -15,7 +16,7 @@ pub struct Termios {
 }
 
 impl Termios {
-	pub fn from_fd(fd: RawFd) -> io::Result<Self> {
+	pub fn from_fd(fd: RawFd) -> Result<Self> {
 		let mut termios = MaybeUninit::<Termios>::uninit();
 		let termios_ptr = termios.as_mut_ptr();
 
@@ -36,7 +37,7 @@ impl Termios {
 
 	/// Sets the terminal to `raw` mode and returns the original termios
 	/// configuration
-	pub fn raw(&mut self, fd: RawFd) -> io::Result<Self> {
+	pub fn raw(&mut self, fd: RawFd) -> Result<Self> {
 		let orig_termios = self.clone();
 
 		unsafe {
@@ -48,22 +49,19 @@ impl Termios {
 	}
 
 	/// Resets the terminal to the original termios configuration
-	pub fn restore_terminal(
-		fd: RawFd,
-		orig_termios: Termios,
-	) -> io::Result<()> {
+	pub fn restore_terminal(fd: RawFd, orig_termios: Termios) -> Result<()> {
 		tcsetattr(fd, TCSANOW, &orig_termios)
 	}
 }
 
-fn tcsetattr(fd: RawFd, action: c_int, termios: &Termios) -> io::Result<()> {
+fn tcsetattr(fd: RawFd, action: c_int, termios: &Termios) -> Result<()> {
 	io_result(unsafe { unix::ffi::tcsetattr(fd, action, termios.inner()) })
 }
 
 #[inline]
-fn io_result(result: c_int) -> io::Result<()> {
+fn io_result(result: c_int) -> Result<()> {
 	match result {
 		0 => Ok(()),
-		_ => Err(io::Error::last_os_error()),
+		_ => Err(io::Error::last_os_error().into()),
 	}
 }

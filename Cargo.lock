@@ -134,6 +134,9 @@ dependencies = [
 [[package]]
 name = "ryvex-os"
 version = "0.1.0"
+dependencies = [
+ "proc-macros",
+]
 
 [[package]]
 name = "ryvex-std"

@@ -1,9 +1,18 @@
 use ryvex_app::{
+	error::Result,
 	terminal_guard::TerminalGuard,
 };
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+use std;
+
+fn main() -> Result<()> {
+	let exit_code = app_main()?;
+	std::process::exit(exit_code)
+}
+
+fn app_main() -> Result<i32> {
 	let _guard = TerminalGuard::spawn()?;
 
 	drop(_guard);
-	std::process::exit(0)
+
+	Ok(0)
 }
