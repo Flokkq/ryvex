@@ -5,6 +5,7 @@ include = ["src/**/*"]
 default-run = "ryvex"
 version.workspace = true
 edition.workspace = true
+authors.workspace = true
 
 [[bin]]
 name = "ryvex"

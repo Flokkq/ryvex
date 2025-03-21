@@ -1,4 +1,8 @@
 use ryvex_app::{
+	args::{
+		print_help,
+		Args,
+	},
 	error::Result,
 	terminal_guard::TerminalGuard,
 };
@@ -10,6 +14,12 @@ fn main() -> Result<()> {
 }
 
 fn app_main() -> Result<i32> {
+	let args = Args::parse_args()?;
+	if args.help_flag {
+		print_help();
+		return Ok(0);
+	}
+
 	let _guard = TerminalGuard::spawn()?;
 
 	drop(_guard);
