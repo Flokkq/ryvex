@@ -1,0 +1,8 @@
+[package]
+name = "ryvex-std"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+proc-macros = { path = "../proc-macros" }
+log.workspace = true
