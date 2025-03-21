@@ -1,3 +1,4 @@
+use log::error;
 use ryvex_app::{
 	args::{
 		print_help,
@@ -5,6 +6,7 @@ use ryvex_app::{
 	},
 	error::Result,
 	logger,
+	startup::Application,
 	terminal_guard::TerminalGuard,
 };
 use std::{
@@ -15,29 +17,36 @@ use std::{
 };
 
 fn main() -> Result<()> {
-	let exit_code = app_main()?;
+	let exit_code = app_main().map_err(|e| {
+		error!("Error while running app: {}", e);
+		e
+	})?;
 	std::process::exit(exit_code)
 }
 
 fn app_main() -> Result<i32> {
 	let args = Args::parse_args()?;
-	if args.verbosity == 1 {
-		env::set_var("RUST_LOG", "debug");
-	} else if args.verbosity > 1 {
-		env::set_var("RUST_LOG", "trace");
-	} else if env::var_os("RUST_LOG").is_none() {
-		env::set_var("RUST_LOG", "info");
-	}
-	logger::init()?;
 
 	if args.help_flag {
 		print_help();
 		return Ok(0);
 	}
 
+	setup_logging(args.verbosity)?;
+	let app = Application::build(args)?;
+
 	let _guard = TerminalGuard::spawn()?;
+	let exit_code = app.run_until_stopped()?;
 
-	drop(_guard);
+	Ok(exit_code)
+}
 
-	Ok(0)
+fn setup_logging(verbosity: usize) -> Result<()> {
+	match verbosity {
+		0 => env::set_var("RUST_LOG", "warn"),
+		1 => env::set_var("RUST_LOG", "info"),
+		2 => env::set_var("RUST_LOG", "debug"),
+		_3_or_more => env::set_var("RUST_LOG", "trace"),
+	}
+	logger::init()
 }
