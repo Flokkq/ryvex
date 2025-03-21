@@ -42,10 +42,16 @@ impl Args {
 						}
 					}
 				}
-				_ => {}
+				_ => {
+					args.file = Some(PathBuf::from(arg));
+					break;
+				}
 			}
 		}
-		args.file = argv.next().map(|f| PathBuf::from(f));
+
+		if args.file.is_none() {
+			args.file = argv.next().map(|f| PathBuf::from(f))
+		};
 
 		Ok(args)
 	}
