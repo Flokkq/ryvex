@@ -1,11 +1,14 @@
-[package]
-name = "ryvex"
+[workspace.package]
 version = "0.1.0"
 edition = "2021"
 
 [workspace]
 resolver = "2"
-members = [".", "ryvex-os"]
+members = ["ryvex-app", "proc-macros", "ryvex-os", "ryvex-std"]
+
+default-members = [
+  "ryvex-app"
+]
 
 [profile.dev]
 incremental = true
@@ -17,5 +20,5 @@ opt-level = 3
 [profile.release]
 opt-level = 3
 
-[dependencies]
-ryvex-os = { path = "ryvex-os" }
+[workspace.dependencies]
+log = "0.4.21"

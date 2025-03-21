@@ -1,0 +1,18 @@
+[package]
+name = "ryvex-app"
+description = "The revolutionary text editor in rust"
+include = ["src/**/*"]
+default-run = "ryvex"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "ryvex"
+path = "src/main.rs"
+
+[dependencies]
+ryvex-os = { path = "../ryvex-os" }
+ryvex-std = { path = "../ryvex-std" }
+proc-macros = { path = "../proc-macros" }
+log.workspace = true
+env_logger = "=0.10.2"
