@@ -54,6 +54,9 @@ impl Document {
 		ryvex_std::fs::read_from_file_if_exists(&path, &mut content)
 			.map_err(|err| DocumentError::OpenError(err))?;
 
+		// TODO: does this break on windows?
+		content = content.replace("\n", "\r\n");
+
 		Ok(Self {
 			id:   DocumentId::default(),
 			text: content,
@@ -72,7 +75,7 @@ impl Document {
 		&self.text
 	}
 
-	pub fn save(&mut self) -> Result<()> {
+	pub fn save(&self) -> Result<()> {
 		match &self.path {
 			Some(path) => ryvex_std::fs::write(&self.text, path)
 				.map_err(|err| DocumentError::SaveError(err).into()),

@@ -1,3 +1,5 @@
+use std::io::stdout;
+
 use crate::{
 	args::Args,
 	editor::{
@@ -21,6 +23,12 @@ impl Application {
 	}
 
 	pub fn run_until_stopped(&self) -> Result<i32> {
-		Ok(0)
+		let mut stdout = stdout().lock();
+
+		loop {
+			self.editor.render(&mut stdout)?;
+
+			break Ok(42);
+		}
 	}
 }
