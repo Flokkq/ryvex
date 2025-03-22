@@ -1,3 +1,12 @@
+use std::{
+	fmt::Display,
+	ops::{
+		BitAnd,
+		BitOr,
+		Not,
+	},
+};
+
 /// Represents an ASCII key code.
 ///
 /// This enum covers all standard ASCII characters, including control
@@ -185,6 +194,91 @@ impl Into<char> for AsciiKeyCode {
 	}
 }
 
+#[derive(PartialEq, Debug, Clone, Copy, Hash)]
+pub struct KeyModifiers(u8);
+
+impl KeyModifiers {
+	pub const NONE: Self = Self(0b0000_0000);
+	pub const SHIFT: Self = Self(0b0000_0001);
+	pub const CONTROL: Self = Self(0b0000_0010);
+	pub const ALT: Self = Self(0b0000_0100);
+
+	/// Checks if this instance of `[KeyModifiers` contains the given flags.
+	///
+	/// # Examples
+	///
+	/// ```rust
+	/// use ryvex_term::key::KeyModifiers;
+	///
+	/// let modifiers = KeyModifiers::SHIFT | KeyModifiers::CONTROL;
+	/// assert!(modifiers.contains(KeyModifiers::SHIFT));
+	/// assert!(modifiers.contains(KeyModifiers::CONTROL));
+	/// assert!(!modifiers.contains(KeyModifiers::ALT));
+	/// ```
+	pub fn contains(self, other: Self) -> bool {
+		(self.0 & other.0) == other.0
+	}
+
+	/// Returns an iterator over the flags contained in `self`.
+	pub fn iter(self) -> impl Iterator<Item = Self> {
+		[Self::SHIFT, Self::CONTROL, Self::ALT]
+			.iter()
+			.copied()
+			.filter(move |flag| self.contains(*flag))
+	}
+}
+
+impl Display for KeyModifiers {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		let mut first = true;
+
+		for modifier in self.iter() {
+			if !first {
+				f.write_str("+")?;
+			}
+
+			first = false;
+			match modifier {
+				KeyModifiers::SHIFT => f.write_str("Shift")?,
+				#[cfg(unix)]
+				KeyModifiers::CONTROL => f.write_str("Control")?,
+				#[cfg(windows)]
+				KeyModifiers::CONTROL => f.write_str("Ctrl")?,
+				#[cfg(target_os = "macos")]
+				KeyModifiers::ALT => f.write_str("Option")?,
+				#[cfg(not(target_os = "macos"))]
+				KeyModifiers::ALT => f.write_str("Alt")?,
+				_ => unreachable!(),
+			}
+		}
+		Ok(())
+	}
+}
+
+impl BitOr for KeyModifiers {
+	type Output = Self;
+
+	fn bitor(self, rhs: Self) -> Self::Output {
+		Self(self.0 | rhs.0)
+	}
+}
+
+impl BitAnd for KeyModifiers {
+	type Output = Self;
+
+	fn bitand(self, rhs: Self) -> Self::Output {
+		Self(self.0 & rhs.0)
+	}
+}
+
+impl Not for KeyModifiers {
+	type Output = Self;
+
+	fn not(self) -> Self::Output {
+		Self(!self.0)
+	}
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;
@@ -193,5 +287,20 @@ mod tests {
 	fn value_greater_than_127_is_converted_to_nul() {
 		let key = AsciiKeyCode::from_ascii(128);
 		assert_eq!(key, AsciiKeyCode::Nul);
+	}
+
+	#[test]
+	fn key_modifiers_display() {
+		let modifiers =
+			KeyModifiers::SHIFT | KeyModifiers::CONTROL | KeyModifiers::ALT;
+
+		#[cfg(target_os = "macos")]
+		assert_eq!(modifiers.to_string(), "Shift+Control+Option");
+
+		#[cfg(target_os = "windows")]
+		assert_eq!(modifiers.to_string(), "Shift+Ctrl+Alt");
+
+		#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+		assert_eq!(modifiers.to_string(), "Shift+Control+Alt");
 	}
 }
