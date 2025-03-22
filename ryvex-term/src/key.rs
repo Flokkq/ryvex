@@ -1,11 +1,4 @@
-use std::{
-	fmt::Display,
-	ops::{
-		BitAnd,
-		BitOr,
-		Not,
-	},
-};
+use std::fmt::Display;
 
 /// Represents an ASCII key code.
 ///
@@ -194,88 +187,44 @@ impl Into<char> for AsciiKeyCode {
 	}
 }
 
-#[derive(PartialEq, Debug, Clone, Copy, Hash)]
-pub struct KeyModifiers(u8);
-
-impl KeyModifiers {
-	pub const NONE: Self = Self(0b0000_0000);
-	pub const SHIFT: Self = Self(0b0000_0001);
-	pub const CONTROL: Self = Self(0b0000_0010);
-	pub const ALT: Self = Self(0b0000_0100);
-
-	/// Checks if this instance of `[KeyModifiers` contains the given flags.
-	///
-	/// # Examples
-	///
-	/// ```rust
-	/// use ryvex_term::key::KeyModifiers;
-	///
-	/// let modifiers = KeyModifiers::SHIFT | KeyModifiers::CONTROL;
-	/// assert!(modifiers.contains(KeyModifiers::SHIFT));
-	/// assert!(modifiers.contains(KeyModifiers::CONTROL));
-	/// assert!(!modifiers.contains(KeyModifiers::ALT));
-	/// ```
-	pub fn contains(self, other: Self) -> bool {
-		(self.0 & other.0) == other.0
-	}
-
-	/// Returns an iterator over the flags contained in `self`.
-	pub fn iter(self) -> impl Iterator<Item = Self> {
-		[Self::SHIFT, Self::CONTROL, Self::ALT]
-			.iter()
-			.copied()
-			.filter(move |flag| self.contains(*flag))
-	}
-}
-
-impl Display for KeyModifiers {
+impl Display for AsciiKeyCode {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		let mut first = true;
-
-		for modifier in self.iter() {
-			if !first {
-				f.write_str("+")?;
-			}
-
-			first = false;
-			match modifier {
-				KeyModifiers::SHIFT => f.write_str("Shift")?,
-				#[cfg(unix)]
-				KeyModifiers::CONTROL => f.write_str("Control")?,
-				#[cfg(windows)]
-				KeyModifiers::CONTROL => f.write_str("Ctrl")?,
-				#[cfg(target_os = "macos")]
-				KeyModifiers::ALT => f.write_str("Option")?,
-				#[cfg(not(target_os = "macos"))]
-				KeyModifiers::ALT => f.write_str("Alt")?,
-				_ => unreachable!(),
-			}
+		match self {
+			AsciiKeyCode::Nul => write!(f, "<C-@>"),
+			AsciiKeyCode::Soh => write!(f, "<C-A>"),
+			AsciiKeyCode::Stx => write!(f, "<C-B>"),
+			AsciiKeyCode::Etx => write!(f, "<C-C>"),
+			AsciiKeyCode::Eot => write!(f, "<C-D>"),
+			AsciiKeyCode::Enq => write!(f, "<C-E>"),
+			AsciiKeyCode::Ack => write!(f, "<C-F>"),
+			AsciiKeyCode::Bell => write!(f, "<C-G>"),
+			AsciiKeyCode::Backspace => write!(f, "<C-H>"),
+			AsciiKeyCode::Tab => write!(f, "<C-I>"),
+			AsciiKeyCode::LineFeed => write!(f, "<C-J>"),
+			AsciiKeyCode::Vt => write!(f, "<C-K>"),
+			AsciiKeyCode::Ff => write!(f, "<C-L>"),
+			AsciiKeyCode::CarriageReturn => write!(f, "<C-M>"),
+			AsciiKeyCode::So => write!(f, "<C-N>"),
+			AsciiKeyCode::Si => write!(f, "<C-O>"),
+			AsciiKeyCode::Dle => write!(f, "<C-P>"),
+			AsciiKeyCode::Dc1 => write!(f, "<C-Q>"),
+			AsciiKeyCode::Dc2 => write!(f, "<C-R>"),
+			AsciiKeyCode::Dc3 => write!(f, "<C-S>"),
+			AsciiKeyCode::Dc4 => write!(f, "<C-T>"),
+			AsciiKeyCode::Nak => write!(f, "<C-U>"),
+			AsciiKeyCode::Syn => write!(f, "<C-V>"),
+			AsciiKeyCode::Etb => write!(f, "<C-W>"),
+			AsciiKeyCode::Can => write!(f, "<C-X>"),
+			AsciiKeyCode::Em => write!(f, "<C-Y>"),
+			AsciiKeyCode::Sub => write!(f, "<C-Z>"),
+			AsciiKeyCode::Esc => write!(f, "<C-[>"),
+			AsciiKeyCode::Fs => write!(f, "<C-\\>"),
+			AsciiKeyCode::Gs => write!(f, "<C-]>"),
+			AsciiKeyCode::Rs => write!(f, "<C-^>"),
+			AsciiKeyCode::Us => write!(f, "<C-_>"),
+			AsciiKeyCode::Del => write!(f, "<Del>"),
+			_printable_key_code => write!(f, "{}", self.to_char()),
 		}
-		Ok(())
-	}
-}
-
-impl BitOr for KeyModifiers {
-	type Output = Self;
-
-	fn bitor(self, rhs: Self) -> Self::Output {
-		Self(self.0 | rhs.0)
-	}
-}
-
-impl BitAnd for KeyModifiers {
-	type Output = Self;
-
-	fn bitand(self, rhs: Self) -> Self::Output {
-		Self(self.0 & rhs.0)
-	}
-}
-
-impl Not for KeyModifiers {
-	type Output = Self;
-
-	fn not(self) -> Self::Output {
-		Self(!self.0)
 	}
 }
 
@@ -287,20 +236,5 @@ mod tests {
 	fn value_greater_than_127_is_converted_to_nul() {
 		let key = AsciiKeyCode::from_ascii(128);
 		assert_eq!(key, AsciiKeyCode::Nul);
-	}
-
-	#[test]
-	fn key_modifiers_display() {
-		let modifiers =
-			KeyModifiers::SHIFT | KeyModifiers::CONTROL | KeyModifiers::ALT;
-
-		#[cfg(target_os = "macos")]
-		assert_eq!(modifiers.to_string(), "Shift+Control+Option");
-
-		#[cfg(target_os = "windows")]
-		assert_eq!(modifiers.to_string(), "Shift+Ctrl+Alt");
-
-		#[cfg(not(any(target_os = "macos", target_os = "windows")))]
-		assert_eq!(modifiers.to_string(), "Shift+Control+Alt");
 	}
 }
