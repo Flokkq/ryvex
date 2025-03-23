@@ -5,3 +5,4 @@ edition.workspace = true
 authors.workspace = true
 
 [dependencies]
+proc-macros = { path = "../proc-macros" }

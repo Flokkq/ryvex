@@ -129,6 +129,7 @@ dependencies = [
  "proc-macros",
  "ryvex-os",
  "ryvex-std",
+ "ryvex-term",
 ]
 
 [[package]]
@@ -149,6 +150,9 @@ dependencies = [
 [[package]]
 name = "ryvex-term"
 version = "0.1.0"
+dependencies = [
+ "proc-macros",
+]
 
 [[package]]
 name = "syn"
