@@ -15,18 +15,12 @@ pub struct SyncEventStream {
 }
 
 impl SyncEventStream {
-	pub fn new() -> Self {
-		Self::default()
-	}
-}
+	pub fn new() -> Result<Self> {
+		let source = TargetEventSource::new()?;
 
-impl Default for SyncEventStream {
-	fn default() -> Self {
-		let source = TargetEventSource::new();
-
-		Self {
+		Ok(Self {
 			inner: Box::new(source),
-		}
+		})
 	}
 }
 

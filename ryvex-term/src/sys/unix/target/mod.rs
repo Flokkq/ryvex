@@ -9,3 +9,6 @@ pub use self::macos as os;
 pub mod linux;
 #[cfg(target_os = "macos")]
 pub mod macos;
+
+use std::ffi::c_int;
+pub const STDIN_FILENO: c_int = 0;

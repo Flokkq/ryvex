@@ -37,7 +37,9 @@ fn app_main() -> Result<i32> {
 	let app = Application::build(args)?;
 
 	let _guard = TerminalGuard::spawn()?;
-	let exit_code = app.run_until_stopped(&mut SyncEventStream::new())?;
+
+	let mut event_stream = SyncEventStream::new()?;
+	let exit_code = app.run_until_stopped(&mut event_stream)?;
 
 	Ok(exit_code)
 }

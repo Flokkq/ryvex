@@ -3,8 +3,8 @@ use super::EventSource;
 pub(crate) struct WindowsEventSource;
 
 impl WindowsEventSource {
-	pub fn new() -> Self {
-		Self {}
+	pub fn new() -> Result<Self> {
+		Ok(Self {})
 	}
 }
 
