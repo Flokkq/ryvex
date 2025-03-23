@@ -12,7 +12,6 @@ name = "ryvex"
 path = "src/main.rs"
 
 [dependencies]
-ryvex-os = { path = "../ryvex-os" }
 ryvex-std = { path = "../ryvex-std" }
 ryvex-term = {path = "../ryvex-term"}
 proc-macros = { path = "../proc-macros" }

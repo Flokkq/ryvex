@@ -4,9 +4,9 @@ use crate::error::Result;
 
 use super::Event;
 
-#[cfg(not(target_os = "windows"))]
+#[cfg(unix)]
 pub(crate) mod unix;
-#[cfg(target_os = "windows")]
+#[cfg(windows)]
 pub(crate) mod windows;
 
 pub trait EventSource: Sync + Send {

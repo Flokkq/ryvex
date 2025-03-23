@@ -10,7 +10,6 @@ use crate::editor::document::DocumentError;
 #[derive(StackTraceDebug)]
 pub enum RyvexError {
 	StdError(ryvex_std::error::StdError),
-	OsError(ryvex_os::error::OsError),
 	TermError(ryvex_term::error::TermError),
 	DocumentError(DocumentError),
 	LoggerError(String),
@@ -21,7 +20,6 @@ impl Error for RyvexError {
 	fn source(&self) -> Option<&(dyn Error + 'static)> {
 		match self {
 			RyvexError::StdError(error) => Some(error),
-			RyvexError::OsError(error) => Some(error),
 			RyvexError::TermError(error) => Some(error),
 			RyvexError::DocumentError(error) => Some(error),
 			RyvexError::LoggerError(_) => None,
@@ -42,7 +40,6 @@ impl Display for RyvexError {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			RyvexError::StdError(err) => write!(f, "ryvex-std error: {}", err),
-			RyvexError::OsError(err) => write!(f, "ryvex-os error: {}", err),
 			RyvexError::TermError(err) => {
 				write!(f, "ryvex-term error: {}", err)
 			}
@@ -62,12 +59,6 @@ impl Display for RyvexError {
 impl From<ryvex_std::error::StdError> for RyvexError {
 	fn from(error: ryvex_std::error::StdError) -> Self {
 		RyvexError::StdError(error)
-	}
-}
-
-impl From<ryvex_os::error::OsError> for RyvexError {
-	fn from(error: ryvex_os::error::OsError) -> Self {
-		RyvexError::OsError(error)
 	}
 }
 
