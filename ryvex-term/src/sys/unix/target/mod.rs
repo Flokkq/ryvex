@@ -1,4 +1,5 @@
 //! OS-specific definitions.
+#![allow(non_camel_case_types)]
 
 #[cfg(target_os = "linux")]
 pub use self::linux as os;
@@ -11,4 +12,6 @@ pub mod linux;
 pub mod macos;
 
 use std::ffi::c_int;
+
 pub const STDIN_FILENO: c_int = 0;
+pub type ssize_t = isize;

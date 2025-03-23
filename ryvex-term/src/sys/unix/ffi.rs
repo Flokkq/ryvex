@@ -16,6 +16,6 @@ extern "C" {
 	) -> c_int;
 
 	pub fn isatty(fd: c_int) -> c_int;
-	pub fn read(fd: c_int, buf: *mut c_void, count: usize) -> isize;
+	pub fn read(fd: c_int, buf: *mut c_void, count: usize) -> target::ssize_t;
 	pub fn close(fd: c_int) -> c_int;
 }
