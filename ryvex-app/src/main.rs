@@ -9,6 +9,7 @@ use ryvex_app::{
 	startup::Application,
 	terminal_guard::TerminalGuard,
 };
+use ryvex_term::event::stream::SyncEventStream;
 use std::{
 	self,
 	env::{
@@ -36,7 +37,7 @@ fn app_main() -> Result<i32> {
 	let app = Application::build(args)?;
 
 	let _guard = TerminalGuard::spawn()?;
-	let exit_code = app.run_until_stopped()?;
+	let exit_code = app.run_until_stopped(&mut SyncEventStream::new())?;
 
 	Ok(exit_code)
 }
