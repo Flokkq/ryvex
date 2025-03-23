@@ -5,7 +5,7 @@ authors = ["Flokkq <webcla21@htl-kaindorf.at>"]
 
 [workspace]
 resolver = "2"
-members = ["ryvex-app", "proc-macros", "ryvex-os", "ryvex-std"]
+members = ["ryvex-app", "proc-macros", "ryvex-std", "ryvex-term"]
 
 default-members = [
   "ryvex-app"

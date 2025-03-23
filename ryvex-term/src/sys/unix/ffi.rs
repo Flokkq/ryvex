@@ -1,4 +1,7 @@
-use std::ffi::c_int;
+use std::ffi::{
+	c_int,
+	c_void,
+};
 
 use super::target;
 
@@ -11,4 +14,8 @@ extern "C" {
 		optional_actions: c_int,
 		termios_p: *const target::os::termios,
 	) -> c_int;
+
+	pub fn isatty(fd: c_int) -> c_int;
+	pub fn read(fd: c_int, buf: *mut c_void, count: usize) -> target::ssize_t;
+	pub fn close(fd: c_int) -> c_int;
 }

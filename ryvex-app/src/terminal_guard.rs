@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::error::Result;
-use ryvex_os::termios::Termios;
+use ryvex_term::termios::Termios;
 
 pub struct TerminalGuard<'a> {
 	fd:           i32,

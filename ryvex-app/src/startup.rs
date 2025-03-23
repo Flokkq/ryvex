@@ -1,5 +1,8 @@
 use std::io::stdout;
 
+use log::info;
+use ryvex_term::event::Event;
+
 use crate::{
 	args::Args,
 	editor::{
@@ -22,13 +25,21 @@ impl Application {
 		Ok(Application { editor })
 	}
 
-	pub fn run_until_stopped(&self) -> Result<i32> {
+	pub fn run_until_stopped<S>(&self, input_stream: &mut S) -> Result<i32>
+	where
+		S: Iterator<Item = ryvex_term::error::Result<Event>>,
+	{
 		let mut stdout = stdout().lock();
+		self.editor.render(&mut stdout)?;
 
 		loop {
-			self.editor.render(&mut stdout)?;
-
-			break Ok(42);
+			match input_stream.next() {
+				Some(Ok(event)) => {
+					info!("Recieved terminal event: '{:?}'", event);
+					break Ok(42);
+				}
+				_ => continue,
+			}
 		}
 	}
 }

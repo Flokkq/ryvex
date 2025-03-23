@@ -5,10 +5,12 @@ use std::{
 	os::fd::RawFd,
 };
 
-use self::unix::target::os::TCSANOW;
-use crate::error::Result;
-
-mod unix;
+use crate::error::{
+	Result,
+	TermError,
+};
+use crate::sys::unix;
+use crate::sys::unix::target::os::TCSANOW;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Termios {
@@ -62,6 +64,6 @@ fn tcsetattr(fd: RawFd, action: c_int, termios: &Termios) -> Result<()> {
 fn io_result(result: c_int) -> Result<()> {
 	match result {
 		0 => Ok(()),
-		_ => Err(io::Error::last_os_error().into()),
+		_ => Err(TermError::TermiosError(io::Error::last_os_error())),
 	}
 }
