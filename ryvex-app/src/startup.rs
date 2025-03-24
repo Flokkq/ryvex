@@ -1,6 +1,9 @@
 use std::io::stdout;
 
-use log::info;
+use log::{
+	info,
+	warn,
+};
 use ryvex_term::event::Event;
 
 use crate::{
@@ -33,12 +36,36 @@ impl Application {
 		self.editor.render(&mut stdout)?;
 
 		loop {
+			if !self.main_loop(input_stream)? {
+				break Ok(0);
+			}
+		}
+	}
+
+	pub fn main_loop<S>(&self, input_stream: &mut S) -> Result<bool>
+	where
+		S: Iterator<Item = ryvex_term::error::Result<Event>>,
+	{
+		loop {
 			match input_stream.next() {
 				Some(Ok(event)) => {
-					info!("Recieved terminal event: '{:?}'", event);
-					break Ok(42);
+					self.handle_terminal_event(event);
+				}
+				Some(Err(e)) => {
+					warn!("Could not recieve terminal event: '{:?}'", e);
 				}
 				_ => continue,
+			}
+		}
+	}
+
+	pub fn handle_terminal_event(&self, event: Event) {
+		match event {
+			Event::Key(ascii_key_code) => {
+				todo!("I dont know how to handle '{}' yet :/", ascii_key_code)
+			}
+			Event::Resize(_, _) => {
+				todo!("I dont know how to handle resize event yet :/")
 			}
 		}
 	}
