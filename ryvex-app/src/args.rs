@@ -20,7 +20,7 @@ impl Args {
 		while let Some(arg) = argv.next() {
 			match arg.as_str() {
 				"--" => break, // stop parsing args
-				"--help" => print_help(),
+				"--help" => args.help_flag = true,
 				arg if arg.starts_with("--") => {
 					return Err(RyvexError::ArgParseError(format!(
 						"unexpected long arg {}",
