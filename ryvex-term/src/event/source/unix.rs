@@ -36,17 +36,9 @@ pub struct UnixEventSource {
 impl UnixEventSource {
 	/// Creates a new UnixEventSource by obtaining a tty file descriptor.
 	pub fn new() -> Result<Self> {
-		let (fd, close_on_drop) = if is_tty(STDIN_FILENO) {
-			(STDIN_FILENO, false)
-		} else {
-			let file =
-				OpenOptions::new().read(true).write(true).open("/dev/tty")?;
-			(file.into_raw_fd(), true)
-		};
+		let tty = TtyFd::from_default_tty()?;
 
-		Ok(Self {
-			tty: TtyFd::new(fd, close_on_drop),
-		})
+		Ok(Self { tty })
 	}
 }
 
@@ -75,10 +67,6 @@ fn is_would_block(err: &TermError) -> bool {
 		}
 	}
 	false
-}
-
-fn is_tty(fd: RawFd) -> bool {
-	unsafe { ffi::isatty(fd) == 1 }
 }
 
 fn read(fd: RawFd, buf: &mut [u8]) -> Result<usize> {

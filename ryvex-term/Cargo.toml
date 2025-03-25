@@ -5,4 +5,5 @@ edition.workspace = true
 authors.workspace = true
 
 [dependencies]
+ryvex-ui = { path = "../ryvex-ui" }
 proc-macros = { path = "../proc-macros" }

@@ -9,6 +9,7 @@ use proc_macros::StackTraceDebug;
 pub enum TermError {
 	IoError(std::io::Error),
 	TermiosError(std::io::Error),
+	TerminalSizeError(std::io::Error),
 }
 
 impl Error for TermError {
@@ -16,6 +17,7 @@ impl Error for TermError {
 		match self {
 			TermError::IoError(error) => Some(error),
 			TermError::TermiosError(error) => Some(error),
+			TermError::TerminalSizeError(error) => Some(error),
 		}
 	}
 
@@ -39,6 +41,7 @@ impl Display for TermError {
 		match self {
 			TermError::IoError(_) => write!(f, "IO error"),
 			TermError::TermiosError(_) => write!(f, "Termios error"),
+			TermError::TerminalSizeError(_) => write!(f, "Terminal size error"),
 		}
 	}
 }

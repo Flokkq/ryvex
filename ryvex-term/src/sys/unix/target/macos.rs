@@ -4,6 +4,7 @@ use std::ffi::{
 	c_int,
 	c_uchar,
 	c_ulong,
+	c_ushort,
 };
 
 pub type tcflag_t = c_ulong;
@@ -22,6 +23,15 @@ pub struct termios {
 	c_ospeed:    speed_t,
 }
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[repr(C)]
+pub struct winsize {
+	pub ws_row:    c_ushort,
+	pub ws_col:    c_ushort,
+	pub ws_xpixel: c_ushort,
+	pub ws_ypixel: c_ushort,
+}
+
 pub const NCCS: usize = 20;
 
 // `tcsetattr`
@@ -29,3 +39,6 @@ pub const TCSANOW: c_int = 0;
 pub const TCSADRAIN: c_int = 1;
 pub const TCSAFLUSH: c_int = 2;
 pub const TCSASOFT: c_int = 0x10;
+
+// used for `ioctl`
+pub const TIOCGWINSZ: c_int = 0x40087468;

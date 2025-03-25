@@ -23,9 +23,21 @@ pub struct termios {
 	c_ospeed:    speed_t,
 }
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[repr(C)]
+pub struct winsize {
+	pub ws_row:    u16,
+	pub ws_col:    u16,
+	pub ws_xpixel: u16,
+	pub ws_ypixel: u16,
+}
+
 pub const NCCS: usize = 32;
 
 // used for `tcsetattr`
 pub const TCSANOW: c_int = 0;
 pub const TCSADRAIN: c_int = 1;
 pub const TCSAFLUSH: c_int = 2;
+
+// used for `ioctl`
+pub const TIOCGWINSZ: c_int = 0x5413;
