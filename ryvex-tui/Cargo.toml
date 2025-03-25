@@ -1,0 +1,8 @@
+[package]
+name = "ryvex-tui"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+ryvex-ui = { path = "../ryvex-ui" }

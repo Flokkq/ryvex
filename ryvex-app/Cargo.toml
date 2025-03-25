@@ -13,7 +13,9 @@ path = "src/main.rs"
 
 [dependencies]
 ryvex-std = { path = "../ryvex-std" }
-ryvex-term = {path = "../ryvex-term"}
+ryvex-term = { path = "../ryvex-term" }
+ryvex-ui = { path = "../ryvex-ui" }
+ryvex-tui = { path = "../ryvex-tui" }
 proc-macros = { path = "../proc-macros" }
 log.workspace = true
 env_logger = "=0.10.2"
