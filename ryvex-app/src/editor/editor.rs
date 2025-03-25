@@ -47,6 +47,7 @@ impl Editor {
 		self.active_document.and_then(|id| self.documents.get(&id))
 	}
 
+	#[deprecated]
 	pub fn render(&self, stdout: &mut StdoutLock) -> Result<()> {
 		self.write(stdout, "\x1B[0m")?;
 		self.write(stdout, "\x1B[2J")?;

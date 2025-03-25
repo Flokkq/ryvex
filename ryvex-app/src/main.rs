@@ -34,7 +34,7 @@ fn app_main() -> Result<i32> {
 	}
 
 	setup_logging(args.verbosity)?;
-	let app = Application::build(args)?;
+	let mut app = Application::build(args)?;
 
 	let _guard = TerminalGuard::spawn()?;
 

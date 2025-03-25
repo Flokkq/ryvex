@@ -7,7 +7,7 @@ use crate::{
 
 use ryvex_term::event::Event;
 use ryvex_tui::buffer::Buffer;
-use ryvex_ui::rect::Rect;
+use ryvex_ui::graphics::Rect;
 
 pub struct Compositor {
 	layers: Vec<Box<dyn Component>>,
@@ -37,8 +37,20 @@ impl Compositor {
 		}
 	}
 
-	pub fn render() -> Result<()> {
-		Ok(())
+	pub fn size(&self) -> Rect {
+		self.area
+	}
+
+	pub fn render(&mut self, area: Rect, frame: &mut Buffer) {
+		for layer in &mut self.layers {
+			layer.render(area, frame);
+		}
+	}
+
+	pub fn push(&mut self, mut layer: Box<dyn Component>) {
+		let size = self.size();
+		layer.required_size((size.width, size.height));
+		self.layers.push(layer);
 	}
 }
 
@@ -110,6 +122,10 @@ pub trait Component: Any + AnyComponent {
 	}
 
 	fn id(&self) -> Option<&'static str> {
+		None
+	}
+
+	fn required_size(&mut self, _viewport: (u16, u16)) -> Option<(u16, u16)> {
 		None
 	}
 }

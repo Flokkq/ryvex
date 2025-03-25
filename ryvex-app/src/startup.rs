@@ -4,19 +4,26 @@ use log::{
 	info,
 	warn,
 };
-use ryvex_term::event::Event;
+use ryvex_term::{
+	event::Event,
+	sys::unix::fd::TtyFd,
+};
+use ryvex_tui::buffer::Buffer;
 
 use crate::{
 	args::Args,
+	compositor::Compositor,
 	editor::{
 		document::Document,
 		editor::Editor,
 	},
 	error::Result,
+	ui,
 };
 
 pub struct Application {
-	pub editor: Editor,
+	pub editor:     Editor,
+	pub compositor: Compositor,
 }
 
 impl Application {
@@ -25,15 +32,21 @@ impl Application {
 		let document = Document::new(args.file)?;
 		let _id = editor.new_document(document);
 
-		Ok(Application { editor })
+		let fd = TtyFd::from_default_tty()?;
+		let area = ryvex_term::get_terminal_size(fd)?;
+		let mut compositor = Compositor::new(area);
+
+		let editor_view = Box::new(ui::EditorView::new());
+		compositor.push(editor_view);
+
+		Ok(Application { editor, compositor })
 	}
 
-	pub fn run_until_stopped<S>(&self, input_stream: &mut S) -> Result<i32>
+	pub fn run_until_stopped<S>(&mut self, input_stream: &mut S) -> Result<i32>
 	where
 		S: Iterator<Item = ryvex_term::error::Result<Event>>,
 	{
-		let mut stdout = stdout().lock();
-		self.editor.render(&mut stdout)?;
+		self.render();
 
 		loop {
 			if !self.main_loop(input_stream)? {
@@ -42,7 +55,7 @@ impl Application {
 		}
 	}
 
-	pub fn main_loop<S>(&self, input_stream: &mut S) -> Result<bool>
+	fn main_loop<S>(&mut self, input_stream: &mut S) -> Result<bool>
 	where
 		S: Iterator<Item = ryvex_term::error::Result<Event>>,
 	{
@@ -59,7 +72,13 @@ impl Application {
 		}
 	}
 
-	pub fn handle_terminal_event(&self, event: Event) {
+	fn render(&mut self) {
+		let size = self.compositor.size();
+		let mut buffer = Buffer::empty(size);
+		self.compositor.render(size, &mut buffer);
+	}
+
+	fn handle_terminal_event(&self, event: Event) {
 		match event {
 			Event::Key(ascii_key_code) => {
 				todo!("I dont know how to handle '{}' yet :/", ascii_key_code)

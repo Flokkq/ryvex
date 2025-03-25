@@ -10,4 +10,8 @@ impl Rect {
 	pub fn new() -> Self {
 		Self::default()
 	}
+
+	pub fn area(&self) -> usize {
+		(self.width as usize) * (self.height as usize)
+	}
 }
