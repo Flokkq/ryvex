@@ -32,7 +32,7 @@ impl Application {
 		let document = Document::new(args.file)?;
 		let _id = editor.new_document(document);
 
-		let fd = TtyFd::from_default_tty()?;
+		let fd = TtyFd::read()?;
 		let area = ryvex_term::get_terminal_size(fd)?;
 		let mut compositor = Compositor::new(area);
 

@@ -25,16 +25,26 @@ impl TtyFd {
 		Self { fd, close_on_drop }
 	}
 
-	pub fn from_default_tty() -> Result<Self> {
+	fn from_default_tty(read: bool, write: bool) -> Result<Self> {
 		let (fd, close_on_drop) = if is_tty(STDIN_FILENO) {
 			(STDIN_FILENO, false)
 		} else {
-			let file =
-				OpenOptions::new().read(true).write(true).open("/dev/tty")?;
+			let file = OpenOptions::new()
+				.read(read)
+				.write(write)
+				.open("/dev/tty")?;
 			(file.into_raw_fd(), true)
 		};
 
 		Ok(Self { fd, close_on_drop })
+	}
+
+	pub fn read() -> Result<Self> {
+		Self::from_default_tty(true, false)
+	}
+
+	pub fn write() -> Result<Self> {
+		Self::from_default_tty(false, true)
 	}
 
 	/// Returns the underlying RawFd.

@@ -2,13 +2,8 @@
 
 use std::{
 	error::Error,
-	ffi::c_void,
-	fs::OpenOptions,
 	io,
-	os::fd::{
-		IntoRawFd,
-		RawFd,
-	},
+	os::fd::RawFd,
 	time::Duration,
 };
 
@@ -22,7 +17,6 @@ use crate::{
 	sys::unix::{
 		fd::TtyFd,
 		ffi,
-		target::STDIN_FILENO,
 	},
 };
 
@@ -36,7 +30,7 @@ pub struct UnixEventSource {
 impl UnixEventSource {
 	/// Creates a new UnixEventSource by obtaining a tty file descriptor.
 	pub fn new() -> Result<Self> {
-		let tty = TtyFd::from_default_tty()?;
+		let tty = TtyFd::write()?;
 
 		Ok(Self { tty })
 	}
