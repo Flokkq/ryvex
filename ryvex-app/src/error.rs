@@ -11,6 +11,7 @@ use crate::editor::document::DocumentError;
 pub enum RyvexError {
 	StdError(ryvex_std::error::StdError),
 	TermError(ryvex_term::error::TermError),
+	TuiError(ryvex_tui::error::TuiError),
 	DocumentError(DocumentError),
 	LoggerError(String),
 	ArgParseError(String),
@@ -21,6 +22,7 @@ impl Error for RyvexError {
 		match self {
 			RyvexError::StdError(error) => Some(error),
 			RyvexError::TermError(error) => Some(error),
+			RyvexError::TuiError(error) => Some(error),
 			RyvexError::DocumentError(error) => Some(error),
 			RyvexError::LoggerError(_) => None,
 			RyvexError::ArgParseError(_) => None,
@@ -42,6 +44,9 @@ impl Display for RyvexError {
 			RyvexError::StdError(err) => write!(f, "ryvex-std error: {}", err),
 			RyvexError::TermError(err) => {
 				write!(f, "ryvex-term error: {}", err)
+			}
+			RyvexError::TuiError(err) => {
+				write!(f, "ryvex-tui error: {}", err)
 			}
 			RyvexError::DocumentError(err) => {
 				write!(f, "Document error: {}", err)
@@ -65,6 +70,12 @@ impl From<ryvex_std::error::StdError> for RyvexError {
 impl From<ryvex_term::error::TermError> for RyvexError {
 	fn from(error: ryvex_term::error::TermError) -> Self {
 		RyvexError::TermError(error)
+	}
+}
+
+impl From<ryvex_tui::error::TuiError> for RyvexError {
+	fn from(error: ryvex_tui::error::TuiError) -> Self {
+		RyvexError::TuiError(error)
 	}
 }
 

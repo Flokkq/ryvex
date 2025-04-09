@@ -1,14 +1,13 @@
-use std::io::stdout;
-
-use log::{
-	info,
-	warn,
-};
+use log::warn;
 use ryvex_term::{
 	event::Event,
 	sys::unix::fd::TtyFd,
 };
-use ryvex_tui::buffer::Buffer;
+use ryvex_tui::{
+	backend::term::TerminalBackend,
+	buffer::Buffer,
+	terminal::Terminal,
+};
 
 use crate::{
 	args::Args,
@@ -22,8 +21,9 @@ use crate::{
 };
 
 pub struct Application {
-	pub editor:     Editor,
-	pub compositor: Compositor,
+	editor:     Editor,
+	compositor: Compositor,
+	terminal:   Terminal<TerminalBackend>,
 }
 
 impl Application {
@@ -39,7 +39,13 @@ impl Application {
 		let editor_view = Box::new(ui::EditorView::new());
 		compositor.push(editor_view);
 
-		Ok(Application { editor, compositor })
+		let terminal = Terminal::new(TerminalBackend::new())?;
+
+		Ok(Application {
+			editor,
+			compositor,
+			terminal,
+		})
 	}
 
 	pub fn run_until_stopped<S>(&mut self, input_stream: &mut S) -> Result<i32>
@@ -76,6 +82,9 @@ impl Application {
 		let size = self.compositor.size();
 		let mut buffer = Buffer::empty(size);
 		self.compositor.render(size, &mut buffer);
+		let _ = self
+			.terminal
+			.draw(None, ryvex_ui::graphics::CursorKind::Block);
 	}
 
 	fn handle_terminal_event(&self, event: Event) {

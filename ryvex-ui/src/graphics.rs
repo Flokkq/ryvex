@@ -15,3 +15,13 @@ impl Rect {
 		(self.width as usize) * (self.height as usize)
 	}
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CursorKind {
+	/// █
+	Block,
+	/// |
+	Bar,
+	/// _
+	Underline,
+}
