@@ -26,10 +26,14 @@ impl<'a> TerminalGuard<'a> {
 			_phantom: std::marker::PhantomData,
 		})
 	}
+
+	pub fn restore(&self) -> Result<()> {
+		Ok(Termios::restore_terminal(self.fd, self.orig_termios)?)
+	}
 }
 
 impl<'a> Drop for TerminalGuard<'a> {
 	fn drop(&mut self) {
-		let _ = Termios::restore_terminal(self.fd, self.orig_termios);
+		let _ = self.restore();
 	}
 }

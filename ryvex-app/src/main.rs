@@ -17,11 +17,19 @@ use std::{
 	},
 };
 
-fn main() -> Result<()> {
-	let exit_code = app_main().map_err(|e| {
-		error!("Error while running app: {}", e);
-		e
-	})?;
+fn main() -> ! {
+	let guard = Box::leak(Box::new(TerminalGuard::spawn().unwrap()));
+	setup_panic_handler(guard);
+
+	let exit_code: i32 = match app_main() {
+		Ok(code) => code,
+		Err(e) => {
+			error!("Error while running app: {}", e);
+			1
+		}
+	};
+
+	let _ = guard.restore();
 	std::process::exit(exit_code)
 }
 
@@ -36,12 +44,20 @@ fn app_main() -> Result<i32> {
 	setup_logging(args.verbosity)?;
 	let mut app = Application::build(args)?;
 
-	let _guard = TerminalGuard::spawn()?;
-
 	let mut event_stream = SyncEventStream::new()?;
 	let exit_code = app.run_until_stopped(&mut event_stream)?;
 
 	Ok(exit_code)
+}
+
+fn setup_panic_handler(guard: &'static TerminalGuard<'static>) {
+	let original_hook = std::panic::take_hook();
+
+	std::panic::set_hook(Box::new(move |info| {
+		let _ = guard.restore();
+
+		original_hook(info);
+	}));
 }
 
 fn setup_logging(verbosity: usize) -> Result<()> {
