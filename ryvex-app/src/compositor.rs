@@ -1,9 +1,6 @@
 use std::any::Any;
 
-use crate::{
-	editor::editor::Editor,
-	error::Result,
-};
+use crate::editor::editor::Editor;
 
 use ryvex_term::event::Event;
 use ryvex_tui::buffer::Buffer;
@@ -25,7 +22,6 @@ pub enum EventResult {
 
 pub struct Context<'a> {
 	pub editor: &'a mut Editor,
-	pub scroll: Option<usize>,
 }
 
 impl Compositor {
@@ -41,9 +37,9 @@ impl Compositor {
 		self.area
 	}
 
-	pub fn render(&mut self, area: Rect, frame: &mut Buffer) {
+	pub fn render(&mut self, area: Rect, frame: &mut Buffer, cx: &mut Context) {
 		for layer in &mut self.layers {
-			layer.render(area, frame);
+			layer.render(area, frame, cx);
 		}
 	}
 
@@ -104,7 +100,11 @@ impl dyn AnyComponent {
 
 pub trait Component: Any + AnyComponent {
 	/// Process input events, return true if handled.
-	fn handle_event(&mut self, _event: &Event) -> EventResult {
+	fn handle_event(
+		&mut self,
+		_event: &Event,
+		_cx: &mut Context,
+	) -> EventResult {
 		EventResult::Ignored(None)
 	}
 
@@ -115,7 +115,7 @@ pub trait Component: Any + AnyComponent {
 	}
 
 	/// Render the component onto the provided surface.
-	fn render(&mut self, area: Rect, frame: &mut Buffer);
+	fn render(&mut self, area: Rect, frame: &mut Buffer, cx: &mut Context);
 
 	fn type_name(&self) -> &'static str {
 		std::any::type_name::<Self>()

@@ -1,10 +1,28 @@
 use super::Backend;
+use ryvex_term::sys::unix::fd::TtyFd;
+use std::io::Write;
 
-pub struct TerminalBackend;
+pub struct TerminalBackend {
+	buffer: std::io::Stdout,
+	fd:     TtyFd,
+}
 
 impl TerminalBackend {
-	pub fn new() -> Self {
-		Self {}
+	pub fn new(fd: TtyFd) -> Self {
+		Self {
+			fd,
+			buffer: std::io::stdout(),
+		}
+	}
+}
+
+impl std::io::Write for TerminalBackend {
+	fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+		self.buffer.write(buf)
+	}
+
+	fn flush(&mut self) -> std::io::Result<()> {
+		self.buffer.flush()
 	}
 }
 
@@ -13,7 +31,17 @@ impl Backend for TerminalBackend {
 	where
 		I: Iterator<Item = (u16, u16, &'a crate::buffer::Cell)>,
 	{
-		todo!("TerminalBackend")
+		let mut last_pos: Option<(u16, u16)> = None;
+		for (x, y, cell) in content {
+			if !matches!(last_pos, Some(p) if x == p.0 + 1 && y == p.1) {
+				let _ = write!(self.buffer, "\x1b[{};{}H", y + 1, x + 1);
+			}
+			last_pos = Some((x, y));
+
+			let _ = write!(self.buffer, "{}", cell.to_string());
+		}
+
+		Ok(())
 	}
 
 	fn show_cursor(
@@ -32,15 +60,15 @@ impl Backend for TerminalBackend {
 	}
 
 	fn clear(&mut self) -> super::Result<()> {
-		todo!("TerminalBackend")
+		Ok(write!(self.buffer, "\x1b[2J")?)
 	}
 
 	fn size(&self) -> super::Result<ryvex_ui::graphics::Rect> {
-		todo!("TerminalBackend")
+		Ok(ryvex_term::get_terminal_size(&self.fd)?)
 	}
 
 	fn flush(&mut self) -> super::Result<()> {
-		todo!("TerminalBackend")
+		Ok(self.buffer.flush()?)
 	}
 
 	fn hide_cursor(&mut self) -> super::Result<()> {

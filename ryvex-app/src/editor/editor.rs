@@ -12,6 +12,7 @@ use ryvex_std::error::StdError;
 use super::document::{
 	Document,
 	DocumentId,
+	Mode,
 };
 use crate::error::Result;
 
@@ -19,6 +20,8 @@ pub struct Editor {
 	pub documents:        BTreeMap<DocumentId, Document>,
 	pub active_document:  Option<DocumentId>,
 	pub next_document_id: DocumentId,
+
+	pub mode: Mode,
 }
 
 impl Editor {
@@ -27,6 +30,7 @@ impl Editor {
 			documents:        BTreeMap::new(),
 			active_document:  None,
 			next_document_id: DocumentId::default(),
+			mode:             Mode::Normal,
 		}
 	}
 
@@ -47,6 +51,11 @@ impl Editor {
 		self.active_document.and_then(|id| self.documents.get(&id))
 	}
 
+	pub fn get_active_document_mut(&mut self) -> Option<&mut Document> {
+		self.active_document
+			.and_then(move |id| self.documents.get_mut(&id))
+	}
+
 	#[deprecated]
 	pub fn render(&self, stdout: &mut StdoutLock) -> Result<()> {
 		self.write(stdout, "\x1B[0m")?;
@@ -64,5 +73,15 @@ impl Editor {
 		stdout
 			.write_all(text.as_bytes())
 			.map_err(|e| StdError::IoError(e).into())
+	}
+
+	pub fn insert_character(&mut self, key: ryvex_term::key::AsciiKeyCode) {
+		if let Some(document) = self.get_active_document_mut() {
+			document.insert_character(key);
+		}
+	}
+
+	pub fn enter_normal_mode(&mut self) {
+		self.mode = Mode::Normal;
 	}
 }

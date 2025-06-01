@@ -165,6 +165,18 @@ impl AsciiKeyCode {
 	pub fn to_char(&self) -> char {
 		(*self).into()
 	}
+
+	pub fn is_control_character(self) -> bool {
+		let n = self as u8;
+
+		0 < n && n < 28
+	}
+
+	pub fn is_seperator(self) -> bool {
+		let n = self as u8;
+
+		27 < n && n < 33
+	}
 }
 
 impl From<u8> for AsciiKeyCode {
@@ -236,5 +248,29 @@ mod tests {
 	fn value_greater_than_127_is_converted_to_nul() {
 		let key = AsciiKeyCode::from_ascii(128);
 		assert_eq!(key, AsciiKeyCode::Nul);
+	}
+
+	#[test]
+	fn control_character_gets_recognized() {
+		let ctrl_a = AsciiKeyCode::Soh;
+		let ctrl_z = AsciiKeyCode::Sub;
+
+		assert!(ctrl_a.is_control_character());
+		assert!(ctrl_z.is_control_character());
+
+		let a = AsciiKeyCode::LowerA;
+		assert!(!a.is_control_character());
+	}
+
+	#[test]
+	fn seperator_character_gets_recognized() {
+		let file_seperator = AsciiKeyCode::Fs;
+		let unit_seperator = AsciiKeyCode::Us;
+
+		assert!(file_seperator.is_seperator());
+		assert!(unit_seperator.is_seperator());
+
+		let a = AsciiKeyCode::LowerA;
+		assert!(!a.is_seperator());
 	}
 }

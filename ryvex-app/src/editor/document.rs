@@ -85,6 +85,27 @@ impl Document {
 			}
 		}
 	}
+
+	pub fn insert_character(&mut self, key: ryvex_term::key::AsciiKeyCode) {
+		self.text.push(key.to_char());
+	}
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Mode {
+	Normal = 0,
+	Visual = 1,
+	Insert = 2,
+}
+
+impl Display for Mode {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Mode::Normal => f.write_str("NORMAL"),
+			Mode::Visual => f.write_str("VISUAL"),
+			Mode::Insert => f.write_str("INSERT"),
+		}
+	}
 }
 
 #[derive(StackTraceDebug)]

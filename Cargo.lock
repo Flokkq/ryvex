@@ -146,7 +146,6 @@ name = "ryvex-term"
 version = "0.1.0"
 dependencies = [
  "proc-macros",
- "ryvex-tui",
  "ryvex-ui",
 ]
 
@@ -155,6 +154,7 @@ name = "ryvex-tui"
 version = "0.1.0"
 dependencies = [
  "proc-macros",
+ "ryvex-term",
  "ryvex-ui",
 ]
 

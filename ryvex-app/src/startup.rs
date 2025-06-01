@@ -1,3 +1,5 @@
+use std::io::stdout;
+
 use log::warn;
 use ryvex_term::{
 	event::Event,
@@ -33,13 +35,13 @@ impl Application {
 		let _id = editor.new_document(document);
 
 		let fd = TtyFd::read()?;
-		let area = ryvex_term::get_terminal_size(fd)?;
+		let area = ryvex_term::get_terminal_size(&fd)?;
 		let mut compositor = Compositor::new(area);
 
 		let editor_view = Box::new(ui::EditorView::new());
 		compositor.push(editor_view);
 
-		let terminal = Terminal::new(TerminalBackend::new())?;
+		let terminal = Terminal::new(TerminalBackend::new(fd))?;
 
 		Ok(Application {
 			editor,
@@ -79,9 +81,16 @@ impl Application {
 	}
 
 	fn render(&mut self) {
-		let size = self.compositor.size();
-		let mut buffer = Buffer::empty(size);
-		self.compositor.render(size, &mut buffer);
+		self.terminal.clear().expect("Failed to clear terminal");
+
+		let mut cx = crate::compositor::Context {
+			editor: &mut self.editor,
+		};
+
+		let area = self.terminal.size().expect("Failed to get terminal size");
+		let surface = self.terminal.current_buffer_mut();
+
+		self.compositor.render(area, surface, &mut cx);
 		let _ = self
 			.terminal
 			.draw(None, ryvex_ui::graphics::CursorKind::Block);

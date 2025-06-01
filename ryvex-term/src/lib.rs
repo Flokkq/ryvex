@@ -18,13 +18,14 @@ use crate::{
 	sys::unix::target::os::winsize,
 };
 
+pub mod display;
 pub mod error;
 pub mod event;
 pub mod key;
 pub mod sys;
 pub mod termios;
 
-pub fn get_terminal_size(fd: TtyFd) -> Result<Rect> {
+pub fn get_terminal_size(fd: &TtyFd) -> Result<Rect> {
 	// unwrap is safe because we know that `TIOCGWINSZ` always fits into a
 	// `c_ulong`
 	let winsize = ioctl(fd, TIOCGWINSZ.try_into().unwrap())?;
@@ -37,7 +38,7 @@ pub fn get_terminal_size(fd: TtyFd) -> Result<Rect> {
 	})
 }
 
-fn ioctl(fd: TtyFd, request: c_ulong) -> Result<winsize> {
+fn ioctl(fd: &TtyFd, request: c_ulong) -> Result<winsize> {
 	let mut winsize = MaybeUninit::<winsize>::uninit();
 
 	io_result(unsafe {
