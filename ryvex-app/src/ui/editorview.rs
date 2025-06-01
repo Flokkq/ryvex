@@ -57,6 +57,14 @@ impl EditorView {
 			_printable_character => cx.editor.insert_character(key),
 		}
 	}
+
+	pub fn normal(&self, key: AsciiKeyCode, cx: &mut Context) {
+		match key {
+			AsciiKeyCode::LowerI => cx.editor.enter_insert_mode(),
+			AsciiKeyCode::LowerQ => cx.editor.quit(),
+			_ => {}
+		}
+	}
 }
 
 impl Component for EditorView {
@@ -80,7 +88,7 @@ impl Component for EditorView {
 				let mode = cx.editor.mode;
 
 				match mode {
-					Mode::Normal => todo!(),
+					Mode::Normal => self.normal(key, cx),
 					Mode::Visual => todo!(),
 					Mode::Insert => self.insert(key, cx),
 				}
@@ -88,6 +96,6 @@ impl Component for EditorView {
 			Event::Resize(_, _) => todo!(),
 		}
 
-		EventResult::Ignored(None)
+		EventResult::Consumed(None)
 	}
 }

@@ -22,6 +22,8 @@ pub struct Editor {
 	pub next_document_id: DocumentId,
 
 	pub mode: Mode,
+
+	should_close: bool,
 }
 
 impl Editor {
@@ -31,6 +33,7 @@ impl Editor {
 			active_document:  None,
 			next_document_id: DocumentId::default(),
 			mode:             Mode::Normal,
+			should_close:     false,
 		}
 	}
 
@@ -83,5 +86,18 @@ impl Editor {
 
 	pub fn enter_normal_mode(&mut self) {
 		self.mode = Mode::Normal;
+	}
+
+	pub fn enter_insert_mode(&mut self) {
+		self.mode = Mode::Insert;
+	}
+
+	pub fn quit(&mut self) {
+		self.documents.clear();
+		self.active_document = None;
+	}
+
+	pub fn should_close(&self) -> bool {
+		self.should_close
 	}
 }

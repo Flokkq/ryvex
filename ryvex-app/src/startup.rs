@@ -13,7 +13,10 @@ use ryvex_tui::{
 
 use crate::{
 	args::Args,
-	compositor::Compositor,
+	compositor::{
+		self,
+		Compositor,
+	},
 	editor::{
 		document::Document,
 		editor::Editor,
@@ -68,6 +71,10 @@ impl Application {
 		S: Iterator<Item = ryvex_term::error::Result<Event>>,
 	{
 		loop {
+			if self.editor.should_close() {
+				return Ok(false);
+			};
+
 			match input_stream.next() {
 				Some(Ok(event)) => {
 					self.handle_terminal_event(event);
@@ -96,14 +103,20 @@ impl Application {
 			.draw(None, ryvex_ui::graphics::CursorKind::Block);
 	}
 
-	fn handle_terminal_event(&self, event: Event) {
-		match event {
-			Event::Key(ascii_key_code) => {
-				todo!("I dont know how to handle '{}' yet :/", ascii_key_code)
-			}
+	fn handle_terminal_event(&mut self, event: Event) {
+		let mut cx = compositor::Context {
+			editor: &mut self.editor,
+		};
+
+		let should_redraw = match event {
 			Event::Resize(_, _) => {
 				todo!("I dont know how to handle resize event yet :/")
 			}
+			e => self.compositor.handle_event(&e, &mut cx),
+		};
+
+		if should_redraw && !self.editor.should_close() {
+			self.render();
 		}
 	}
 }

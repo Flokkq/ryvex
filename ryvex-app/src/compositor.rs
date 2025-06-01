@@ -48,6 +48,35 @@ impl Compositor {
 		layer.required_size((size.width, size.height));
 		self.layers.push(layer);
 	}
+
+	pub fn handle_event(&mut self, event: &Event, cx: &mut Context) -> bool {
+		let mut consumed = false;
+		let mut callbacks = Vec::new();
+
+		for layer in self.layers.iter_mut().rev() {
+			match layer.handle_event(event, cx) {
+				EventResult::Consumed(Some(callback)) => {
+					callbacks.push(callback);
+					consumed = true;
+					break;
+				}
+				EventResult::Consumed(None) => {
+					consumed = true;
+					break;
+				}
+				EventResult::Ignored(Some(callback)) => {
+					callbacks.push(callback);
+				}
+				EventResult::Ignored(None) => {}
+			}
+		}
+
+		for callback in callbacks {
+			callback(self, cx)
+		}
+
+		consumed
+	}
 }
 
 pub trait AnyComponent {
