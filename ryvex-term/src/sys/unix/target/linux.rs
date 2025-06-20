@@ -1,10 +1,6 @@
 #![allow(non_camel_case_types)]
 
-use libc::{
-	c_int,
-	c_uchar,
-	c_uint,
-};
+use std::ffi::c_int;
 
 pub type cc_t = c_uchar;
 pub type speed_t = c_uint;
