@@ -1,6 +1,10 @@
 #![allow(non_camel_case_types)]
 
-use std::ffi::c_int;
+use std::ffi::{
+	c_int,
+	c_uchar,
+	c_uint,
+};
 
 pub type cc_t = c_uchar;
 pub type speed_t = c_uint;
