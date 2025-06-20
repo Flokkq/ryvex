@@ -64,6 +64,24 @@ impl Buffer {
 		((y - self.area.y) as usize) * (self.area.width as usize) +
 			((x - self.area.x) as usize)
 	}
+
+	pub fn diff<'a>(&self, other: &'a Buffer) -> Vec<(u16, u16, &'a Cell)> {
+		let previous_buffer = &self.content;
+		let next_buffer = &other.content;
+		let width = self.area.width;
+
+		let mut updates: Vec<(u16, u16, &Cell)> = vec![];
+		for (i, (current, previous)) in
+			next_buffer.iter().zip(previous_buffer.iter()).enumerate()
+		{
+			if current != previous {
+				let x = (i % width as usize) as u16;
+				let y = (i / width as usize) as u16;
+				updates.push((x, y, &next_buffer[i]));
+			}
+		}
+		updates
+	}
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Eq)]

@@ -1,5 +1,6 @@
 use super::Backend;
 use ryvex_term::sys::unix::fd::TtyFd;
+use ryvex_ui::graphics::CursorKind;
 use std::io::Write;
 
 pub struct TerminalBackend {
@@ -48,7 +49,15 @@ impl Backend for TerminalBackend {
 		&mut self,
 		kind: ryvex_ui::graphics::CursorKind,
 	) -> super::Result<()> {
-		todo!("TerminalBackend")
+		write!(self.buffer, "\x1b[?25h")?;
+
+		match kind {
+			CursorKind::Block => write!(self.buffer, "\x1b[0 q")?,
+			CursorKind::Underline => write!(self.buffer, "\x1b[4 q")?,
+			CursorKind::Bar => write!(self.buffer, "\x1b[6 q")?,
+		}
+
+		Ok(())
 	}
 
 	fn get_cursor(&mut self) -> super::Result<(u16, u16)> {
@@ -72,6 +81,6 @@ impl Backend for TerminalBackend {
 	}
 
 	fn hide_cursor(&mut self) -> super::Result<()> {
-		todo!("TerminalBackend")
+		Ok(write!(self.buffer, "\x1b[?25l")?)
 	}
 }

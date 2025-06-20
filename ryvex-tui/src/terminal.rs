@@ -37,15 +37,13 @@ where
 		cursor_position: Option<(u16, u16)>,
 		cursor_kind: CursorKind,
 	) -> Result<()> {
+		self.backend.hide_cursor()?;
 		self.flush()?;
 
-		if let Some((x, y)) = cursor_position {}
-
-		match cursor_kind {
-			CursorKind::Block => {}
-			CursorKind::Bar => {}
-			CursorKind::Underline => {}
+		if let Some((x, y)) = cursor_position {
+			self.backend.set_cursor(x, y)?;
 		}
+		self.backend.show_cursor(cursor_kind)?;
 
 		self.buffers[1 - self.current].reset();
 		self.current = 1 - self.current;
@@ -56,21 +54,16 @@ where
 	}
 
 	pub fn flush(&mut self) -> Result<()> {
-		self.backend.flush()?;
-		Ok(self.backend.draw(
-			self.buffers[self.current].content.iter().enumerate().map(
-				|(i, cell)| {
-					let x = (i as u16) % self.buffers[self.current].area.width;
-					let y = (i as u16) / self.buffers[self.current].area.width;
-					(x, y, cell)
-				},
-			),
-		)?)
+		let previous_buffer = &self.buffers[1 - self.current];
+		let current_buffer = &self.buffers[self.current];
+		let updates = previous_buffer.diff(current_buffer);
+
+		Ok(self.backend.draw(updates.into_iter())?)
 	}
 
 	pub fn clear(&mut self) -> Result<()> {
 		self.backend.clear()?;
-		self.buffers[1 - self.current].reset();
+		self.buffers.iter_mut().for_each(Buffer::reset);
 		Ok(())
 	}
 
