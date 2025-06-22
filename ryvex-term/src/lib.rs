@@ -18,10 +18,12 @@ use crate::{
 	sys::unix::target::os::winsize,
 };
 
+pub mod command;
 pub mod display;
 pub mod error;
 pub mod event;
 pub mod key;
+pub mod macros;
 pub mod sys;
 pub mod termios;
 
