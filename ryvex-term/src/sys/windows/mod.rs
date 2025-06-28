@@ -4,6 +4,7 @@ use ffi::{
 	GetConsoleMode,
 	GetStdHandle,
 	SetConsoleMode,
+	SetCursorPos,
 	DWORD,
 	ENABLE_VIRTUAL_TERMINAL_PROCESSING,
 	HANDLE,
@@ -34,6 +35,10 @@ pub fn enable_vt_processing() -> io::Result<()> {
 	Ok(())
 }
 
+pub fn set_cursor_position(x: u16, y: u16) -> io::Result<()> {
+	unsafe { set_cursor_pos(x, y) }
+}
+
 unsafe fn get_current_out_handle() -> io::Result<HANDLE> {
 	let handle = GetStdHandle(STD_OUTPUT_HANDLE);
 	if handle == INVALID_HANDLE_VALUE {
@@ -54,6 +59,14 @@ unsafe fn get_console_mode_from_handle(handle: HANDLE) -> io::Result<DWORD> {
 
 unsafe fn set_console_mode(handle: HANDLE, mode: DWORD) -> io::Result<()> {
 	if SetConsoleMode(handle, mode) == 0 {
+		Err(io::Error::last_os_error())
+	} else {
+		Ok(())
+	}
+}
+
+unsafe fn set_cursor_pos(x: u16, y: u16) -> io::Result<()> {
+	if SetCursorPos(x as i32, y as i32) == 0 {
 		Err(io::Error::last_os_error())
 	} else {
 		Ok(())

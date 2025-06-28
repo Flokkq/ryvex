@@ -19,7 +19,7 @@ pub trait Command {
 	/// supported by windows.
 	#[cfg(windows)]
 	fn is_ansi_code_supported(&self) -> bool {
-		use sys::windows;
+		use crate::sys::windows;
 		windows::supports_ansi()
 	}
 }

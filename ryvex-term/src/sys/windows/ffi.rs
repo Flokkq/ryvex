@@ -21,3 +21,8 @@ unsafe extern "system" {
 	pub fn GetConsoleMode(hConsoleHandle: HANDLE, lpMode: LPDWORD) -> BOOL;
 	pub fn SetConsoleMode(hConsoleHandle: HANDLE, dwMode: DWORD) -> BOOL;
 }
+
+#[link(name = "user32")]
+unsafe extern "system" {
+	pub fn SetCursorPos(X: c_int, Y: c_int) -> BOOL;
+}
