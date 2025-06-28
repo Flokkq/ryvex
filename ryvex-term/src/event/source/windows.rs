@@ -1,5 +1,7 @@
 use super::EventSource;
 
+use crate::error::Result;
+
 pub(crate) struct WindowsEventSource;
 
 impl WindowsEventSource {
