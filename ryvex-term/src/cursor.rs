@@ -15,6 +15,6 @@ impl Command for MoveCursor {
 	fn execute_winapi(&self) -> io::Result<()> {
 		use crate::sys::windows;
 
-		windows::set_cursor_position(self.0, self.1)
+		windows::move_cursor(self.0 as i16, self.1 as i16)
 	}
 }

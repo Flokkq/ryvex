@@ -3,8 +3,9 @@ pub mod ffi;
 use ffi::{
 	GetConsoleMode,
 	GetStdHandle,
+	SetConsoleCursorPosition,
 	SetConsoleMode,
-	SetCursorPos,
+	COORD,
 	DWORD,
 	ENABLE_VIRTUAL_TERMINAL_PROCESSING,
 	HANDLE,
@@ -35,8 +36,25 @@ pub fn enable_vt_processing() -> io::Result<()> {
 	Ok(())
 }
 
-pub fn set_cursor_position(x: u16, y: u16) -> io::Result<()> {
-	unsafe { set_cursor_pos(x, y) }
+pub fn move_cursor(x: i16, y: i16) -> io::Result<()> {
+	if x < 0 {
+		return Err(io::Error::new(
+			io::ErrorKind::Other,
+			format!("cursor position out of range - X: {x}"),
+		));
+	}
+
+	if y < 0 {
+		return Err(io::Error::new(
+			io::ErrorKind::Other,
+			format!("cursor position out of range - Y: {y}"),
+		));
+	}
+
+	let point = COORD { X: x, Y: y };
+	let handle = unsafe { (get_current_out_handle())? };
+
+	unsafe { set_cursor_pos(handle, point) }
 }
 
 unsafe fn get_current_out_handle() -> io::Result<HANDLE> {
@@ -65,8 +83,8 @@ unsafe fn set_console_mode(handle: HANDLE, mode: DWORD) -> io::Result<()> {
 	}
 }
 
-unsafe fn set_cursor_pos(x: u16, y: u16) -> io::Result<()> {
-	if SetCursorPos(x as i32, y as i32) == 0 {
+unsafe fn set_cursor_pos(handle: HANDLE, pos: COORD) -> io::Result<()> {
+	if SetConsoleCursorPosition(handle, pos) == 0 {
 		Err(io::Error::last_os_error())
 	} else {
 		Ok(())

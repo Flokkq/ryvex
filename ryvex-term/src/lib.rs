@@ -19,7 +19,7 @@ use crate::{
 };
 
 pub mod command;
-pub mod cusror;
+pub mod cursor;
 pub mod display;
 pub mod error;
 pub mod event;
