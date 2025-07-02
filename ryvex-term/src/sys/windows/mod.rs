@@ -2,6 +2,9 @@
 pub mod ffi;
 
 use ffi::{
+    CONSOLE_CURSOR_INFO,
+    GetConsoleCursorInfo,
+    SetConsoleCursorInfo,
     GetConsoleScreenBufferInfo,
     CONSOLE_SCREEN_BUFFER_INFO,
 	GetConsoleMode,
@@ -134,6 +137,15 @@ pub fn current_cursor_pos() -> io::Result<(i16, i16)> {
     Ok((info.dwCursorPosition.X, info.dwCursorPosition.Y))
 }
 
+pub fn show_cursor(show: bool) -> io::Result<()> {
+	let handle = unsafe { (get_current_out_handle())? };
+
+    let mut info = unsafe { get_console_cursor_info(handle)? };
+    info.bVisible = if show { 1 } else { 0 };
+
+    unsafe { set_console_cursor_info(handle, info) }
+}
+
 unsafe fn get_current_out_handle() -> io::Result<HANDLE> {
 	let handle = GetStdHandle(STD_OUTPUT_HANDLE);
 	if handle == INVALID_HANDLE_VALUE {
@@ -176,4 +188,22 @@ unsafe fn get_screen_buffer_info(handle: HANDLE) -> io::Result<CONSOLE_SCREEN_BU
     }
 
     Ok(info)
+}
+
+unsafe fn get_console_cursor_info(handle: HANDLE) -> io::Result<CONSOLE_CURSOR_INFO> {
+    let mut info: CONSOLE_CURSOR_INFO = std::mem::zeroed();
+
+    if GetConsoleCursorInfo(handle, &mut info) == 0 {
+        return Err(io::Error::last_os_error());
+    }
+
+    Ok(info)
+}
+
+unsafe fn set_console_cursor_info(handle: HANDLE, info: CONSOLE_CURSOR_INFO) -> io::Result<()> {
+    if SetConsoleCursorInfo(handle, &info as *const _) == 0 {
+        return Err(io::Error::last_os_error());
+    }
+
+    Ok(())
 }

@@ -198,3 +198,36 @@ impl Command for RestorePosition {
         windows::restore_position()
     }
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Show;
+
+impl Command for Show {
+    fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+        f.write_str(csi!("?25h"))
+    }
+
+    #[cfg(windows)]
+    fn execute_winapi(&self) -> std::io::Result<()> {
+        use crate::sys::windows;
+
+        windows::show_cursor(true)
+    }
+}
+
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Hide;
+
+impl Command for Hide {
+    fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+        f.write_str(csi!("?25l"))
+    }
+
+    #[cfg(windows)]
+    fn execute_winapi(&self) -> std::io::Result<()> {
+        use crate::sys::windows;
+
+        windows::show_cursor(true)
+    }
+}

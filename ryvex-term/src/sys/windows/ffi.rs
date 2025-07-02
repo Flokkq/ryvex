@@ -43,6 +43,14 @@ pub struct CONSOLE_SCREEN_BUFFER_INFO {
 
 pub type PCONSOLE_SCREEN_BUFFER_INFO = *mut CONSOLE_SCREEN_BUFFER_INFO;
 
+#[repr(C)]
+pub struct CONSOLE_CURSOR_INFO {
+    pub dwSize: DWORD,
+    pub bVisible: BOOL,
+}
+
+pub type PCONSOLE_CURSOR_INFO = *mut CONSOLE_CURSOR_INFO;
+
 #[link(name = "kernel32")]
 unsafe extern "system" {
 	pub fn GetStdHandle(nStdHandle: DWORD) -> HANDLE;
@@ -60,4 +68,12 @@ unsafe extern "system" {
 		hConsoleOutput: HANDLE,
 		dwCursorPosition: COORD,
 	) -> BOOL;
+    pub fn SetConsoleCursorInfo(
+        hConsoleOutput: HANDLE,
+        lpConsoleCursorInfo: *const CONSOLE_CURSOR_INFO,
+    ) -> BOOL;
+    pub fn GetConsoleCursorInfo(
+        hConsoleOutput: HANDLE,
+        lpConsoleCursorInfo: PCONSOLE_CURSOR_INFO,
+    ) -> BOOL;
 }
