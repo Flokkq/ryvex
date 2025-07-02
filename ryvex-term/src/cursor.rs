@@ -163,3 +163,38 @@ impl Command for MoveRight {
         windows::move_right(self.0)
     }
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SavePosition;
+
+
+impl Command for SavePosition {
+    fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+        write!(f, csi!("\x1B7"))
+    }
+
+    #[cfg(windows)]
+    fn execute_winapi(&self) -> io::Result<()> {
+        use crate::sys::windows;
+
+        windows::save_position()
+    }
+}
+
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RestorePosition;
+
+
+impl Command for RestorePosition {
+    fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+        write!(f, csi!("\x1B8"))
+    }
+
+    #[cfg(windows)]
+    fn execute_winapi(&self) -> io::Result<()> {
+        use crate::sys::windows;
+
+        windows::restore_position()
+    }
+}

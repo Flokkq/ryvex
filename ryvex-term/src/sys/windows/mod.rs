@@ -17,9 +17,11 @@ use ffi::{
 	STD_OUTPUT_HANDLE,
 };
 use std::io;
-use std::sync::OnceLock;
+use std::sync::{OnceLock, atomic::{AtomicU64, Ordering}};
 
 static SUPPORTS_ANSI: OnceLock<bool> = OnceLock::new();
+
+static SAVED_CURSOR_POS: AtomicU64 = AtomicU64::new(u64::MAX);
 
 pub fn supports_ansi() -> bool {
 	*SUPPORTS_ANSI.get_or_init(|| enable_vt_processing().is_ok())
@@ -98,6 +100,31 @@ pub fn move_to_row(new_row: u16) -> io::Result<()> {
 pub fn move_to_column(new_col: u16) -> io::Result<()> {
     let (_, row) = current_cursor_pos()?;
     move_to(new_col as i16, row)
+}
+
+pub fn save_position() -> io::Result<()> {
+    let (x, y) = current_cursor_pos()?;
+
+    // `x` is stored in the first 16 bits
+    let upper = u32::from(x as u16) << 16;
+
+    // `y` is stored in the last 16 bits
+    let lower = u32::from(y as u16);
+
+    // combine into one singular u32
+    SAVED_CURSOR_POS.store(u64::from(upper | lower), Ordering::Relaxed);
+
+    Ok(())
+}
+
+pub fn restore_position() -> io::Result<()> {
+    if let Ok(bits) = u32::try_from(SAVED_CURSOR_POS.load(Ordering::Relaxed)) {
+        let x = ((bits >> 16) & 0xFFFF) as u16 as i16;
+        let y = (bits & 0xFFFF) as u16 as i16;
+        move_to(x, y)?;
+    }
+
+    Ok(())
 }
 
 pub fn current_cursor_pos() -> io::Result<(i16, i16)> {
