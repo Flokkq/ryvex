@@ -1,6 +1,9 @@
+#[allow(non_camel_case_types)]
 pub mod ffi;
 
 use ffi::{
+    GetConsoleScreenBufferInfo,
+    CONSOLE_SCREEN_BUFFER_INFO,
 	GetConsoleMode,
 	GetStdHandle,
 	SetConsoleCursorPosition,
@@ -36,7 +39,7 @@ pub fn enable_vt_processing() -> io::Result<()> {
 	Ok(())
 }
 
-pub fn move_cursor(x: i16, y: i16) -> io::Result<()> {
+pub fn move_to(x: i16, y: i16) -> io::Result<()> {
 	if x < 0 {
 		return Err(io::Error::new(
 			io::ErrorKind::Other,
@@ -55,6 +58,53 @@ pub fn move_cursor(x: i16, y: i16) -> io::Result<()> {
 	let handle = unsafe { (get_current_out_handle())? };
 
 	unsafe { set_cursor_pos(handle, point) }
+}
+
+pub fn move_up(count: u16) -> io::Result<()> {
+    let (col, row) = current_cursor_pos()?;
+    move_to(col, row - count as i16)
+}
+
+pub fn move_down(count: u16) -> io::Result<()> {
+    let (col, row) = current_cursor_pos()?;
+    move_to(col, row + count as i16)
+}
+
+pub fn move_left(count: u16) -> io::Result<()> {
+    let (col, row) = current_cursor_pos()?;
+    move_to(col - count as i16, row)
+}
+
+pub fn move_right(count: u16) -> io::Result<()> {
+    let (col, row) = current_cursor_pos()?;
+    move_to(col + count as i16, row)
+}
+
+pub fn move_to_next_line(count: u16) -> io::Result<()> {
+    let (_, row) = current_cursor_pos()?;
+    move_to(0, row + count as i16)
+}
+
+pub fn move_to_previous_line(count: u16) -> io::Result<()> {
+    let (_, row) = current_cursor_pos()?;
+    move_to(0, row - count as i16)
+}
+
+pub fn move_to_row(new_row: u16) -> io::Result<()> {
+    let (col, _) = current_cursor_pos()?;
+    move_to(col, new_row as i16)
+}
+
+pub fn move_to_column(new_col: u16) -> io::Result<()> {
+    let (_, row) = current_cursor_pos()?;
+    move_to(new_col as i16, row)
+}
+
+pub fn current_cursor_pos() -> io::Result<(i16, i16)> {
+	let handle = unsafe { (get_current_out_handle())? };
+    let info = unsafe { get_screen_buffer_info(handle)? };
+
+    Ok((info.dwCursorPosition.X, info.dwCursorPosition.Y))
 }
 
 unsafe fn get_current_out_handle() -> io::Result<HANDLE> {
@@ -89,4 +139,14 @@ unsafe fn set_cursor_pos(handle: HANDLE, pos: COORD) -> io::Result<()> {
 	} else {
 		Ok(())
 	}
+}
+
+unsafe fn get_screen_buffer_info(handle: HANDLE) -> io::Result<CONSOLE_SCREEN_BUFFER_INFO> {
+    let mut info: CONSOLE_SCREEN_BUFFER_INFO = std::mem::zeroed();
+
+    if GetConsoleScreenBufferInfo(handle, &mut info) == 0 {
+        return Err(io::Error::last_os_error());
+    }
+
+    Ok(info)
 }
