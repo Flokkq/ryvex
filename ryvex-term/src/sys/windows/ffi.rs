@@ -51,6 +51,18 @@ pub struct CONSOLE_CURSOR_INFO {
 
 pub type PCONSOLE_CURSOR_INFO = *mut CONSOLE_CURSOR_INFO;
 
+#[repr(C)]
+pub union CHAR_INFO_Char {
+	pub UnicodeChar: u16,
+	pub AsciiChar:   u8,
+}
+
+#[repr(C)]
+pub struct CHAR_INFO {
+	pub Char:       CHAR_INFO_Char,
+	pub Attributes: WORD,
+}
+
 #[link(name = "kernel32")]
 unsafe extern "system" {
 	pub fn GetStdHandle(nStdHandle: DWORD) -> HANDLE;
@@ -59,6 +71,13 @@ unsafe extern "system" {
 	pub fn GetConsoleScreenBufferInfo(
 		hConsoleOutput: HANDLE,
 		lpConsoleScreenBufferInfo: PCONSOLE_SCREEN_BUFFER_INFO,
+	) -> BOOL;
+	pub fn ScrollConsoleScreenBufferW(
+		hConsoleOutput: HANDLE,
+		lpScrollRectangle: *const SMALL_RECT,
+		lpClipRectangle: *const SMALL_RECT,
+		dwDestinationOrigin: COORD,
+		lpFill: *const CHAR_INFO,
 	) -> BOOL;
 }
 

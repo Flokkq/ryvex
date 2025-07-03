@@ -2,13 +2,16 @@
 pub mod ffi;
 
 use ffi::{
+	CHAR_INFO_Char,
 	GetConsoleCursorInfo,
 	GetConsoleMode,
 	GetConsoleScreenBufferInfo,
 	GetStdHandle,
+	ScrollConsoleScreenBufferW,
 	SetConsoleCursorInfo,
 	SetConsoleCursorPosition,
 	SetConsoleMode,
+	CHAR_INFO,
 	CONSOLE_CURSOR_INFO,
 	CONSOLE_SCREEN_BUFFER_INFO,
 	COORD,
@@ -17,15 +20,19 @@ use ffi::{
 	HANDLE,
 	INVALID_HANDLE_VALUE,
 	LPDWORD,
+	SMALL_RECT,
 	STD_OUTPUT_HANDLE,
 };
-use std::io;
 use std::sync::{
 	atomic::{
 		AtomicU64,
 		Ordering,
 	},
 	OnceLock,
+};
+use std::{
+	io,
+	ptr,
 };
 
 static SUPPORTS_ANSI: OnceLock<bool> = OnceLock::new();
@@ -152,6 +159,38 @@ pub fn show_cursor(show: bool) -> io::Result<()> {
 	unsafe { set_console_cursor_info(handle, info) }
 }
 
+pub fn scroll_up(count: u16) -> io::Result<()> {
+	scroll_to(count as i16)
+}
+
+pub fn scroll_down(count: u16) -> io::Result<()> {
+	scroll_to(-(count as i16))
+}
+
+fn scroll_to(count: i16) -> io::Result<()> {
+	let handle = unsafe { get_current_out_handle()? };
+	let csbi = unsafe { get_screen_buffer_info(handle)? };
+	let rect = csbi.srWindow;
+
+	let dest = COORD {
+		X: rect.Left,
+		Y: rect.Top as i16 + count,
+	};
+
+	let ch = CHAR_INFO_Char {
+		UnicodeChar: b' ' as u16,
+	};
+
+	let fill = CHAR_INFO {
+		Char:       ch,
+		Attributes: csbi.wAttributes,
+	};
+
+	unsafe {
+		scroll_console_screen_buffer_w(handle, Some(&rect), None, dest, fill)
+	}
+}
+
 unsafe fn get_current_out_handle() -> io::Result<HANDLE> {
 	let handle = GetStdHandle(STD_OUTPUT_HANDLE);
 	if handle == INVALID_HANDLE_VALUE {
@@ -219,4 +258,29 @@ unsafe fn set_console_cursor_info(
 	}
 
 	Ok(())
+}
+
+unsafe fn scroll_console_screen_buffer_w(
+	handle: HANDLE,
+	scroll_rect: Option<&SMALL_RECT>,
+	clip_rect: Option<&SMALL_RECT>,
+	dest: COORD,
+	fill: CHAR_INFO,
+) -> io::Result<()> {
+	let scroll_ptr =
+		scroll_rect.map_or(ptr::null(), |r| r as *const SMALL_RECT);
+	let clip_ptr = clip_rect.map_or(ptr::null(), |r| r as *const SMALL_RECT);
+
+	let success = ScrollConsoleScreenBufferW(
+		handle,
+		scroll_ptr,
+		clip_ptr,
+		dest,
+		&fill as *const _,
+	);
+	if success == 0 {
+		Err(io::Error::last_os_error())
+	} else {
+		Ok(())
+	}
 }

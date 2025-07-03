@@ -21,6 +21,7 @@ use crate::{
 pub mod command;
 pub mod cursor;
 pub mod display;
+pub mod terminal;
 pub mod error;
 pub mod event;
 pub mod key;
