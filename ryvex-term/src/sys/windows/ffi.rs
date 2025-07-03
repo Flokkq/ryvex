@@ -128,4 +128,14 @@ unsafe extern "system" {
 		hConsoleOutput: HANDLE,
 		lpConsoleCursorInfo: PCONSOLE_CURSOR_INFO,
 	) -> BOOL;
+	pub fn SetConsoleScreenBufferSize(
+		hConsoleOutput: HANDLE,
+		dwSize: COORD,
+	) -> BOOL;
+	pub fn SetConsoleWindowInfo(
+		hConsoleOutput: HANDLE,
+		bAbsolute: BOOL,
+		lpConsoleWindow: *const SMALL_RECT,
+	) -> BOOL;
+	pub fn GetLargestConsoleWindowSize(hConsoleOutput: HANDLE) -> COORD;
 }

@@ -9,11 +9,14 @@ use ffi::{
 	GetConsoleCursorInfo,
 	GetConsoleMode,
 	GetConsoleScreenBufferInfo,
+	GetLargestConsoleWindowSize,
 	GetStdHandle,
 	ScrollConsoleScreenBufferW,
 	SetConsoleCursorInfo,
 	SetConsoleCursorPosition,
 	SetConsoleMode,
+	SetConsoleScreenBufferSize,
+	SetConsoleWindowInfo,
 	CHAR_INFO,
 	CONSOLE_CURSOR_INFO,
 	CONSOLE_SCREEN_BUFFER_INFO,
@@ -223,23 +226,6 @@ pub fn clear(clear_type: ClearType) -> io::Result<()> {
 	}
 }
 
-unsafe fn fill_region(
-	handle: HANDLE,
-	start: COORD,
-	length: u32,
-	attr: WORD,
-	reset_cursor: Option<COORD>,
-) -> io::Result<()> {
-	fill_console_output_character(handle, ' ' as u16, length, start)?;
-	fill_console_output_attribute(handle, attr, length, start)?;
-
-	if let Some(pos) = reset_cursor {
-		set_cursor_pos(handle, pos)?;
-	}
-
-	Ok(())
-}
-
 fn scroll_to(count: i16) -> io::Result<()> {
 	let handle = unsafe { get_current_out_handle()? };
 	let csbi = unsafe { get_screen_buffer_info(handle)? };
@@ -262,6 +248,67 @@ fn scroll_to(count: i16) -> io::Result<()> {
 	unsafe {
 		scroll_console_screen_buffer_w(handle, Some(&rect), None, dest, fill)
 	}
+}
+
+pub fn set_size(width: u16, height: u16) -> io::Result<()> {
+	if width < 1 || height < 1 {
+		return Err(io::Error::new(
+			io::ErrorKind::InvalidInput,
+			"width and height must be at least 1",
+		));
+	}
+
+	let handle = unsafe { get_current_out_handle()? };
+	let csbi = unsafe { get_screen_buffer_info(handle)? };
+	let orig_buf = csbi.dwSize;
+	let win = csbi.srWindow;
+	let w = width as i16;
+	let h = height as i16;
+	let mut new_buf = orig_buf;
+	let mut resized_buffer = false;
+
+	if orig_buf.X < win.Left + w {
+		new_buf.X = win.Left + w;
+		resized_buffer = true;
+	}
+	if orig_buf.Y < win.Top + h {
+		new_buf.Y = win.Top + h;
+		resized_buffer = true;
+	}
+	if resized_buffer {
+		unsafe {
+			set_console_screen_buffer_size(handle, new_buf)?;
+		}
+	}
+
+	let mut new_win = win;
+	new_win.Right = win.Left + w - 1;
+	new_win.Bottom = win.Top + h - 1;
+	unsafe {
+		set_console_window_info(handle, true, &new_win)?;
+	}
+
+	if resized_buffer {
+		unsafe {
+			set_console_screen_buffer_size(handle, orig_buf)?;
+		}
+	}
+
+	let max_win = unsafe { get_largest_console_window_size(handle)? };
+	if w > max_win.X {
+		return Err(io::Error::new(
+			io::ErrorKind::InvalidInput,
+			format!("terminal width {} too large (max {})", width, max_win.X),
+		));
+	}
+	if h > max_win.Y {
+		return Err(io::Error::new(
+			io::ErrorKind::InvalidInput,
+			format!("terminal height {} too large (max {})", height, max_win.Y),
+		));
+	}
+
+	Ok(())
 }
 
 unsafe fn get_current_out_handle() -> io::Result<HANDLE> {
@@ -395,4 +442,54 @@ unsafe fn fill_console_output_attribute(
 	}
 
 	Ok(())
+}
+
+unsafe fn fill_region(
+	handle: HANDLE,
+	start: COORD,
+	length: u32,
+	attr: WORD,
+	reset_cursor: Option<COORD>,
+) -> io::Result<()> {
+	fill_console_output_character(handle, ' ' as u16, length, start)?;
+	fill_console_output_attribute(handle, attr, length, start)?;
+
+	if let Some(pos) = reset_cursor {
+		set_cursor_pos(handle, pos)?;
+	}
+
+	Ok(())
+}
+
+unsafe fn set_console_screen_buffer_size(
+	handle: HANDLE,
+	size: COORD,
+) -> io::Result<()> {
+	if SetConsoleScreenBufferSize(handle, size) == 0 {
+		return Err(io::Error::last_os_error());
+	}
+
+	Ok(())
+}
+
+unsafe fn set_console_window_info(
+	handle: HANDLE,
+	absolute: bool,
+	window: &SMALL_RECT,
+) -> io::Result<()> {
+	let flag = if absolute { 1 } else { 0 };
+	if SetConsoleWindowInfo(handle, flag, window as *const _) == 0 {
+		return Err(io::Error::last_os_error());
+	}
+
+	Ok(())
+}
+
+unsafe fn get_largest_console_window_size(handle: HANDLE) -> io::Result<COORD> {
+	let coord = GetLargestConsoleWindowSize(handle);
+	if coord.X == 0 && coord.Y == 0 {
+		return Err(io::Error::last_os_error());
+	}
+
+	Ok(coord)
 }

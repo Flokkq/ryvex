@@ -82,3 +82,19 @@ impl Command for Clear {
 		windows::clear(self.0)
 	}
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SetSize(pub u16, pub u16);
+
+impl Command for SetSize {
+	fn write_ansi(&self, f: &mut impl fmt::Write) -> fmt::Result {
+		write!(f, csi!("8;{};{}t"), self.1, self.0)
+	}
+
+	#[cfg(windows)]
+	fn execute_winapi(&self) -> std::io::Result<()> {
+		use crate::sys::windows;
+
+		windows::set_size(self.0, self.1)
+	}
+}
