@@ -27,7 +27,7 @@
                 (rust-bin.selectLatestNightlyWith (toolchain:
                   toolchain.default.override {
                     extensions = ["rust-src" "rust-analyzer"];
-                    targets = [];
+                    targets = ["x86_64-pc-windows-gnu"];
                   }))
                 gnupg
                 git-cliff
@@ -37,6 +37,9 @@
 
                 pkg-config
                 openssl
+
+                wineWow64Packages.base
+                pkgsCross.mingwW64.buildPackages.gcc
               ]
               ++ pkgs.lib.optionals pkg.stdenv.isDarwin [
                 darwin.apple_sdk.frameworks.SystemConfiguration
