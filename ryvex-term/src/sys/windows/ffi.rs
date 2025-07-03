@@ -2,8 +2,8 @@ use std::ffi::{
 	c_int,
 	c_long,
 	c_ulong,
+	c_ushort,
 	c_void,
-    c_ushort,
 };
 
 pub type BOOL = c_int;
@@ -26,27 +26,27 @@ pub struct COORD {
 
 #[repr(C)]
 pub struct SMALL_RECT {
-    pub Left: SHORT,
-    pub Top: SHORT,
-    pub Right: SHORT,
-    pub Bottom: SHORT,
+	pub Left:   SHORT,
+	pub Top:    SHORT,
+	pub Right:  SHORT,
+	pub Bottom: SHORT,
 }
 
 #[repr(C)]
 pub struct CONSOLE_SCREEN_BUFFER_INFO {
-    pub dwSize: COORD,
-    pub dwCursorPosition: COORD,
-    pub wAttributes: WORD,
-    pub srWindow: SMALL_RECT,
-    pub dwMaximumWindowSize: COORD,
+	pub dwSize:              COORD,
+	pub dwCursorPosition:    COORD,
+	pub wAttributes:         WORD,
+	pub srWindow:            SMALL_RECT,
+	pub dwMaximumWindowSize: COORD,
 }
 
 pub type PCONSOLE_SCREEN_BUFFER_INFO = *mut CONSOLE_SCREEN_BUFFER_INFO;
 
 #[repr(C)]
 pub struct CONSOLE_CURSOR_INFO {
-    pub dwSize: DWORD,
-    pub bVisible: BOOL,
+	pub dwSize:   DWORD,
+	pub bVisible: BOOL,
 }
 
 pub type PCONSOLE_CURSOR_INFO = *mut CONSOLE_CURSOR_INFO;
@@ -56,10 +56,10 @@ unsafe extern "system" {
 	pub fn GetStdHandle(nStdHandle: DWORD) -> HANDLE;
 	pub fn GetConsoleMode(hConsoleHandle: HANDLE, lpMode: LPDWORD) -> BOOL;
 	pub fn SetConsoleMode(hConsoleHandle: HANDLE, dwMode: DWORD) -> BOOL;
-    pub fn GetConsoleScreenBufferInfo(
-        hConsoleOutput: HANDLE,
-        lpConsoleScreenBufferInfo: PCONSOLE_SCREEN_BUFFER_INFO,
-    ) -> BOOL;
+	pub fn GetConsoleScreenBufferInfo(
+		hConsoleOutput: HANDLE,
+		lpConsoleScreenBufferInfo: PCONSOLE_SCREEN_BUFFER_INFO,
+	) -> BOOL;
 }
 
 #[link(name = "user32")]
@@ -68,12 +68,12 @@ unsafe extern "system" {
 		hConsoleOutput: HANDLE,
 		dwCursorPosition: COORD,
 	) -> BOOL;
-    pub fn SetConsoleCursorInfo(
-        hConsoleOutput: HANDLE,
-        lpConsoleCursorInfo: *const CONSOLE_CURSOR_INFO,
-    ) -> BOOL;
-    pub fn GetConsoleCursorInfo(
-        hConsoleOutput: HANDLE,
-        lpConsoleCursorInfo: PCONSOLE_CURSOR_INFO,
-    ) -> BOOL;
+	pub fn SetConsoleCursorInfo(
+		hConsoleOutput: HANDLE,
+		lpConsoleCursorInfo: *const CONSOLE_CURSOR_INFO,
+	) -> BOOL;
+	pub fn GetConsoleCursorInfo(
+		hConsoleOutput: HANDLE,
+		lpConsoleCursorInfo: PCONSOLE_CURSOR_INFO,
+	) -> BOOL;
 }
