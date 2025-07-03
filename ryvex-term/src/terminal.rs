@@ -42,3 +42,43 @@ impl Command for ScrollDown {
 		windows::scroll_down(self.0)
 	}
 }
+
+/// Different ways to clear the terminal buffer.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
+pub enum ClearType {
+	/// All cells.
+	All,
+	/// All plus history
+	Purge,
+	/// All cells from the cursor position downwards.
+	FromCursorDown,
+	/// All cells from the cursor position upwards.
+	FromCursorUp,
+	/// All cells at the cursor row.
+	CurrentLine,
+	/// All cells from the cursor position until the new line.
+	UntilNewLine,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Clear(pub ClearType);
+
+impl Command for Clear {
+	fn write_ansi(&self, f: &mut impl fmt::Write) -> fmt::Result {
+		f.write_str(match self.0 {
+			ClearType::All => csi!("2J"),
+			ClearType::Purge => csi!("3J"),
+			ClearType::FromCursorDown => csi!("J"),
+			ClearType::FromCursorUp => csi!("1J"),
+			ClearType::CurrentLine => csi!("2K"),
+			ClearType::UntilNewLine => csi!("K"),
+		})
+	}
+
+	#[cfg(windows)]
+	fn execute_winapi(&self) -> std::io::Result<()> {
+		use crate::sys::windows;
+
+		windows::clear(self.0)
+	}
+}

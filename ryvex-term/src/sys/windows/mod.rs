@@ -1,8 +1,11 @@
 #[allow(non_camel_case_types)]
 pub mod ffi;
 
+use crate::terminal::ClearType;
 use ffi::{
 	CHAR_INFO_Char,
+	FillConsoleOutputAttribute,
+	FillConsoleOutputCharacterW,
 	GetConsoleCursorInfo,
 	GetConsoleMode,
 	GetConsoleScreenBufferInfo,
@@ -22,6 +25,7 @@ use ffi::{
 	LPDWORD,
 	SMALL_RECT,
 	STD_OUTPUT_HANDLE,
+	WORD,
 };
 use std::sync::{
 	atomic::{
@@ -167,6 +171,75 @@ pub fn scroll_down(count: u16) -> io::Result<()> {
 	scroll_to(-(count as i16))
 }
 
+pub fn clear(clear_type: ClearType) -> io::Result<()> {
+	let handle = unsafe { get_current_out_handle()? };
+	let csbi = unsafe { get_screen_buffer_info(handle)? };
+	let sr = csbi.srWindow;
+	let attr = csbi.wAttributes;
+	let width = (sr.Right - sr.Left + 1) as u32;
+	let height = (sr.Bottom - sr.Top + 1) as u32;
+	let cursor = csbi.dwCursorPosition;
+
+	match clear_type {
+		ClearType::All | ClearType::Purge => {
+			let origin = COORD {
+				X: sr.Left,
+				Y: sr.Top,
+			};
+
+			unsafe {
+				fill_region(handle, origin, width * height, attr, Some(origin))
+			}
+		}
+		ClearType::FromCursorDown => {
+			let consumed = (cursor.Y as u32 - sr.Top as u32) * width +
+				(cursor.X as u32 - sr.Left as u32);
+			let remaining = width * height - consumed;
+
+			unsafe { fill_region(handle, cursor, remaining, attr, None) }
+		}
+		ClearType::FromCursorUp => {
+			let length = (cursor.Y as u32 - sr.Top as u32 + 1) * width;
+			let start = COORD {
+				X: sr.Left,
+				Y: sr.Top,
+			};
+
+			unsafe { fill_region(handle, start, length, attr, None) }
+		}
+		ClearType::CurrentLine => {
+			let start = COORD {
+				X: sr.Left,
+				Y: cursor.Y,
+			};
+
+			unsafe { fill_region(handle, start, width, attr, None) }
+		}
+		ClearType::UntilNewLine => {
+			let remaining = width - (cursor.X as u32 - sr.Left as u32);
+
+			unsafe { fill_region(handle, cursor, remaining, attr, None) }
+		}
+	}
+}
+
+unsafe fn fill_region(
+	handle: HANDLE,
+	start: COORD,
+	length: u32,
+	attr: WORD,
+	reset_cursor: Option<COORD>,
+) -> io::Result<()> {
+	fill_console_output_character(handle, ' ' as u16, length, start)?;
+	fill_console_output_attribute(handle, attr, length, start)?;
+
+	if let Some(pos) = reset_cursor {
+		set_cursor_pos(handle, pos)?;
+	}
+
+	Ok(())
+}
+
 fn scroll_to(count: i16) -> io::Result<()> {
 	let handle = unsafe { get_current_out_handle()? };
 	let csbi = unsafe { get_screen_buffer_info(handle)? };
@@ -283,4 +356,43 @@ unsafe fn scroll_console_screen_buffer_w(
 	} else {
 		Ok(())
 	}
+}
+
+unsafe fn fill_console_output_character(
+	handle: HANDLE,
+	fill_char: u16,
+	length: u32,
+	coord: COORD,
+) -> io::Result<()> {
+	let mut written: DWORD = 0;
+	let result = FillConsoleOutputCharacterW(
+		handle,
+		fill_char,
+		length,
+		coord,
+		&mut written,
+	);
+
+	if result == 0 {
+		return Err(io::Error::last_os_error());
+	}
+
+	Ok(())
+}
+
+unsafe fn fill_console_output_attribute(
+	handle: HANDLE,
+	attr: WORD,
+	length: u32,
+	coord: COORD,
+) -> io::Result<()> {
+	let mut written: DWORD = 0;
+	let result =
+		FillConsoleOutputAttribute(handle, attr, length, coord, &mut written);
+
+	if result == 0 {
+		return Err(io::Error::last_os_error());
+	}
+
+	Ok(())
 }
