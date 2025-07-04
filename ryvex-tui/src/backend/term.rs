@@ -1,5 +1,20 @@
 use super::Backend;
-use ryvex_term::sys::unix::fd::TtyFd;
+use ryvex_term::{
+	cursor::{
+		Hide,
+		MoveTo,
+		SetCursorStyle,
+		Show,
+	},
+	execute,
+	queue,
+	sys::unix::fd::TtyFd,
+	terminal::{
+		Clear,
+		ClearType,
+		Print,
+	},
+};
 use ryvex_ui::graphics::CursorKind;
 use std::io::Write;
 
@@ -35,11 +50,11 @@ impl Backend for TerminalBackend {
 		let mut last_pos: Option<(u16, u16)> = None;
 		for (x, y, cell) in content {
 			if !matches!(last_pos, Some(p) if x == p.0 + 1 && y == p.1) {
-				let _ = write!(self.buffer, "\x1b[{};{}H", y + 1, x + 1);
+				execute!(self.buffer, MoveTo(y + 1, x + 1))?;
 			}
 			last_pos = Some((x, y));
 
-			let _ = write!(self.buffer, "{}", cell.to_string());
+			queue!(self.buffer, Print(&cell.symbol))?;
 		}
 
 		Ok(())
@@ -49,12 +64,18 @@ impl Backend for TerminalBackend {
 		&mut self,
 		kind: ryvex_ui::graphics::CursorKind,
 	) -> super::Result<()> {
-		write!(self.buffer, "\x1b[?25h")?;
+		execute!(self.buffer, Show)?;
 
 		match kind {
-			CursorKind::Block => write!(self.buffer, "\x1b[0 q")?,
-			CursorKind::Underline => write!(self.buffer, "\x1b[4 q")?,
-			CursorKind::Bar => write!(self.buffer, "\x1b[6 q")?,
+			CursorKind::Block => {
+				execute!(self.buffer, SetCursorStyle::SteadyBlock)?
+			}
+			CursorKind::Underline => {
+				execute!(self.buffer, SetCursorStyle::SteadyUnderScore)?
+			}
+			CursorKind::Bar => {
+				execute!(self.buffer, SetCursorStyle::SteadyBar)?
+			}
 		}
 
 		Ok(())
@@ -65,11 +86,11 @@ impl Backend for TerminalBackend {
 	}
 
 	fn set_cursor(&mut self, x: u16, y: u16) -> super::Result<()> {
-		todo!("TerminalBackend")
+		Ok(execute!(self.buffer, MoveTo(x, y))?)
 	}
 
 	fn clear(&mut self) -> super::Result<()> {
-		Ok(write!(self.buffer, "\x1b[2J")?)
+		Ok(execute!(self.buffer, Clear(ClearType::All))?)
 	}
 
 	fn size(&self) -> super::Result<ryvex_ui::graphics::Rect> {
@@ -81,6 +102,6 @@ impl Backend for TerminalBackend {
 	}
 
 	fn hide_cursor(&mut self) -> super::Result<()> {
-		Ok(write!(self.buffer, "\x1b[?25l")?)
+		Ok(execute!(self.buffer, Hide)?)
 	}
 }

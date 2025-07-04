@@ -16,7 +16,7 @@ macro_rules! queue {
         use ::std::io::Write;
 
         Ok($writer.by_ref())
-            $(.and_then(|writer| $crate::QueueableCommand::queue(writer, $command)))*
+            $(.and_then(|writer| $crate::command::QueueableCommand::queue(writer, $command)))*
             .map(|_| ())
     }}
 }
