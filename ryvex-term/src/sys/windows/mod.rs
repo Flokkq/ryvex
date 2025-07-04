@@ -17,6 +17,7 @@ use ffi::{
 	SetConsoleMode,
 	SetConsoleScreenBufferSize,
 	SetConsoleWindowInfo,
+	WriteConsoleW,
 	CHAR_INFO,
 	CONSOLE_CURSOR_INFO,
 	CONSOLE_SCREEN_BUFFER_INFO,
@@ -311,6 +312,12 @@ pub fn set_size(width: u16, height: u16) -> io::Result<()> {
 	Ok(())
 }
 
+pub fn write(text: &str) -> io::Result<()> {
+	let handle = unsafe { get_current_out_handle()? };
+
+	unsafe { write_console(handle, text) }
+}
+
 unsafe fn get_current_out_handle() -> io::Result<HANDLE> {
 	let handle = GetStdHandle(STD_OUTPUT_HANDLE);
 	if handle == INVALID_HANDLE_VALUE {
@@ -492,4 +499,22 @@ unsafe fn get_largest_console_window_size(handle: HANDLE) -> io::Result<COORD> {
 	}
 
 	Ok(coord)
+}
+
+unsafe fn write_console(handle: HANDLE, text: &str) -> io::Result<()> {
+	let utf16: Vec<u16> = text.encode_utf16().collect();
+
+	let mut written = 0;
+	let result = WriteConsoleW(
+		handle,
+		utf16.as_ptr(),
+		utf16.len() as u32,
+		&mut written,
+		std::ptr::null_mut(),
+	);
+	if result == 0 {
+		return Err(io::Error::last_os_error());
+	}
+
+	Ok(())
 }

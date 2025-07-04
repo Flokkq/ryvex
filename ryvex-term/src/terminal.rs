@@ -1,4 +1,5 @@
 use core::fmt;
+use std::fmt::Display;
 
 use crate::{
 	command::Command,
@@ -96,5 +97,32 @@ impl Command for SetSize {
 		use crate::sys::windows;
 
 		windows::set_size(self.0, self.1)
+	}
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Print<T: Display>(pub T);
+
+impl<T: Display> Command for Print<T> {
+	fn write_ansi(&self, f: &mut impl fmt::Write) -> fmt::Result {
+		write!(f, "{}", self.0)
+	}
+
+	#[cfg(windows)]
+	fn execute_winapi(&self) -> std::io::Result<()> {
+		use crate::sys::windows;
+
+		windows::write(&self.0.to_string())
+	}
+
+	#[cfg(windows)]
+	fn is_ansi_code_supported(&self) -> bool {
+		true
+	}
+}
+
+impl<T: Display> Display for Print<T> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		self.0.fmt(f)
 	}
 }

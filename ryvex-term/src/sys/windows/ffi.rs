@@ -112,6 +112,13 @@ unsafe extern "system" {
 		dwWriteCoord: COORD,
 		lpNumberOfAttrsWritten: LPDWORD,
 	) -> BOOL;
+	pub fn WriteConsoleW(
+		hConsoleOutput: HANDLE,
+		lpBuffer: *const WCHAR,
+		nNumberOfCharsToWrite: DWORD,
+		lpNumberOfCharsWritten: LPDWORD,
+		lpReserved: *mut c_void,
+	) -> BOOL;
 }
 
 #[link(name = "user32")]
