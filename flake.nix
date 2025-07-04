@@ -37,7 +37,8 @@
 
                 pkg-config
                 openssl
-
+              ]
+              ++ lib.optionals pkgs.stdenv.isLinux [
                 wineWow64Packages.base
                 pkgsCross.mingwW64.buildPackages.gcc
               ]
