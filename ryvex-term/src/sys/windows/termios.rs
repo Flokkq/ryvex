@@ -5,7 +5,6 @@ use super::{
 use crate::{
 	error::Result,
 	sys::windows::{
-		fd::TtyFd,
 		ffi::{
 			DWORD,
 			ENABLE_ECHO_INPUT,
