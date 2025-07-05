@@ -52,7 +52,7 @@ impl Document {
 	pub fn open(path: PathBuf) -> Result<Self> {
 		let mut content = String::new();
 		ryvex_std::fs::read_from_file_if_exists(&path, &mut content)
-			.map_err(|err| DocumentError::OpenError(err))?;
+			.map_err(DocumentError::OpenError)?;
 
 		// TODO: does this break on windows?
 		content = content.replace("\n", "\r\n");

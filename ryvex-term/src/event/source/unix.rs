@@ -47,7 +47,7 @@ impl EventSource for UnixEventSource {
 			Ok(0) => Ok(None),
 			Ok(_) => Ok(Some(Event::Key(AsciiKeyCode::from_ascii(buf[0])))),
 			Err(e) if is_would_block(&e) => Ok(None),
-			Err(e) => Err(e.into()),
+			Err(e) => Err(e),
 		}
 	}
 }
@@ -70,13 +70,6 @@ fn read(fd: RawFd, buf: &mut [u8]) -> Result<usize> {
 	match result {
 		n if n > 0 => Ok(n as usize),
 		0 => Ok(0), // No data read
-		_ => Err(TermError::IoError(io::Error::last_os_error())),
-	}
-}
-
-fn close(fd: RawFd) -> Result<()> {
-	match unsafe { ffi::close(fd) } {
-		0 => Ok(()),
 		_ => Err(TermError::IoError(io::Error::last_os_error())),
 	}
 }

@@ -20,6 +20,12 @@ use crate::{
 
 pub struct EditorView {}
 
+impl Default for EditorView {
+	fn default() -> Self {
+		Self::new()
+	}
+}
+
 impl EditorView {
 	pub fn new() -> Self {
 		Self {}
@@ -52,8 +58,8 @@ impl EditorView {
 	pub fn insert(&self, key: AsciiKeyCode, cx: &mut Context) {
 		match key {
 			AsciiKeyCode::Esc => cx.editor.enter_normal_mode(),
-			control_char if key.is_control_character() => {}
-			seperator if key.is_seperator() => {}
+			_control_char if key.is_control_character() => {}
+			_seperator if key.is_seperator() => {}
 			_printable_character => cx.editor.insert_character(key),
 		}
 	}
@@ -84,13 +90,13 @@ impl Component for EditorView {
 		cx: &mut crate::compositor::Context,
 	) -> crate::compositor::EventResult {
 		match event {
-			Event::Key(mut key) => {
+			Event::Key(key) => {
 				let mode = cx.editor.mode;
 
 				match mode {
-					Mode::Normal => self.normal(key, cx),
+					Mode::Normal => self.normal(*key, cx),
 					Mode::Visual => todo!(),
-					Mode::Insert => self.insert(key, cx),
+					Mode::Insert => self.insert(*key, cx),
 				}
 			}
 			Event::Resize(_, _) => todo!(),

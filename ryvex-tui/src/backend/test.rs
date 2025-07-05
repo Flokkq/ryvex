@@ -3,7 +3,7 @@ use super::Backend;
 pub struct TestBackend;
 
 impl Backend for TestBackend {
-	fn draw<'a, I>(&mut self, content: I) -> super::Result<()>
+	fn draw<'a, I>(&mut self, _content: I) -> super::Result<()>
 	where
 		I: Iterator<Item = (u16, u16, &'a crate::buffer::Cell)>,
 	{
@@ -13,7 +13,7 @@ impl Backend for TestBackend {
 
 	fn show_cursor(
 		&mut self,
-		kind: ryvex_ui::graphics::CursorKind,
+		_kind: ryvex_ui::graphics::CursorKind,
 	) -> super::Result<()> {
 		todo!("TestBackend")
 	}
@@ -22,7 +22,7 @@ impl Backend for TestBackend {
 		todo!("TestBackend")
 	}
 
-	fn set_cursor(&mut self, x: u16, y: u16) -> super::Result<()> {
+	fn set_cursor(&mut self, _x: u16, _y: u16) -> super::Result<()> {
 		todo!("TestBackend")
 	}
 

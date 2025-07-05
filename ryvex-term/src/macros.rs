@@ -1,5 +1,3 @@
-use std::ffi::c_char;
-
 #[macro_export]
 #[doc(hidden)]
 macro_rules! csi {

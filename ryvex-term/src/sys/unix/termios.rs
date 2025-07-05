@@ -40,12 +40,12 @@ impl Termios {
 	/// Sets the terminal to `raw` mode and returns the original termios
 	/// configuration
 	pub fn raw(&mut self, fd: RawFd) -> Result<Self> {
-		let orig_termios = self.clone();
+		let orig_termios = *self;
 
 		unsafe {
 			unix::ffi::cfmakeraw(self.inner_mut());
 		};
-		tcsetattr(fd, TCSANOW, &self)?;
+		tcsetattr(fd, TCSANOW, self)?;
 
 		Ok(orig_termios)
 	}

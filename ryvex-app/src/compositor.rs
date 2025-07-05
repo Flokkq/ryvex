@@ -10,7 +10,7 @@ pub struct Compositor {
 	layers: Vec<Box<dyn Component>>,
 	area:   Rect,
 
-	pub(crate) full_redraw: bool,
+	pub(crate) _full_redraw: bool,
 }
 
 pub type Callback = Box<dyn FnOnce(&mut Compositor, &mut Context)>;
@@ -29,7 +29,7 @@ impl Compositor {
 		Self {
 			layers: Vec::new(),
 			area,
-			full_redraw: false,
+			_full_redraw: false,
 		}
 	}
 

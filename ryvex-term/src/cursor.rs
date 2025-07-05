@@ -2,7 +2,6 @@ use crate::{
 	command::Command,
 	csi,
 };
-use std::io;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MoveTo(pub u16, pub u16);

@@ -19,6 +19,12 @@ pub struct Editor {
 	should_close: bool,
 }
 
+impl Default for Editor {
+	fn default() -> Self {
+		Self::new()
+	}
+}
+
 impl Editor {
 	pub fn new() -> Self {
 		Self {

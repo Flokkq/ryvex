@@ -1,5 +1,4 @@
 use std::{
-	borrow::Cow,
 	fs,
 	io::Write,
 	path::PathBuf,

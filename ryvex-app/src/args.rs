@@ -17,7 +17,7 @@ impl Args {
 		let mut argv = std::env::args().peekable();
 
 		argv.next();
-		while let Some(arg) = argv.next() {
+		for arg in argv.by_ref() {
 			match arg.as_str() {
 				"--" => break, // stop parsing args
 				"--help" => args.help_flag = true,
@@ -50,7 +50,7 @@ impl Args {
 		}
 
 		if args.file.is_none() {
-			args.file = argv.next().map(|f| PathBuf::from(f))
+			args.file = argv.next().map(PathBuf::from)
 		};
 
 		Ok(args)

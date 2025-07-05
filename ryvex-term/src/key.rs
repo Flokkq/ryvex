@@ -185,7 +185,7 @@ impl From<u8> for AsciiKeyCode {
 			// Safety: Since `KeyCode` is #[repr(u8)] and we have exactly 128
 			// variants declared in order (0 to 127), transmuting is safe for
 			// values 0–127.
-			unsafe { std::mem::transmute(ascii) }
+			unsafe { std::mem::transmute::<u8, Self>(ascii) }
 		} else {
 			// For any non-ASCII value, we default to Nul.
 			AsciiKeyCode::Nul
@@ -193,9 +193,9 @@ impl From<u8> for AsciiKeyCode {
 	}
 }
 
-impl Into<char> for AsciiKeyCode {
-	fn into(self) -> char {
-		self as u8 as char
+impl From<AsciiKeyCode> for char {
+	fn from(val: AsciiKeyCode) -> Self {
+		val as u8 as char
 	}
 }
 

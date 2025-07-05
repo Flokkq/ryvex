@@ -12,9 +12,9 @@ use crate::{
 pub struct Terminal<B: Backend> {
 	backend: B,
 
-	buffers:     [Buffer; 2],
-	current:     usize,
-	cursor_kind: CursorKind,
+	buffers:      [Buffer; 2],
+	current:      usize,
+	_cursor_kind: CursorKind,
 }
 
 impl<B> Terminal<B>
@@ -28,7 +28,7 @@ where
 			backend,
 			buffers: [Buffer::empty(size), Buffer::empty(size)],
 			current: 0,
-			cursor_kind: CursorKind::Block,
+			_cursor_kind: CursorKind::Block,
 		})
 	}
 
