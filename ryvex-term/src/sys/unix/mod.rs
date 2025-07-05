@@ -14,7 +14,7 @@ use std::{
 use crate::error::TermError;
 use fd::TtyFd;
 use ryvex_ui::graphics::Rect;
-use target::linux::TIOCGWINSZ;
+use target::os::TIOCGWINSZ;
 
 use crate::{
 	error::Result,
