@@ -1,15 +1,5 @@
-use std::{
-	io,
-	marker::PhantomData,
-	os::windows::io::{
-		AsRawHandle,
-		RawHandle,
-	},
-};
-
 use super::{
 	get_console_mode_from_handle,
-	get_current_out_handle,
 	set_console_mode,
 };
 use crate::{
@@ -21,9 +11,8 @@ use crate::{
 			ENABLE_ECHO_INPUT,
 			ENABLE_LINE_INPUT,
 			ENABLE_PROCESSED_INPUT,
-			ENABLE_WRAP_AT_EOL_OUTPUT,
-			HANDLE,
 		},
+		ConsoleHandle,
 	},
 };
 
@@ -33,19 +22,19 @@ pub struct Termios {
 }
 
 impl Termios {
-	pub fn from_handle(handle: HANDLE) -> Result<Self> {
-		let mode = unsafe { get_console_mode_from_handle(handle)? };
+	pub fn from_handle(handle: ConsoleHandle) -> Result<Self> {
+		let mode = unsafe { get_console_mode_from_handle(handle.as_raw())? };
 		Ok(Self { mode })
 	}
 
-	pub fn raw(&mut self, handle: HANDLE) -> Result<Self> {
+	pub fn raw(&mut self, handle: ConsoleHandle) -> Result<Self> {
 		let orig = *self;
 
 		const RAW_MASK: DWORD =
 			!(ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT);
 
 		let new_mode = self.mode & RAW_MASK;
-		unsafe { set_console_mode(handle, new_mode)? };
+		unsafe { set_console_mode(handle.as_raw(), new_mode)? };
 
 		self.mode = new_mode;
 		Ok(orig)
@@ -59,7 +48,10 @@ impl Termios {
 		&mut self.mode
 	}
 
-	pub fn restore_terminal(handle: HANDLE, orig: Termios) -> Result<()> {
-		unsafe { Ok(set_console_mode(handle, orig.mode)?) }
+	pub fn restore_terminal(
+		handle: ConsoleHandle,
+		orig: Termios,
+	) -> Result<()> {
+		unsafe { Ok(set_console_mode(handle.as_raw(), orig.mode)?) }
 	}
 }

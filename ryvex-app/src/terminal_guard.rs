@@ -15,6 +15,9 @@ use std::os::windows::io::{
 	RawHandle,
 };
 
+#[cfg(windows)]
+use ryvex_term::sys::windows::ConsoleHandle;
+
 use crate::error::Result;
 use ryvex_term::sys::target::termios::Termios;
 
@@ -23,7 +26,7 @@ pub struct TerminalGuard<'a> {
 	fd: RawFd,
 
 	#[cfg(windows)]
-	handle: RawHandle,
+	handle: ConsoleHandle,
 
 	orig_termios: Termios,
 	_phantom:     PhantomData<&'a ()>,
@@ -51,7 +54,7 @@ impl<'a> TerminalGuard<'a> {
 
 	#[cfg(windows)]
 	pub fn spawn() -> Result<Self> {
-		let handle = stdin().as_raw_handle();
+		let handle = unsafe { ConsoleHandle::new(stdin().as_raw_handle()) };
 
 		let mut t = Termios::from_handle(handle)?;
 		let orig = t.raw(handle)?;

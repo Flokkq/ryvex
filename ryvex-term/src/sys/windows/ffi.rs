@@ -2,7 +2,6 @@
 #![allow(non_snake_case)]
 use std::ffi::{
 	c_int,
-	c_long,
 	c_ulong,
 	c_ushort,
 	c_void,

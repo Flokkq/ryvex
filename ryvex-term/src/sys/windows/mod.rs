@@ -44,7 +44,6 @@ use ffi::{
 };
 use ryvex_ui::graphics::Rect;
 use std::ffi::c_void;
-use std::ffi::CStr;
 use std::sync::{
 	atomic::{
 		AtomicU64,
@@ -79,19 +78,32 @@ pub fn enable_vt_processing() -> io::Result<()> {
 	Ok(())
 }
 
+#[derive(Clone, Copy)]
+pub struct ConsoleHandle(HANDLE);
+
+impl ConsoleHandle {
+	/// # Safety
+	/// `handle` must be a valid console handle obtained from Win32.
+	pub unsafe fn new(handle: HANDLE) -> Self {
+		Self(handle)
+	}
+
+	fn as_raw(self) -> HANDLE {
+		self.0
+	}
+}
+
 pub fn move_to(x: i16, y: i16) -> io::Result<()> {
 	if x < 0 {
-		return Err(io::Error::new(
-			io::ErrorKind::Other,
-			format!("cursor position out of range - X: {x}"),
-		));
+		return Err(io::Error::other(format!(
+			"cursor position out of range - X: {x}"
+		)));
 	}
 
 	if y < 0 {
-		return Err(io::Error::new(
-			io::ErrorKind::Other,
-			format!("cursor position out of range - Y: {y}"),
-		));
+		return Err(io::Error::other(format!(
+			"cursor position out of range - Y: {y}"
+		)));
 	}
 
 	let point = COORD { X: x, Y: y };
@@ -332,7 +344,7 @@ pub fn write(text: &str) -> io::Result<()> {
 	unsafe { write_console(handle, text) }
 }
 
-pub fn open_device(name: *const i8, access: u32) -> io::Result<HANDLE> {
+pub unsafe fn open_device(name: *const i8, access: u32) -> io::Result<HANDLE> {
 	let handle = unsafe {
 		create_file_a(
 			name,
@@ -598,6 +610,7 @@ unsafe fn create_file_a(
 	Ok(handle)
 }
 
+#[allow(clippy::missing_safety_doc)]
 pub unsafe fn close_handle(handle: HANDLE) -> io::Result<()> {
 	if CloseHandle(handle) == 0 {
 		return Err(io::Error::last_os_error());

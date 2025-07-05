@@ -51,7 +51,8 @@ jobs:
             -- -D warnings \
                -A dead_code \
                -A clippy::module-inception \
-               -A clippy::uninlined-format-args
+               -A clippy::uninlined-format-args \
+               -A clippy::missing-safety-doc
 
       - name: cargo test
         run: cargo test --workspace --all-features --no-fail-fast

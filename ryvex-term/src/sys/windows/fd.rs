@@ -2,21 +2,10 @@ use crate::c;
 use crate::sys::windows::close_handle;
 use crate::sys::windows::get_current_out_handle;
 use crate::sys::windows::open_device;
-use std::{
-	ffi::c_void,
-	mem::MaybeUninit,
-	os::windows::io::{
-		IntoRawHandle,
-		RawHandle,
-	},
-	ptr,
-};
+use std::os::windows::io::RawHandle;
 
 use super::ffi;
-use crate::error::{
-	Result,
-	TermError,
-};
+use crate::error::Result;
 
 pub struct TtyFd {
 	handle:        RawHandle,
@@ -31,12 +20,11 @@ impl TtyFd {
 		}
 	}
 
-	fn from_default_tty(read: bool, write: bool) -> Result<Self> {
+	fn from_default_tty(read: bool, _write: bool) -> Result<Self> {
 		let handle = unsafe { get_current_out_handle() };
-		match handle {
-			Ok(h) => return Ok(Self::new(h as RawHandle, false)),
-			_ => {}
-		};
+		if let Ok(h) = handle {
+			return Ok(Self::new(h as RawHandle, false));
+		}
 
 		let (name, desired) = if read {
 			(c!("CONIN$"), ffi::GENERIC_READ)
