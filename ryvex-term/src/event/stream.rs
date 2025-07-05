@@ -6,7 +6,7 @@ use super::{
 #[cfg(unix)]
 use super::source::unix::UnixEventSource as TargetEventSource;
 #[cfg(windows)]
-use super::source::unix::WindowsEventSource as TargetEventSource;
+use super::source::windows::WindowsEventSource as TargetEventSource;
 
 use crate::error::Result;
 

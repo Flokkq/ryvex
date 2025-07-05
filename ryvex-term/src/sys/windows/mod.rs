@@ -1,9 +1,17 @@
-#[allow(non_camel_case_types)]
-pub mod ffi;
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
 
+pub mod fd;
+pub mod ffi;
+pub mod termios;
+
+use crate::error::Result;
+use crate::sys::windows::fd::TtyFd;
 use crate::terminal::ClearType;
 use ffi::{
 	CHAR_INFO_Char,
+	CloseHandle,
+	CreateFileA,
 	FillConsoleOutputAttribute,
 	FillConsoleOutputCharacterW,
 	GetConsoleCursorInfo,
@@ -24,13 +32,19 @@ use ffi::{
 	COORD,
 	DWORD,
 	ENABLE_VIRTUAL_TERMINAL_PROCESSING,
+	FILE_SHARE_READ,
+	FILE_SHARE_WRITE,
 	HANDLE,
 	INVALID_HANDLE_VALUE,
 	LPDWORD,
+	OPEN_EXISTING,
 	SMALL_RECT,
 	STD_OUTPUT_HANDLE,
 	WORD,
 };
+use ryvex_ui::graphics::Rect;
+use std::ffi::c_void;
+use std::ffi::CStr;
 use std::sync::{
 	atomic::{
 		AtomicU64,
@@ -318,16 +332,50 @@ pub fn write(text: &str) -> io::Result<()> {
 	unsafe { write_console(handle, text) }
 }
 
-unsafe fn get_current_out_handle() -> io::Result<HANDLE> {
+pub fn open_device(name: *const i8, access: u32) -> io::Result<HANDLE> {
+	let handle = unsafe {
+		create_file_a(
+			name,
+			access,
+			FILE_SHARE_READ | FILE_SHARE_WRITE,
+			ptr::null_mut(),
+			OPEN_EXISTING,
+			0,
+			ptr::null_mut(),
+		)?
+	};
+
+	Ok(handle)
+}
+
+pub fn get_terminal_size(fd: &TtyFd) -> Result<Rect> {
+	let handle = fd.handle();
+
+	let info = unsafe { get_screen_buffer_info(handle)? };
+
+	let width = (info.srWindow.Right - info.srWindow.Left + 1) as u16;
+	let height = (info.srWindow.Bottom - info.srWindow.Top + 1) as u16;
+
+	Ok(Rect {
+		x: 0,
+		y: 0,
+		width,
+		height,
+	})
+}
+
+pub(crate) unsafe fn get_current_out_handle() -> io::Result<HANDLE> {
 	let handle = GetStdHandle(STD_OUTPUT_HANDLE);
-	if handle == INVALID_HANDLE_VALUE {
+	if handle == INVALID_HANDLE_VALUE || handle.is_null() {
 		Err(io::Error::last_os_error())
 	} else {
 		Ok(handle)
 	}
 }
 
-unsafe fn get_console_mode_from_handle(handle: HANDLE) -> io::Result<DWORD> {
+pub(crate) unsafe fn get_console_mode_from_handle(
+	handle: HANDLE,
+) -> io::Result<DWORD> {
 	let mut mode: DWORD = 0;
 	if GetConsoleMode(handle, &mut mode as LPDWORD) == 0 {
 		Err(io::Error::last_os_error())
@@ -336,7 +384,10 @@ unsafe fn get_console_mode_from_handle(handle: HANDLE) -> io::Result<DWORD> {
 	}
 }
 
-unsafe fn set_console_mode(handle: HANDLE, mode: DWORD) -> io::Result<()> {
+pub(crate) unsafe fn set_console_mode(
+	handle: HANDLE,
+	mode: DWORD,
+) -> io::Result<()> {
 	if SetConsoleMode(handle, mode) == 0 {
 		Err(io::Error::last_os_error())
 	} else {
@@ -513,6 +564,42 @@ unsafe fn write_console(handle: HANDLE, text: &str) -> io::Result<()> {
 		std::ptr::null_mut(),
 	);
 	if result == 0 {
+		return Err(io::Error::last_os_error());
+	}
+
+	Ok(())
+}
+
+unsafe fn create_file_a(
+	file_name: *const i8,
+	desired_access: u32,
+	share_mode: u32,
+	security_attributes: *mut c_void,
+	creation_disposition: u32,
+	flags_and_attributes: u32,
+	template_file: HANDLE,
+) -> io::Result<HANDLE> {
+	let handle = unsafe {
+		CreateFileA(
+			file_name,
+			desired_access,
+			share_mode,
+			security_attributes,
+			creation_disposition,
+			flags_and_attributes,
+			template_file,
+		)
+	};
+
+	if handle == INVALID_HANDLE_VALUE || handle.is_null() {
+		return Err(io::Error::last_os_error());
+	}
+
+	Ok(handle)
+}
+
+pub unsafe fn close_handle(handle: HANDLE) -> io::Result<()> {
+	if CloseHandle(handle) == 0 {
 		return Err(io::Error::last_os_error());
 	}
 

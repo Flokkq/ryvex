@@ -1,3 +1,5 @@
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
 use std::ffi::{
 	c_int,
 	c_long,
@@ -18,6 +20,16 @@ pub type WCHAR = c_ushort;
 pub const STD_OUTPUT_HANDLE: DWORD = -11i32 as DWORD;
 pub const INVALID_HANDLE_VALUE: HANDLE = -1isize as HANDLE;
 pub const ENABLE_VIRTUAL_TERMINAL_PROCESSING: DWORD = 0x0004;
+pub const GENERIC_READ: DWORD = 0x8000_0000;
+pub const GENERIC_WRITE: DWORD = 0x4000_0000;
+pub const FILE_SHARE_READ: DWORD = 0x0000_0001;
+pub const FILE_SHARE_WRITE: DWORD = 0x0000_0002;
+pub const OPEN_EXISTING: DWORD = 3;
+
+pub const ENABLE_WRAP_AT_EOL_OUTPUT: DWORD = 0x0002;
+pub const ENABLE_PROCESSED_INPUT: DWORD = 0x0001;
+pub const ENABLE_LINE_INPUT: DWORD = 0x0002;
+pub const ENABLE_ECHO_INPUT: DWORD = 0x0004;
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -119,6 +131,16 @@ unsafe extern "system" {
 		lpNumberOfCharsWritten: LPDWORD,
 		lpReserved: *mut c_void,
 	) -> BOOL;
+	pub fn CreateFileA(
+		lpFileName: *const i8,
+		dwDesiredAccess: DWORD,
+		dwShareMode: DWORD,
+		lpSecurityAttributes: *mut c_void,
+		dwCreationDisposition: DWORD,
+		dwFlagsAndAttributes: DWORD,
+		hTemplateFile: HANDLE,
+	) -> HANDLE;
+	pub fn CloseHandle(hObject: HANDLE) -> BOOL;
 }
 
 #[link(name = "user32")]
@@ -145,4 +167,10 @@ unsafe extern "system" {
 		lpConsoleWindow: *const SMALL_RECT,
 	) -> BOOL;
 	pub fn GetLargestConsoleWindowSize(hConsoleOutput: HANDLE) -> COORD;
+}
+
+#[link(name = "msvcrt")]
+extern "C" {
+	pub fn _kbhit() -> c_int;
+	pub fn _getch() -> c_int;
 }

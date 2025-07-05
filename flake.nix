@@ -41,6 +41,9 @@
               ++ lib.optionals pkgs.stdenv.isLinux [
                 wineWow64Packages.base
                 pkgsCross.mingwW64.buildPackages.gcc
+                pkgs.pkgsCross.mingwW64.windows.pthreads
+                pkgs.wine
+                pkgs.wine64
               ]
               ++ pkgs.lib.optionals pkg.stdenv.isDarwin [
                 darwin.apple_sdk.frameworks.SystemConfiguration

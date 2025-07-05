@@ -8,7 +8,7 @@ use ryvex_term::{
 	},
 	execute,
 	queue,
-	sys::unix::fd::TtyFd,
+	sys::target::fd::TtyFd,
 	terminal::{
 		Clear,
 		ClearType,
@@ -94,7 +94,7 @@ impl Backend for TerminalBackend {
 	}
 
 	fn size(&self) -> super::Result<ryvex_ui::graphics::Rect> {
-		Ok(ryvex_term::get_terminal_size(&self.fd)?)
+		Ok(ryvex_term::sys::target::get_terminal_size(&self.fd)?)
 	}
 
 	fn flush(&mut self) -> super::Result<()> {

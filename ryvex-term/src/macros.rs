@@ -1,3 +1,5 @@
+use std::ffi::c_char;
+
 #[macro_export]
 #[doc(hidden)]
 macro_rules! csi {
@@ -8,6 +10,13 @@ macro_rules! csi {
 #[doc(hidden)]
 macro_rules! osc {
     ($( $l:expr ),*) => { concat!("\x1B]", $( $l ),*, "\x1B\\") };
+}
+
+#[macro_export]
+macro_rules! c {
+	($l:expr) => {
+		concat!($l, "\0").as_ptr() as *const ::core::ffi::c_char
+	};
 }
 
 #[macro_export]

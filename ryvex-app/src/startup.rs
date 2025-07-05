@@ -1,13 +1,10 @@
-use std::io::stdout;
-
 use log::warn;
 use ryvex_term::{
 	event::Event,
-	sys::unix::fd::TtyFd,
+	sys::target::fd::TtyFd,
 };
 use ryvex_tui::{
 	backend::term::TerminalBackend,
-	buffer::Buffer,
 	terminal::Terminal,
 };
 
@@ -38,7 +35,7 @@ impl Application {
 		let _id = editor.new_document(document);
 
 		let fd = TtyFd::read()?;
-		let area = ryvex_term::get_terminal_size(&fd)?;
+		let area = ryvex_term::sys::target::get_terminal_size(&fd)?;
 		let mut compositor = Compositor::new(area);
 
 		let editor_view = Box::new(ui::EditorView::new());
