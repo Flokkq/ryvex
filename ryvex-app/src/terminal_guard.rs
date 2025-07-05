@@ -10,7 +10,7 @@ use std::os::unix::io::{
 };
 
 #[cfg(windows)]
-use std::os::windows::io::RawHandle;
+use std::os::windows::io::AsRawHandle;
 
 #[cfg(windows)]
 use ryvex_term::sys::windows::ConsoleHandle;
