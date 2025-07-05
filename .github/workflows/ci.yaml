@@ -1,0 +1,57 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-lint-test:
+    name: ${{ matrix.os }} / ${{ matrix.toolchain }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        toolchain: [stable, nightly]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust ${{ matrix.toolchain }}
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          components: clippy,rustfmt
+          override: true
+          profile: minimal
+
+      - name: Cache cargo + target
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: cargo fmt
+        if: matrix.toolchain == 'nightly'
+        run: cargo fmt --all --check
+
+      - name: cargo clippy
+        shell: bash
+        run: |
+          cargo clippy --workspace --all-targets --all-features \
+            -- -D warnings \
+               -A dead_code \
+               -A clippy::module-inception \
+               -A clippy::uninlined-format-args
+
+      - name: cargo test
+        run: cargo test --workspace --all-features --no-fail-fast
