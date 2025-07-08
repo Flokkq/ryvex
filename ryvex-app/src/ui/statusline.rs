@@ -1,5 +1,3 @@
-use std::usize;
-
 use ryvex_term::event::Event;
 use ryvex_tui::buffer::Buffer;
 use ryvex_ui::graphics::Rect;
@@ -13,9 +11,9 @@ use crate::compositor::{
 pub struct StatusLine;
 
 impl Default for StatusLine {
-    fn default() -> Self {
-        Self::new()
-    }
+	fn default() -> Self {
+		Self::new()
+	}
 }
 
 impl StatusLine {
