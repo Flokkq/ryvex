@@ -38,20 +38,14 @@ impl EditorView {
 		doc: &Document,
 		area: ryvex_ui::graphics::Rect,
 	) {
+		let max_rows = area.height.saturating_sub(2);
 		for (row_idx, line) in doc.text().lines().enumerate() {
-			let y = area.y.saturating_add(row_idx as u16);
-			if y >= area.y + area.height {
+			if row_idx as u16 >= max_rows {
 				break;
 			}
-
-			let max_width = area.width as usize;
-			let display = if line.len() > max_width {
-				&line[..max_width]
-			} else {
-				line
-			};
-
-			frame.set_string(area.x, y, display);
+			let y = area.y + row_idx as u16;
+			let slice = &line[..line.len().min(area.width as usize)];
+			frame.set_string(area.x, y, slice);
 		}
 	}
 
@@ -103,5 +97,9 @@ impl Component for EditorView {
 		}
 
 		EventResult::Consumed(None)
+	}
+
+	fn should_update(&self) -> bool {
+		true
 	}
 }

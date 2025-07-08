@@ -2,7 +2,10 @@ use std::{
 	error::Error,
 	fmt::Display,
 	num::NonZeroUsize,
-	path::PathBuf,
+	path::{
+		Path,
+		PathBuf,
+	},
 };
 
 use log::warn;
@@ -29,9 +32,9 @@ impl std::fmt::Display for DocumentId {
 }
 
 pub struct Document {
-	pub id:   DocumentId,
-	text:     String,
-	pub path: Option<PathBuf>,
+	pub id: DocumentId,
+	text:   String,
+	path:   Option<PathBuf>,
 }
 
 impl Default for Document {
@@ -88,6 +91,10 @@ impl Document {
 
 	pub fn insert_character(&mut self, key: ryvex_term::key::AsciiKeyCode) {
 		self.text.push(key.to_char());
+	}
+
+	pub fn path(&self) -> Option<&PathBuf> {
+		self.path.as_ref().map(|p| p)
 	}
 }
 

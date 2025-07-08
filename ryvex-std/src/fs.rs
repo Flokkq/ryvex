@@ -1,4 +1,8 @@
 use std::{
+	env::{
+		self,
+		home_dir,
+	},
 	fs,
 	io::Write,
 	path::PathBuf,
@@ -10,7 +14,10 @@ use log::{
 	info,
 };
 
-use crate::error::Result;
+use crate::error::{
+	Result,
+	StdError,
+};
 
 pub fn write(content: &str, path: &PathBuf) -> Result<()> {
 	let path_str = path.to_string_lossy();
@@ -51,4 +58,28 @@ pub fn read_from_file_if_exists(
 	*buffer = String::new();
 
 	Ok(())
+}
+
+/// Takes a Pathbuf and expands it into its full path
+pub fn expand(mut path: PathBuf) -> Result<String> {
+	if !path.exists() {
+		return Err(StdError::IoError(std::io::Error::other(
+			"Path does not exists",
+		)));
+	}
+
+	if !path.is_absolute() {
+		path = env::current_dir()?.join(path);
+	}
+
+	let mut s = path.canonicalize()?.to_string_lossy().into_owned();
+
+	if let Some(home) = home_dir() {
+		let home = home.to_string_lossy().into_owned();
+		if s.starts_with(&home) {
+			s.replace_range(..home.len(), "~");
+		}
+	}
+
+	Ok(s)
 }
