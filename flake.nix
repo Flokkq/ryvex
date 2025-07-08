@@ -31,6 +31,7 @@
                   }))
                 gnupg
                 git-cliff
+                pre-commit
 
                 act
                 cargo-tarpaulin
