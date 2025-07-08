@@ -1,5 +1,4 @@
 use std::{
-	error::Error,
 	fmt::Display,
 	num::NonZeroUsize,
 	path::{
@@ -9,10 +8,11 @@ use std::{
 };
 
 use log::warn;
-use proc_macros::StackTraceDebug;
-use ryvex_std::error::StdError;
+use ryvex_std::fs;
 
 use crate::error::Result;
+
+use super::error::DocumentError;
 
 // uses NonZeroUsize so Option<DocumentId> use a byte rather than two
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -31,6 +31,7 @@ impl std::fmt::Display for DocumentId {
 	}
 }
 
+#[derive(Debug)]
 pub struct Document {
 	pub id: DocumentId,
 	text:   String,
@@ -96,6 +97,12 @@ impl Document {
 	pub fn path(&self) -> Option<&PathBuf> {
 		self.path.as_ref().map(|p| p)
 	}
+
+	pub fn diplay_path(&self) -> Option<String> {
+		self.path.clone().map(|p| {
+			fs::expand(p.clone()).unwrap_or(p.to_string_lossy().to_string())
+		})
+	}
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -103,6 +110,7 @@ pub enum Mode {
 	Normal = 0,
 	Visual = 1,
 	Insert = 2,
+	Command = 3,
 }
 
 impl Display for Mode {
@@ -111,42 +119,7 @@ impl Display for Mode {
 			Mode::Normal => f.write_str("NORMAL"),
 			Mode::Visual => f.write_str("VISUAL"),
 			Mode::Insert => f.write_str("INSERT"),
-		}
-	}
-}
-
-#[derive(StackTraceDebug)]
-pub enum DocumentError {
-	SaveError(StdError),
-	OpenError(StdError),
-}
-
-impl Error for DocumentError {
-	fn source(&self) -> Option<&(dyn Error + 'static)> {
-		match self {
-			DocumentError::SaveError(err) => Some(err),
-			DocumentError::OpenError(err) => Some(err),
-		}
-	}
-
-	fn description(&self) -> &str {
-		"description() is deprecated; use Display"
-	}
-
-	fn cause(&self) -> Option<&dyn Error> {
-		self.source()
-	}
-}
-
-impl Display for DocumentError {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		match self {
-			DocumentError::SaveError(err) => {
-				write!(f, "Failed to save document: {}", err)
-			}
-			DocumentError::OpenError(err) => {
-				write!(f, "Failed to open document: {}", err)
-			}
+			Mode::Command => f.write_str("COMMAND"),
 		}
 	}
 }

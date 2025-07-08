@@ -1,6 +1,5 @@
 use std::usize;
 
-use ryvex_std::fs;
 use ryvex_term::event::Event;
 use ryvex_tui::buffer::Buffer;
 use ryvex_ui::graphics::Rect;
@@ -26,20 +25,14 @@ impl Component for StatusLine {
 
 		frame.set_string(0, y, " ".repeat(width));
 
-		let left = if let Some(doc) = cx.editor.get_active_document() {
-			let file = doc
-				.path()
-				.map(|p| {
-					fs::expand(p.clone())
-						.unwrap_or(p.to_string_lossy().to_string())
-				})
-				.unwrap_or("[No Name]".into());
-
-			format!(" {} | {}", cx.editor.mode, file)
+		let path = if let Some(doc) = cx.editor.get_active_document() {
+			doc.diplay_path().unwrap_or("[No Name]".into())
 		} else {
-			format!(" {} | [No Document]", cx.editor.mode)
+			"[No Document]".to_string()
 		};
-		frame.set_string(0, y, &left[..left.len().min(width)]);
+
+		let file = format!(" {} | {}", cx.editor.mode, path);
+		frame.set_string(0, y, &file[..file.len().min(width)]);
 
 		if let Some(doc) = cx.editor.get_active_document() {
 			let row = doc.text().lines().count();

@@ -5,7 +5,10 @@ use std::{
 
 use proc_macros::StackTraceDebug;
 
-use crate::editor::document::DocumentError;
+use crate::editor::error::{
+	CommandError,
+	DocumentError,
+};
 
 #[derive(StackTraceDebug)]
 pub enum RyvexError {
@@ -13,6 +16,7 @@ pub enum RyvexError {
 	TermError(ryvex_term::error::TermError),
 	TuiError(ryvex_tui::error::TuiError),
 	DocumentError(DocumentError),
+	CommandError(CommandError),
 	LoggerError(String),
 	ArgParseError(String),
 }
@@ -24,6 +28,7 @@ impl Error for RyvexError {
 			RyvexError::TermError(error) => Some(error),
 			RyvexError::TuiError(error) => Some(error),
 			RyvexError::DocumentError(error) => Some(error),
+			RyvexError::CommandError(error) => Some(error),
 			RyvexError::LoggerError(_) => None,
 			RyvexError::ArgParseError(_) => None,
 		}
@@ -50,6 +55,9 @@ impl Display for RyvexError {
 			}
 			RyvexError::DocumentError(err) => {
 				write!(f, "Document error: {}", err)
+			}
+			RyvexError::CommandError(err) => {
+				write!(f, "Command error: {}", err)
 			}
 			RyvexError::LoggerError(msg) => {
 				write!(f, "Error while initializing logger: {}", msg)
@@ -82,6 +90,12 @@ impl From<ryvex_tui::error::TuiError> for RyvexError {
 impl From<DocumentError> for RyvexError {
 	fn from(error: DocumentError) -> Self {
 		RyvexError::DocumentError(error)
+	}
+}
+
+impl From<CommandError> for RyvexError {
+	fn from(error: CommandError) -> Self {
+		RyvexError::CommandError(error)
 	}
 }
 

@@ -41,6 +41,7 @@ impl Application {
 		let editor_view = Box::new(ui::EditorView::new());
 		compositor.push(editor_view);
 		compositor.push(Box::new(ui::StatusLine::new()));
+		compositor.push(Box::new(ui::CommandLine::new()));
 
 		let terminal = Terminal::new(TerminalBackend::new(fd))?;
 

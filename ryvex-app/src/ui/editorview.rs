@@ -62,6 +62,7 @@ impl EditorView {
 		match key {
 			AsciiKeyCode::LowerI => cx.editor.enter_insert_mode(),
 			AsciiKeyCode::LowerQ => cx.editor.quit(),
+			AsciiKeyCode::Colon => cx.editor.enter_command_mode(),
 			_ => {}
 		}
 	}
@@ -91,6 +92,7 @@ impl Component for EditorView {
 					Mode::Normal => self.normal(*key, cx),
 					Mode::Visual => todo!(),
 					Mode::Insert => self.insert(*key, cx),
+					Mode::Command => return EventResult::Ignored(None),
 				}
 			}
 			Event::Resize(_, _) => todo!(),
