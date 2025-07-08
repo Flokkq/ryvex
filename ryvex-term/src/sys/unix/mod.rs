@@ -29,8 +29,8 @@ pub fn get_terminal_size(fd: &TtyFd) -> Result<Rect> {
 	Ok(Rect {
 		width:  winsize.ws_col,
 		height: winsize.ws_row,
-		x:      winsize.ws_xpixel,
-		y:      winsize.ws_ypixel,
+		x:      0,
+		y:      0,
 	})
 }
 
