@@ -129,9 +129,7 @@ impl Editor {
 	pub fn submit_command(&mut self) -> Result<ExitStatus> {
 		let input: String = self.command_buffer.trim().to_string();
 
-		if input.starts_with('!') {
-			let command = &input[1..];
-
+		if let Some(command) = input.strip_prefix('!') {
 			let parts: Vec<&str> = command.split_whitespace().collect();
 
 			if !parts.is_empty() {

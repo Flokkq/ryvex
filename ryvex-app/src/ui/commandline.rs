@@ -16,6 +16,12 @@ use crate::{
 
 pub struct CommandLine;
 
+impl Default for CommandLine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CommandLine {
 	pub fn new() -> Self {
 		Self
@@ -51,27 +57,24 @@ impl Component for CommandLine {
 			return EventResult::Ignored(None);
 		}
 
-		match event {
-			Event::Key(key) => match key {
-				AsciiKeyCode::Esc => cx.editor.exit_command_mode(),
-				AsciiKeyCode::CarriageReturn => {
-					let _ = cx
-						.editor
-						.submit_command()
-						.map_err(|err| cx.editor.log_error(err.to_string()));
+		if let Event::Key(key) = event { match key {
+  				AsciiKeyCode::Esc => cx.editor.exit_command_mode(),
+  				AsciiKeyCode::CarriageReturn => {
+  					let _ = cx
+  						.editor
+  						.submit_command()
+  						.map_err(|err| cx.editor.log_error(err.to_string()));
 
-					cx.editor.enter_normal_mode();
-				}
-				AsciiKeyCode::Backspace => cx.editor.pop_command_char(),
-				_other
-					if !key.is_control_character() && !key.is_seperator() =>
-				{
-					cx.editor.push_command_char(key.to_char());
-				}
-				_ => {}
-			},
-			_ => {}
-		}
+  					cx.editor.enter_normal_mode();
+  				}
+  				AsciiKeyCode::Backspace => cx.editor.pop_command_char(),
+  				_other
+  					if !key.is_control_character() && !key.is_seperator() =>
+  				{
+  					cx.editor.push_command_char(key.to_char());
+  				}
+  				_ => {}
+  			} }
 
 		EventResult::Consumed(None)
 	}

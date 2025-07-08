@@ -1,10 +1,7 @@
 use std::{
 	fmt::Display,
 	num::NonZeroUsize,
-	path::{
-		Path,
-		PathBuf,
-	},
+	path::PathBuf,
 };
 
 use log::warn;
@@ -95,7 +92,7 @@ impl Document {
 	}
 
 	pub fn path(&self) -> Option<&PathBuf> {
-		self.path.as_ref().map(|p| p)
+		self.path.as_ref()
 	}
 
 	pub fn diplay_path(&self) -> Option<String> {
