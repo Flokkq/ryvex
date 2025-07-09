@@ -57,8 +57,8 @@ impl TtyFd {
 	}
 }
 
-impl Handle<RawFd, TtyFdSettigns> for TtyFd {
-	fn aquire(mode: TtyFdSettigns) -> io::Result<Self> {
+impl Handle<RawFd, TtyFdSettings> for TtyFd {
+	fn acquire(mode: TtyFdSettings) -> io::Result<Self> {
 		TtyFd::from_default_tty(mode.read, mode.write)
 	}
 
