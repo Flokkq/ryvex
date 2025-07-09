@@ -51,7 +51,7 @@ pub fn enable_vt_processing() -> io::Result<()> {
 }
 
 pub fn get_terminal_size(handle: &handle::ConsoleHandle) -> io::Result<Rect> {
-	let info = ffi::get_screen_buffer_info(handle.inner().clone())?;
+	let info = ffi::get_screen_buffer_info(*handle.inner())?;
 
 	let width = (info.srWindow.Right - info.srWindow.Left + 1) as u16;
 	let height = (info.srWindow.Bottom - info.srWindow.Top + 1) as u16;

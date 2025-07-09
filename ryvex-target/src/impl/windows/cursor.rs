@@ -1,15 +1,8 @@
 use super::ffi;
-use std::ffi::c_void;
-use std::sync::{
-	atomic::{
-		AtomicU64,
-		Ordering,
-	},
-	OnceLock,
-};
-use std::{
-	io,
-	ptr,
+use std::io;
+use std::sync::atomic::{
+	AtomicU64,
+	Ordering,
 };
 
 static SAVED_CURSOR_POS: AtomicU64 = AtomicU64::new(u64::MAX);

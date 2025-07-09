@@ -20,8 +20,8 @@ pub struct ConsoleSettings {
 
 impl ConsoleSettings {
 	pub fn from_handle(handle: ConsoleHandle) -> io::Result<Self> {
-		let mode = ffi::get_console_mode_from_handle(handle.inner().clone())?;
-		let cursor = ffi::get_cursor_info(handle.inner().clone())?;
+		let mode = ffi::get_console_mode_from_handle(*handle.inner())?;
+		let cursor = ffi::get_cursor_info(*handle.inner())?;
 
 		Ok(Self { mode, cursor })
 	}
@@ -36,7 +36,7 @@ impl ConsoleSettings {
 			!(ffi::ENABLE_ECHO_INPUT | ffi::ENABLE_LINE_INPUT);
 
 		let new_mode = self.mode & RAW_MASK;
-		ffi::set_console_mode(handle.inner().clone(), new_mode)?;
+		ffi::set_console_mode(*handle.inner(), new_mode)?;
 
 		self.mode = new_mode;
 		Ok(orig)
@@ -54,8 +54,8 @@ impl ConsoleSettings {
 		handle: ConsoleHandle,
 		orig: ConsoleSettings,
 	) -> io::Result<()> {
-		ffi::set_console_mode(handle.inner().clone(), orig.mode)?;
-		ffi::set_cursor_info(handle.inner().clone(), &orig.cursor)?;
+		ffi::set_console_mode(*handle.inner(), orig.mode)?;
+		ffi::set_cursor_info(*handle.inner(), &orig.cursor)?;
 		Ok(())
 	}
 }
