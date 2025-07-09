@@ -71,7 +71,7 @@ impl ConsoleHandle {
 }
 
 impl Handle<RawHandle, ConsoleHandleSettings> for ConsoleHandle {
-	fn aquire(mode: ConsoleHandleSettings) -> io::Result<Self> {
+	fn acquire(mode: ConsoleHandleSettings) -> io::Result<Self> {
 		ConsoleHandle::from_default_tty(mode.read, mode.write)
 	}
 
