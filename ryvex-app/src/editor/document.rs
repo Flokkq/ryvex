@@ -6,6 +6,7 @@ use std::{
 
 use log::warn;
 use ryvex_std::fs;
+use ryvex_target::key;
 
 use crate::error::Result;
 
@@ -87,7 +88,7 @@ impl Document {
 		}
 	}
 
-	pub fn insert_character(&mut self, key: ryvex_term::key::AsciiKeyCode) {
+	pub fn insert_character(&mut self, key: key::AsciiKeyCode) {
 		self.text.push(key.to_char());
 	}
 

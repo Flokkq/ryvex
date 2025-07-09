@@ -8,6 +8,8 @@ use std::{
 	},
 };
 
+use ryvex_target::key;
+
 use super::{
 	document::{
 		Document,
@@ -100,7 +102,7 @@ impl Editor {
 		self.log_warn("No open document".to_string());
 	}
 
-	pub fn insert_character(&mut self, key: ryvex_term::key::AsciiKeyCode) {
+	pub fn insert_character(&mut self, key: key::AsciiKeyCode) {
 		if self.mode == Mode::Command {
 			self.push_command_char(key.to_char());
 		} else if let Some(document) = self.get_active_document_mut() {

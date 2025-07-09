@@ -9,7 +9,7 @@ use ryvex_app::{
 	startup::Application,
 	terminal_guard::TerminalGuard,
 };
-use ryvex_term::event::stream::SyncEventStream;
+use ryvex_target::term::event::SyncEventStream;
 use std::{
 	self,
 	env::{

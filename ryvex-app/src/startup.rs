@@ -1,7 +1,12 @@
+use std::io;
+
 use log::warn;
-use ryvex_term::{
-	event::Event,
-	sys::target::fd::TtyFd,
+use ryvex_target::{
+	target::{
+		self,
+		Handle,
+	},
+	term::event::Event,
 };
 use ryvex_tui::{
 	backend::term::TerminalBackend,
@@ -34,8 +39,8 @@ impl Application {
 		let document = Document::new(args.file)?;
 		let _id = editor.new_document(document);
 
-		let fd = TtyFd::read()?;
-		let area = ryvex_term::sys::target::get_terminal_size(&fd)?;
+		let handle = Handle::from_default_tty(true, false)?;
+		let area = target::get_terminal_size(&handle)?;
 		let mut compositor = Compositor::new(area);
 
 		let editor_view = Box::new(ui::EditorView::new());
@@ -43,7 +48,7 @@ impl Application {
 		compositor.push(Box::new(ui::StatusLine::new()));
 		compositor.push(Box::new(ui::CommandLine::new()));
 
-		let terminal = Terminal::new(TerminalBackend::new(fd))?;
+		let terminal = Terminal::new(TerminalBackend::new(handle))?;
 
 		Ok(Application {
 			editor,
@@ -54,7 +59,7 @@ impl Application {
 
 	pub fn run_until_stopped<S>(&mut self, input_stream: &mut S) -> Result<i32>
 	where
-		S: Iterator<Item = ryvex_term::error::Result<Event>>,
+		S: Iterator<Item = io::Result<Event>>,
 	{
 		self.render();
 
@@ -67,7 +72,7 @@ impl Application {
 
 	fn main_loop<S>(&mut self, input_stream: &mut S) -> Result<bool>
 	where
-		S: Iterator<Item = ryvex_term::error::Result<Event>>,
+		S: Iterator<Item = io::Result<Event>>,
 	{
 		loop {
 			if self.editor.should_close() {

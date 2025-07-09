@@ -1,6 +1,6 @@
-use ryvex_term::{
-	event::Event,
+use ryvex_target::{
 	key::AsciiKeyCode,
+	term::event::Event,
 };
 use ryvex_tui::buffer::Buffer;
 use ryvex_ui::graphics::Rect;
