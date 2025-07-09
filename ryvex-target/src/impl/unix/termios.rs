@@ -59,11 +59,11 @@ impl Termios {
 	}
 }
 
-impl Console<RawFd, TtyFdSettigns> for Termios {
+impl Console<RawFd, TtyFdSettings> for Termios {
 	type Handle = TtyFd;
 
 	fn init() -> Result<(Self, Self::Handle), io::Error> {
-		let fd = TtyFd::aquire(TtyFdSettigns::read())?;
+		let fd = TtyFd::acquire(TtyFdSettings::read())?;
 		let termios = Termios::from_fd(fd.inner().as_raw_fd())?;
 
 		Ok((termios, fd))
