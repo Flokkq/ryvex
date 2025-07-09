@@ -1,6 +1,6 @@
-use ryvex_term::{
-	event::Event,
+use ryvex_target::{
 	key::AsciiKeyCode,
+	term::event::Event,
 };
 
 use crate::{
@@ -81,7 +81,7 @@ impl Component for EditorView {
 
 	fn handle_event(
 		&mut self,
-		event: &ryvex_term::event::Event,
+		event: &ryvex_target::term::event::Event,
 		cx: &mut crate::compositor::Context,
 	) -> crate::compositor::EventResult {
 		match event {

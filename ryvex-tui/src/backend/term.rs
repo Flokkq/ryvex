@@ -1,18 +1,23 @@
 use super::Backend;
-use ryvex_term::{
-	cursor::{
-		Hide,
-		MoveTo,
-		SetCursorStyle,
-		Show,
-	},
+use ryvex_target::{
 	execute,
 	queue,
-	sys::target::fd::TtyFd,
-	terminal::{
-		Clear,
-		ClearType,
-		Print,
+	target::{
+		self,
+		Handle,
+	},
+	term::command::{
+		cursor::{
+			Hide,
+			MoveTo,
+			SetCursorStyle,
+			Show,
+		},
+		terminal::{
+			Clear,
+			ClearType,
+			Print,
+		},
 	},
 };
 use ryvex_ui::graphics::CursorKind;
@@ -20,11 +25,11 @@ use std::io::Write;
 
 pub struct TerminalBackend {
 	buffer: std::io::Stdout,
-	fd:     TtyFd,
+	fd:     Handle,
 }
 
 impl TerminalBackend {
-	pub fn new(fd: TtyFd) -> Self {
+	pub fn new(fd: Handle) -> Self {
 		Self {
 			fd,
 			buffer: std::io::stdout(),
@@ -94,7 +99,7 @@ impl Backend for TerminalBackend {
 	}
 
 	fn size(&self) -> super::Result<ryvex_ui::graphics::Rect> {
-		Ok(ryvex_term::sys::target::get_terminal_size(&self.fd)?)
+		Ok(target::get_terminal_size(&self.fd)?)
 	}
 
 	fn flush(&mut self) -> super::Result<()> {

@@ -1,10 +1,8 @@
 [package]
-name = "ryvex-tui"
+name = "ryvex-target"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 
 [dependencies]
 ryvex-ui = { path = "../ryvex-ui" }
-ryvex-target = { path = "../ryvex-target" }
-proc-macros = { path = "../proc-macros"}
