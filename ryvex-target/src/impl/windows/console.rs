@@ -64,7 +64,7 @@ impl Console<RawHandle, ConsoleHandleSettings> for ConsoleSettings {
 	type Handle = ConsoleHandle;
 
 	fn init() -> Result<(Self, Self::Handle), io::Error> {
-		let handle = ConsoleHandle::aquire(ConsoleHandleSettings::read())?;
+		let handle = ConsoleHandle::acquire(ConsoleHandleSettings::read())?;
 		let termios = ConsoleSettings::from_handle(handle.clone())?;
 
 		Ok((termios, handle))
