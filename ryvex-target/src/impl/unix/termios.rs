@@ -11,7 +11,7 @@ use super::ffi;
 use super::{
 	fd::{
 		TtyFd,
-		TtyFdSettigns,
+		TtyFdSettings,
 	},
 	target::{
 		self,

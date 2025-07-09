@@ -11,7 +11,7 @@ use std::io;
 use target::os::TIOCGWINSZ;
 
 pub use fd::TtyFd as Handle;
-pub use fd::TtyFdSettigns as HandleMode;
+pub use fd::TtyFdSettings as HandleMode;
 pub use source::UnixEventSource as TargetEventSource;
 pub use termios::Termios as ConsoleSettings;
 
