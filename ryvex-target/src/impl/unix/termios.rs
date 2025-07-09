@@ -15,7 +15,7 @@ use super::{
 	},
 	target::{
 		self,
-		linux::TCSANOW,
+		os::TCSANOW,
 	},
 };
 
