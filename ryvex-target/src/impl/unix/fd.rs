@@ -14,12 +14,12 @@ use super::{
 	target::STDIN_FILENO,
 };
 
-pub struct TtyFdSettigns {
+pub struct TtyFdSettings {
 	read:  bool,
 	write: bool,
 }
 
-impl TtyFdSettigns {
+impl TtyFdSettings {
 	pub fn read() -> Self {
 		Self {
 			read:  true,
