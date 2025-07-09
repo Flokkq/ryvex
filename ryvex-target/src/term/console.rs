@@ -10,7 +10,7 @@ where
 	Self: Sized,
 {
 	// Acquire a new handle instance.
-	fn aquire(mode: S) -> io::Result<Self>;
+	fn acquire(mode: S) -> io::Result<Self>;
 
 	fn inner(&self) -> &T;
 
