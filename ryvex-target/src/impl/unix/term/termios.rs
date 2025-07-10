@@ -3,7 +3,7 @@ use std::os::fd::AsRawFd;
 use std::os::fd::RawFd;
 
 use crate::target::target;
-use crate::target::target::linux::TCSANOW;
+use crate::target::target::os::TCSANOW;
 use crate::term::console::{
 	Console,
 	Handle,
