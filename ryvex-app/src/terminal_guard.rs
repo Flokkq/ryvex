@@ -4,7 +4,7 @@ use std::{
 };
 
 use ryvex_target::{
-	target::{
+	target::term::{
 		ConsoleSettings,
 		Handle,
 	},

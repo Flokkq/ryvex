@@ -4,7 +4,7 @@ use log::warn;
 use ryvex_target::{
 	target::{
 		self,
-		Handle,
+		term::Handle,
 	},
 	term::event::Event,
 };
@@ -40,7 +40,7 @@ impl Application {
 		let _id = editor.new_document(document);
 
 		let handle = Handle::from_default_tty(true, false)?;
-		let area = target::get_terminal_size(&handle)?;
+		let area = target::term::get_terminal_size(&handle)?;
 		let mut compositor = Compositor::new(area);
 
 		let editor_view = Box::new(ui::EditorView::new());

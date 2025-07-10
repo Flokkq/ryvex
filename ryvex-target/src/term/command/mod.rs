@@ -31,7 +31,7 @@ pub trait ExecuteApi {
 	/// Returns whether the ANSI code representation of this command is
 	/// supported by the target.
 	fn is_ansi_code_supported(&self) -> bool {
-		target::supports_ansi()
+		target::term::supports_ansi()
 	}
 }
 

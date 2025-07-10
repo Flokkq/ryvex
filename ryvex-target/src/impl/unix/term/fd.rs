@@ -7,12 +7,12 @@ use std::{
 	},
 };
 
-use crate::term::console::Handle;
-
-use super::{
-	ffi,
-	target::STDIN_FILENO,
+use crate::{
+	target::target::STDIN_FILENO,
+	term::console::Handle,
 };
+
+use super::ffi;
 
 pub struct TtyFdSettings {
 	read:  bool,
