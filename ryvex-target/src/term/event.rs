@@ -5,7 +5,7 @@ use std::{
 
 use crate::{
 	key::AsciiKeyCode,
-	target::TargetEventSource,
+	target::term::TargetEventSource,
 };
 
 #[derive(PartialEq, Debug, Clone, Copy, Hash)]

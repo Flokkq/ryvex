@@ -15,12 +15,12 @@ use std::{
 use crate::term::console::Handle;
 
 use super::{
-	fd::TtyFd,
 	target::{
 		self,
 		os::winsize,
 	},
-	termios::Termios,
+	term::fd::TtyFd,
+	term::termios::Termios,
 };
 
 #[link(name = "c")]

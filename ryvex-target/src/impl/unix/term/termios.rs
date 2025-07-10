@@ -2,22 +2,18 @@ use std::io;
 use std::os::fd::AsRawFd;
 use std::os::fd::RawFd;
 
+use crate::target::target;
+use crate::target::target::linux::TCSANOW;
 use crate::term::console::{
 	Console,
 	Handle,
 };
 
-use super::ffi;
-use super::{
-	fd::{
-		TtyFd,
-		TtyFdSettings,
-	},
-	target::{
-		self,
-		os::TCSANOW,
-	},
+use super::fd::{
+	TtyFd,
+	TtyFdSettings,
 };
+use super::ffi;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Termios {

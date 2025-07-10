@@ -4,7 +4,7 @@ use ryvex_target::{
 	queue,
 	target::{
 		self,
-		Handle,
+		term::Handle,
 	},
 	term::command::{
 		cursor::{
@@ -99,7 +99,7 @@ impl Backend for TerminalBackend {
 	}
 
 	fn size(&self) -> super::Result<ryvex_ui::graphics::Rect> {
-		Ok(target::get_terminal_size(&self.fd)?)
+		Ok(target::term::get_terminal_size(&self.fd)?)
 	}
 
 	fn flush(&mut self) -> super::Result<()> {
