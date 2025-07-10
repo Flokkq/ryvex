@@ -8,7 +8,7 @@ use std::{
 };
 
 use crate::{
-	target::target::STDIN_FILENO,
+	target::unix::target::STDIN_FILENO,
 	term::console::Handle,
 };
 

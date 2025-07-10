@@ -1,9 +1,11 @@
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 pub mod unix;
 #[cfg(any(target_os = "linux", target_os = "macos"))]
-pub use unix as target;
+pub use unix::*;
 
 #[cfg(target_os = "windows")]
 pub mod windows;
 #[cfg(target_os = "windows")]
-pub use windows as target;
+pub use windows::*;
+
+pub mod std;
