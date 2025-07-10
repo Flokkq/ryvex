@@ -6,7 +6,7 @@ pub mod console;
 pub mod handle;
 pub mod source;
 
-use crate::target::ffi;
+use super::ffi;
 use crate::term::console::Handle as OtherHandle;
 use ryvex_ui::graphics::Rect;
 use std::{

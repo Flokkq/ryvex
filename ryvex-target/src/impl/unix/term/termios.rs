@@ -2,8 +2,10 @@ use std::io;
 use std::os::fd::AsRawFd;
 use std::os::fd::RawFd;
 
-use crate::target::target;
-use crate::target::target::os::TCSANOW;
+use crate::target::unix::target::{
+	self,
+	os::TCSANOW,
+};
 use crate::term::console::{
 	Console,
 	Handle,
