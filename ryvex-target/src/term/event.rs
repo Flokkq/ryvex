@@ -1,10 +1,8 @@
-use std::{
-	io,
-	time::Duration,
-};
+use core::time::Duration;
 
 use crate::{
 	key::AsciiKeyCode,
+	std::Result,
 	target::term::TargetEventSource,
 };
 
@@ -16,10 +14,7 @@ pub enum Event {
 
 pub trait EventSource: Sync + Send {
 	/// Block until an event is available (or until timeout, if provided).
-	fn try_read(
-		&mut self,
-		timeout: Option<Duration>,
-	) -> io::Result<Option<Event>>;
+	fn try_read(&mut self, timeout: Option<Duration>) -> Result<Option<Event>>;
 }
 
 pub struct SyncEventStream {
@@ -27,7 +22,7 @@ pub struct SyncEventStream {
 }
 
 impl SyncEventStream {
-	pub fn new() -> io::Result<Self> {
+	pub fn new() -> Result<Self> {
 		let source = TargetEventSource::new()?;
 
 		Ok(Self {
@@ -37,7 +32,7 @@ impl SyncEventStream {
 }
 
 impl Iterator for SyncEventStream {
-	type Item = io::Result<Event>;
+	type Item = Result<Event>;
 
 	/// Block indefinitely until an event is available.
 	fn next(&mut self) -> Option<Self::Item> {

@@ -1,6 +1,5 @@
 use std::{
 	fs::OpenOptions,
-	io,
 	os::fd::{
 		IntoRawFd,
 		RawFd,
@@ -8,6 +7,10 @@ use std::{
 };
 
 use crate::{
+	std::{
+		error::IoError,
+		Result,
+	},
 	target::unix::target::STDIN_FILENO,
 	term::console::Handle,
 };
@@ -42,14 +45,15 @@ pub struct TtyFd {
 }
 
 impl TtyFd {
-	pub fn from_default_tty(read: bool, write: bool) -> io::Result<Self> {
+	pub fn from_default_tty(read: bool, write: bool) -> Result<Self> {
 		let (fd, close_on_drop) = if ffi::isatty(STDIN_FILENO) {
 			(STDIN_FILENO, false)
 		} else {
 			let file = OpenOptions::new()
 				.read(read)
 				.write(write)
-				.open("/dev/tty")?;
+				.open("/dev/tty")
+				.map_err(IoError::from)?;
 			(file.into_raw_fd(), true)
 		};
 
@@ -58,7 +62,7 @@ impl TtyFd {
 }
 
 impl Handle<RawFd, TtyFdSettings> for TtyFd {
-	fn acquire(mode: TtyFdSettings) -> io::Result<Self> {
+	fn acquire(mode: TtyFdSettings) -> Result<Self> {
 		TtyFd::from_default_tty(mode.read, mode.write)
 	}
 

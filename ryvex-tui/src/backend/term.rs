@@ -2,6 +2,7 @@ use super::Backend;
 use ryvex_target::{
 	execute,
 	queue,
+	std::error::IoError,
 	target::{
 		self,
 		term::Handle,
@@ -99,11 +100,11 @@ impl Backend for TerminalBackend {
 	}
 
 	fn size(&self) -> super::Result<ryvex_ui::graphics::Rect> {
-		Ok(target::term::get_terminal_size(&self.fd)?)
+		target::term::get_terminal_size(&self.fd)
 	}
 
 	fn flush(&mut self) -> super::Result<()> {
-		Ok(self.buffer.flush()?)
+		Ok(self.buffer.flush().map_err(IoError::from)?)
 	}
 
 	fn hide_cursor(&mut self) -> super::Result<()> {

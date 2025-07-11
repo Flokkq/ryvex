@@ -1,5 +1,3 @@
-use std::io;
-
 use log::warn;
 use ryvex_target::{
 	target::TargetContext,
@@ -62,7 +60,7 @@ impl Application {
 
 	pub fn run_until_stopped<S>(&mut self, input_stream: &mut S) -> Result<i32>
 	where
-		S: Iterator<Item = io::Result<Event>>,
+		S: Iterator<Item = ryvex_target::std::Result<Event>>,
 	{
 		self.render();
 
@@ -75,7 +73,7 @@ impl Application {
 
 	fn main_loop<S>(&mut self, input_stream: &mut S) -> Result<bool>
 	where
-		S: Iterator<Item = io::Result<Event>>,
+		S: Iterator<Item = ryvex_target::std::Result<Event>>,
 	{
 		loop {
 			if self.editor.should_close() {

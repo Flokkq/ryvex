@@ -7,7 +7,13 @@ pub mod handle;
 pub mod source;
 
 use super::ffi;
-use crate::term::console::Handle as OtherHandle;
+use crate::{
+	std::{
+		error::IoError,
+		Result,
+	},
+	term::console::Handle as OtherHandle,
+};
 use ryvex_ui::graphics::Rect;
 use std::{
 	io,
@@ -50,8 +56,9 @@ pub fn enable_vt_processing() -> io::Result<()> {
 	Ok(())
 }
 
-pub fn get_terminal_size(handle: &handle::ConsoleHandle) -> io::Result<Rect> {
-	let info = ffi::get_screen_buffer_info(*handle.inner())?;
+pub fn get_terminal_size(handle: &handle::ConsoleHandle) -> Result<Rect> {
+	let info =
+		ffi::get_screen_buffer_info(*handle.inner()).map_err(IoError::from)?;
 
 	let width = (info.srWindow.Right - info.srWindow.Left + 1) as u16;
 	let height = (info.srWindow.Bottom - info.srWindow.Top + 1) as u16;

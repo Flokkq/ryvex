@@ -1,9 +1,7 @@
-use std::{
-	io,
-	marker::PhantomData,
-};
+use core::marker::PhantomData;
 
 use ryvex_target::{
+	std::Result,
 	target::term::{
 		ConsoleSettings,
 		Handle,
@@ -19,7 +17,7 @@ pub struct TerminalGuard<'a> {
 }
 
 impl<'a> TerminalGuard<'a> {
-	pub fn spawn() -> io::Result<Self> {
+	pub fn spawn() -> Result<Self> {
 		let (mut console, handle) = ConsoleSettings::init()?;
 		let orig_console = console.raw(&handle)?;
 
@@ -30,7 +28,7 @@ impl<'a> TerminalGuard<'a> {
 		})
 	}
 
-	pub fn restore(&self) -> io::Result<()> {
+	pub fn restore(&self) -> Result<()> {
 		ConsoleSettings::restore(&self.handle, self.orig_console)
 	}
 }

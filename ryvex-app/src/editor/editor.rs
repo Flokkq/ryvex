@@ -9,25 +9,23 @@ use ryvex_target::{
 		TargetContext,
 		TargetFileSystem,
 	},
-	std::process::{
-		Exitstatus,
-		Shell,
+	std::{
+		process::{
+			Exitstatus,
+			Shell,
+			ShellError,
+		},
+		StdError,
 	},
 };
 
-use super::{
-	document::{
-		Document,
-		DocumentId,
-		Mode,
-	},
-	error::CommandError,
+use super::document::{
+	Document,
+	DocumentId,
+	Mode,
 };
 
-use crate::error::{
-	Result,
-	RyvexError,
-};
+use crate::error::Result;
 
 #[derive(Debug)]
 pub struct Editor {
@@ -144,26 +142,31 @@ impl Editor {
 			let parts: Vec<&str> = command.split_whitespace().collect();
 
 			if !parts.is_empty() {
-				let status = target
-					.shell
-					.status(parts[0], &parts[1..])
-					.map_err(|_| CommandError::ExecutionFailed)
-					.map_err(RyvexError::from)?;
+				let status = target.shell.status(parts[0], &parts[1..])?;
 
 				if status.failure() {
-					return Err(CommandError::ExecutionFailed.into());
+					return Err(StdError::Shell(ShellError::ExecutionFailed(
+						input,
+					))
+					.into());
 				}
 
 				return Ok(status);
 			}
 
-			return Err(CommandError::InvalidCommand.into());
+			return Err(
+				StdError::Shell(ShellError::CommandNotFound(input)).into()
+			);
 		}
 
 		match input.as_str() {
 			"q" | "quit" => self.quit(),
 			"w" | "write" => self.write_active_document(&target.fs),
-			_ => return Err(CommandError::InvalidCommand.into()),
+			_ => {
+				return Err(
+					StdError::Shell(ShellError::CommandNotFound(input)).into()
+				)
+			}
 		}
 
 		Ok(Exitstatus::Success)

@@ -2,6 +2,8 @@ use std::io;
 use std::os::fd::AsRawFd;
 use std::os::fd::RawFd;
 
+use crate::std::error::IoError;
+use crate::std::Result;
 use crate::target::unix::target::{
 	self,
 	os::TCSANOW,
@@ -23,8 +25,8 @@ pub struct Termios {
 }
 
 impl Termios {
-	pub fn from_fd(fd: RawFd) -> io::Result<Self> {
-		let termios = ffi::tcgetattr(fd)?;
+	pub fn from_fd(fd: RawFd) -> Result<Self> {
+		let termios = ffi::tcgetattr(fd).map_err(IoError::from)?;
 
 		Ok(termios)
 	}
@@ -39,11 +41,11 @@ impl Termios {
 
 	/// Sets the terminal to `raw` mode and returns the original termios
 	/// configuration
-	pub fn enter_raw_mode(&mut self, fd: RawFd) -> io::Result<Self> {
+	pub fn enter_raw_mode(&mut self, fd: RawFd) -> Result<Self> {
 		let orig_termios = *self;
 
 		ffi::cfmakeraw(self);
-		ffi::tcsetattr(fd, TCSANOW, self)?;
+		ffi::tcsetattr(fd, TCSANOW, self).map_err(IoError::from)?;
 
 		Ok(orig_termios)
 	}
@@ -60,18 +62,19 @@ impl Termios {
 impl Console<RawFd, TtyFdSettings> for Termios {
 	type Handle = TtyFd;
 
-	fn init() -> Result<(Self, Self::Handle), io::Error> {
+	fn init() -> Result<(Self, Self::Handle)> {
 		let fd = TtyFd::acquire(TtyFdSettings::read())?;
 		let termios = Termios::from_fd(fd.inner().as_raw_fd())?;
 
 		Ok((termios, fd))
 	}
 
-	fn raw(&mut self, fd: &Self::Handle) -> std::io::Result<Self> {
+	fn raw(&mut self, fd: &Self::Handle) -> Result<Self> {
 		self.enter_raw_mode(fd.inner().as_raw_fd())
 	}
 
-	fn restore(fd: &Self::Handle, orig: Self) -> std::io::Result<()> {
-		Termios::restore_terminal(fd.inner().as_raw_fd(), orig)
+	fn restore(fd: &Self::Handle, orig: Self) -> Result<()> {
+		Ok(Termios::restore_terminal(fd.inner().as_raw_fd(), orig)
+			.map_err(IoError::from)?)
 	}
 }

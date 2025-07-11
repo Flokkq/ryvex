@@ -34,7 +34,7 @@ impl<S: PathScheme> StdShell<S> {
 
 impl<S: PathScheme> Shell for StdShell<S> {
 	fn status(&self, cmd: &str, args: &[&str]) -> Result<Exitstatus> {
-		let status = Command::new(cmd)
+		let code = Command::new(cmd)
 			.args(args)
 			.stdin(Stdio::null())
 			.stdout(Stdio::null())
@@ -46,9 +46,7 @@ impl<S: PathScheme> Shell for StdShell<S> {
 				} else {
 					IoError::from(err).into()
 				}
-			})?;
-
-		let code = status
+			})?
 			.code()
 			.ok_or(ShellError::ExecutionFailed(cmd.to_string()))?;
 
