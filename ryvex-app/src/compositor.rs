@@ -2,7 +2,10 @@ use std::any::Any;
 
 use crate::editor::editor::Editor;
 
-use ryvex_target::term::event::Event;
+use ryvex_target::{
+	r#impl::TargetContext,
+	term::event::Event,
+};
 use ryvex_tui::buffer::Buffer;
 use ryvex_ui::graphics::Rect;
 
@@ -21,7 +24,8 @@ pub enum EventResult {
 }
 
 pub struct Context<'a> {
-	pub editor: &'a mut Editor,
+	pub editor:    &'a mut Editor,
+	pub target_cx: &'a mut TargetContext,
 }
 
 impl Compositor {

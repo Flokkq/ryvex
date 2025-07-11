@@ -63,7 +63,7 @@ impl Component for CommandLine {
 				AsciiKeyCode::CarriageReturn => {
 					let _ = cx
 						.editor
-						.submit_command()
+						.submit_command(cx.target_cx)
 						.map_err(|err| cx.editor.log_error(err.to_string()));
 
 					cx.editor.enter_normal_mode();

@@ -127,18 +127,9 @@ dependencies = [
  "env_logger",
  "log",
  "proc-macros",
- "ryvex-std",
  "ryvex-target",
  "ryvex-tui",
  "ryvex-ui",
-]
-
-[[package]]
-name = "ryvex-std"
-version = "0.1.0"
-dependencies = [
- "log",
- "proc-macros",
 ]
 
 [[package]]

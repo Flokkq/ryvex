@@ -13,7 +13,6 @@ use crate::editor::error::{
 #[derive(StackTraceDebug)]
 pub enum RyvexError {
 	IoError(std::io::Error),
-	StdError(ryvex_std::error::StdError),
 	TuiError(ryvex_tui::error::TuiError),
 	DocumentError(DocumentError),
 	CommandError(CommandError),
@@ -25,7 +24,6 @@ impl Error for RyvexError {
 	fn source(&self) -> Option<&(dyn Error + 'static)> {
 		match self {
 			RyvexError::IoError(error) => Some(error),
-			RyvexError::StdError(error) => Some(error),
 			RyvexError::TuiError(error) => Some(error),
 			RyvexError::DocumentError(error) => Some(error),
 			RyvexError::CommandError(error) => Some(error),
@@ -47,7 +45,6 @@ impl Display for RyvexError {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			RyvexError::IoError(err) => write!(f, "io-error: {}", err),
-			RyvexError::StdError(err) => write!(f, "ryvex-std error: {}", err),
 			RyvexError::TuiError(err) => {
 				write!(f, "ryvex-tui error: {}", err)
 			}
@@ -64,12 +61,6 @@ impl Display for RyvexError {
 				write!(f, "Error while parsing arguments: {}", msg)
 			}
 		}
-	}
-}
-
-impl From<ryvex_std::error::StdError> for RyvexError {
-	fn from(error: ryvex_std::error::StdError) -> Self {
-		RyvexError::StdError(error)
 	}
 }
 

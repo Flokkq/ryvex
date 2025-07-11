@@ -9,12 +9,11 @@ use ryvex_app::{
 	startup::Application,
 	terminal_guard::TerminalGuard,
 };
-use ryvex_target::term::event::SyncEventStream;
-use std::{
-	self,
-	env::{
-		self,
-	},
+use ryvex_target::{
+	r#impl::TargetEnvironment,
+	std::env::Environment,
+	target::TargetContext,
+	term::event::SyncEventStream,
 };
 
 fn main() -> ! {
@@ -34,15 +33,16 @@ fn main() -> ! {
 }
 
 fn app_main() -> Result<i32> {
-	let args = Args::parse_args()?;
+	let cx = TargetContext::default();
+	let args = Args::parse_args(&cx.env)?;
 
 	if args.help_flag {
 		print_help();
 		return Ok(0);
 	}
 
-	setup_logging(args.verbosity)?;
-	let mut app = Application::build(args)?;
+	setup_logging(&cx.env, args.verbosity)?;
+	let mut app = Application::build(cx, args)?;
 
 	let mut event_stream = SyncEventStream::new()?;
 	let exit_code = app.run_until_stopped(&mut event_stream)?;
@@ -60,12 +60,12 @@ fn setup_panic_handler(guard: &'static TerminalGuard<'static>) {
 	}));
 }
 
-fn setup_logging(verbosity: usize) -> Result<()> {
+fn setup_logging(env: &TargetEnvironment, verbosity: usize) -> Result<()> {
 	match verbosity {
-		0 => env::set_var("RUST_LOG", "warn"),
-		1 => env::set_var("RUST_LOG", "info"),
-		2 => env::set_var("RUST_LOG", "debug"),
-		_3_or_more => env::set_var("RUST_LOG", "trace"),
+		0 => env.set_var("RUST_LOG", "warn"),
+		1 => env.set_var("RUST_LOG", "info"),
+		2 => env.set_var("RUST_LOG", "debug"),
+		_3_or_more => env.set_var("RUST_LOG", "trace"),
 	}
 	logger::init()
 }
