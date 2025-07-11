@@ -4,7 +4,6 @@ use std::{
 		self,
 	},
 	io::{
-		self,
 		Read,
 		Write,
 	},
@@ -14,11 +13,10 @@ use std::{
 };
 
 use crate::std::{
+	error::IoError,
 	fs::{
 		File,
 		FileSystem,
-		FsError,
-		IoErrorKind,
 		Metadata,
 		OpenOptions,
 	},
@@ -26,6 +24,7 @@ use crate::std::{
 		Path,
 		PathScheme,
 	},
+	Result,
 };
 
 #[derive(Debug, Clone, Default)]
@@ -49,12 +48,12 @@ pub struct StdFileHandle<S: PathScheme> {
 impl<S: PathScheme> FileSystem<S> for StdFileSystem<S> {
 	type File = StdFileHandle<S>;
 
-	fn expand(&self, raw: &Path<S>) -> Result<Path<S>, FsError> {
+	fn expand(&self, raw: &Path<S>) -> Result<Path<S>> {
 		let p = StdPath::new(raw.as_str());
 		let abs = if p.is_absolute() {
 			p.to_path_buf()
 		} else {
-			let mut cwd = env::current_dir()?;
+			let mut cwd = env::current_dir().map_err(IoError::from)?;
 			cwd.push(p);
 			cwd
 		};
@@ -62,8 +61,9 @@ impl<S: PathScheme> FileSystem<S> for StdFileSystem<S> {
 		Ok(Path::<S>::from_str(&s).unwrap())
 	}
 
-	fn metadata(&self, path: &Path<S>) -> Result<Metadata, FsError> {
-		let m = fs::metadata(StdPath::new(path.as_str()))?;
+	fn metadata(&self, path: &Path<S>) -> Result<Metadata> {
+		let m =
+			fs::metadata(StdPath::new(path.as_str())).map_err(IoError::from)?;
 
 		Ok(Metadata {
 			is_dir: m.is_dir(),
@@ -71,17 +71,14 @@ impl<S: PathScheme> FileSystem<S> for StdFileSystem<S> {
 		})
 	}
 
-	fn open(
-		&self,
-		path: &Path<S>,
-		opts: OpenOptions,
-	) -> Result<Self::File, FsError> {
+	fn open(&self, path: &Path<S>, opts: OpenOptions) -> Result<Self::File> {
 		let f = fs::OpenOptions::new()
 			.read(opts.read)
 			.write(opts.write)
 			.create(opts.create)
 			.truncate(opts.truncate)
-			.open(StdPath::new(path.as_str()))?;
+			.open(StdPath::new(path.as_str()))
+			.map_err(IoError::from)?;
 
 		Ok(StdFileHandle {
 			inner:   f,
@@ -89,8 +86,9 @@ impl<S: PathScheme> FileSystem<S> for StdFileSystem<S> {
 		})
 	}
 
-	fn create(path: &Path<S>) -> Result<Self::File, FsError> {
-		let f = fs::File::create(StdPath::new(path.as_str()))?;
+	fn create(path: &Path<S>) -> Result<Self::File> {
+		let f = fs::File::create(StdPath::new(path.as_str()))
+			.map_err(IoError::from)?;
 
 		Ok(StdFileHandle {
 			inner:   f,
@@ -100,29 +98,13 @@ impl<S: PathScheme> FileSystem<S> for StdFileSystem<S> {
 }
 
 impl<S: PathScheme> File<S> for StdFileHandle<S> {
-	fn read(&mut self, buf: &mut [u8]) -> Result<usize, FsError> {
-		self.inner.read(buf).map_err(FsError::from)
+	fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
+		Ok(self.inner.read(buf).map_err(IoError::from)?)
 	}
-	fn write(&mut self, buf: &[u8]) -> Result<usize, FsError> {
-		self.inner.write(buf).map_err(FsError::from)
+	fn write(&mut self, buf: &[u8]) -> Result<usize> {
+		Ok(self.inner.write(buf).map_err(IoError::from)?)
 	}
-	fn flush(&mut self) -> Result<(), FsError> {
-		self.inner.flush().map_err(FsError::from)
-	}
-}
-
-impl From<io::Error> for FsError {
-	fn from(err: io::Error) -> FsError {
-		let kind = match err.kind() {
-			io::ErrorKind::NotFound => IoErrorKind::NotFound,
-			io::ErrorKind::PermissionDenied => IoErrorKind::PermissionDenied,
-			io::ErrorKind::AlreadyExists => IoErrorKind::AlreadyExists,
-			io::ErrorKind::InvalidInput => IoErrorKind::InvalidInput,
-			io::ErrorKind::UnexpectedEof => IoErrorKind::UnexpectedEof,
-			io::ErrorKind::WouldBlock => IoErrorKind::WouldBlock,
-			_ => IoErrorKind::Other,
-		};
-
-		FsError::Io(kind)
+	fn flush(&mut self) -> Result<()> {
+		Ok(self.inner.flush().map_err(IoError::from)?)
 	}
 }

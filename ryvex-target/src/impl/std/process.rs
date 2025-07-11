@@ -1,5 +1,5 @@
 use std::{
-	io,
+	io::ErrorKind,
 	marker::PhantomData,
 	process::{
 		Command,
@@ -8,12 +8,15 @@ use std::{
 };
 
 use crate::std::{
-	fs::IoErrorKind,
+	error::IoError,
 	path::PathScheme,
 	process::{
+		Exitstatus,
 		Shell,
 		ShellError,
 	},
+	Result,
+	StdError,
 };
 
 #[derive(Debug, Clone, Default)]
@@ -30,28 +33,25 @@ impl<S: PathScheme> StdShell<S> {
 }
 
 impl<S: PathScheme> Shell for StdShell<S> {
-	fn status(&self, cmd: &str, args: &[&str]) -> Result<i32, ShellError> {
+	fn status(&self, cmd: &str, args: &[&str]) -> Result<Exitstatus> {
 		let status = Command::new(cmd)
 			.args(args)
 			.stdin(Stdio::null())
 			.stdout(Stdio::null())
 			.stderr(Stdio::null())
-			.status()?;
+			.status()
+			.map_err(|err| -> StdError {
+				if err.kind() == ErrorKind::NotFound {
+					ShellError::CommandNotFound(cmd.to_string()).into()
+				} else {
+					IoError::from(err).into()
+				}
+			})?;
 
-		status.code().ok_or(ShellError::ExecutionFailed)
-	}
-}
+		let code = status
+			.code()
+			.ok_or(ShellError::ExecutionFailed(cmd.to_string()))?;
 
-impl From<io::Error> for ShellError {
-	fn from(e: io::Error) -> Self {
-		ShellError::Io(match e.kind() {
-			io::ErrorKind::NotFound => IoErrorKind::NotFound,
-			io::ErrorKind::PermissionDenied => IoErrorKind::PermissionDenied,
-			io::ErrorKind::AlreadyExists => IoErrorKind::AlreadyExists,
-			io::ErrorKind::InvalidInput => IoErrorKind::InvalidInput,
-			io::ErrorKind::UnexpectedEof => IoErrorKind::UnexpectedEof,
-			io::ErrorKind::WouldBlock => IoErrorKind::WouldBlock,
-			_ => IoErrorKind::Other,
-		})
+		Exitstatus::from_code(code)
 	}
 }
