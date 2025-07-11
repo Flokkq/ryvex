@@ -1,12 +1,15 @@
 use super::ffi;
 use std::{
-	io,
 	os::windows::io::RawHandle,
 	ptr,
 };
 
 use crate::{
 	c,
+	std::{
+		error::IoError,
+		Result,
+	},
 	term::console::Handle,
 };
 
@@ -38,7 +41,7 @@ pub struct ConsoleHandle {
 }
 
 impl ConsoleHandle {
-	pub fn from_default_tty(read: bool, _write: bool) -> io::Result<Self> {
+	pub fn from_default_tty(read: bool, _write: bool) -> Result<Self> {
 		let handle = ffi::get_current_out_handle();
 		if let Ok(h) = handle {
 			return Ok(ConsoleHandle {
@@ -61,7 +64,8 @@ impl ConsoleHandle {
 			ffi::OPEN_EXISTING,
 			0,
 			ptr::null_mut(),
-		)?;
+		)
+		.map_err(IoError::from)?;
 
 		Ok(ConsoleHandle {
 			handle:        handle as RawHandle,
@@ -71,7 +75,7 @@ impl ConsoleHandle {
 }
 
 impl Handle<RawHandle, ConsoleHandleSettings> for ConsoleHandle {
-	fn acquire(mode: ConsoleHandleSettings) -> io::Result<Self> {
+	fn acquire(mode: ConsoleHandleSettings) -> Result<Self> {
 		ConsoleHandle::from_default_tty(mode.read, mode.write)
 	}
 

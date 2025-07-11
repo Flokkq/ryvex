@@ -1,40 +1,35 @@
 use super::ffi;
 use crate::{
 	key::AsciiKeyCode,
+	std::Result,
 	term::event::{
 		Event,
 		EventSource,
 	},
 };
-use std::{
-	io,
-	time::{
-		Duration,
-		Instant,
-	},
+use std::time::{
+	Duration,
+	Instant,
 };
 
 pub struct WindowsEventSource;
 
 impl WindowsEventSource {
-	pub fn new() -> io::Result<Self> {
+	pub fn new() -> Result<Self> {
 		Ok(Self)
 	}
 }
 
 impl EventSource for WindowsEventSource {
-	fn try_read(
-		&mut self,
-		timeout: Option<Duration>,
-	) -> io::Result<Option<Event>> {
+	fn try_read(&mut self, timeout: Option<Duration>) -> Result<Option<Event>> {
 		if timeout.is_none() {
-			return Ok(Some(read_key_blocking()?));
+			return Ok(Some(read_key_blocking()));
 		}
 
 		let deadline = Instant::now() + timeout.unwrap();
 		loop {
 			if ffi::kbhit() {
-				return Ok(Some(read_key_blocking()?));
+				return Ok(Some(read_key_blocking()));
 			}
 			if Instant::now() >= deadline {
 				return Ok(None);
@@ -44,13 +39,13 @@ impl EventSource for WindowsEventSource {
 	}
 }
 
-fn read_key_blocking() -> io::Result<Event> {
+fn read_key_blocking() -> Event {
 	loop {
 		let ch = ffi::getch();
 		if ch == 0 || ch == 0xE0 {
 			let _ = ffi::getch();
 			continue;
 		}
-		return Ok(Event::Key(AsciiKeyCode::from_ascii(ch as u8)));
+		return Event::Key(AsciiKeyCode::from_ascii(ch as u8));
 	}
 }

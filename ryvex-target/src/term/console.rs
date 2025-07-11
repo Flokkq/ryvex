@@ -1,4 +1,4 @@
-use std::io;
+use crate::std::Result;
 
 /// Abstraction over a resource handle (e.g. a terminal file descriptor)
 ///
@@ -10,7 +10,7 @@ where
 	Self: Sized,
 {
 	// Acquire a new handle instance.
-	fn acquire(mode: S) -> io::Result<Self>;
+	fn acquire(mode: S) -> Result<Self>;
 
 	fn inner(&self) -> &T;
 
@@ -29,15 +29,15 @@ where
 
 	/// Read the current console settings form the handle and return a new
 	/// instance capturing the saved state;
-	fn init() -> io::Result<(Self, Self::Handle)>;
+	fn init() -> Result<(Self, Self::Handle)>;
 
 	/// Switch the console into raw (unprocessed) mode, return the previous
 	/// configuration so it can later be restored.
-	fn raw(&mut self, fd: &Self::Handle) -> io::Result<Self>;
+	fn raw(&mut self, fd: &Self::Handle) -> Result<Self>;
 
 	/// Restore the console to a previously saved configuration.
 	///
 	/// # Parameters
 	/// - `orig`: the state returned by a prior call to `raw`.
-	fn restore(fd: &Self::Handle, orig: Self) -> io::Result<()>;
+	fn restore(fd: &Self::Handle, orig: Self) -> Result<()>;
 }

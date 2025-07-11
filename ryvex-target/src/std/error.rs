@@ -5,6 +5,21 @@ use core::fmt::Display;
 /// Simple trait for chaining errors
 pub trait Error: Debug + Display {
 	fn source(&self) -> Option<&(dyn Error + 'static)>;
+
+	fn root(&self) -> Option<&(dyn Error + 'static)>
+	where
+		Self: 'static + Sized,
+	{
+		let mut current: &(dyn Error + 'static) = self;
+		let mut last: Option<&(dyn Error + 'static)> = None;
+
+		while let Some(src) = current.source() {
+			last = Some(src);
+			current = src;
+		}
+
+		last
+	}
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

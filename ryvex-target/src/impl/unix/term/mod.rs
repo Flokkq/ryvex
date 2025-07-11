@@ -8,8 +8,9 @@ use super::{
 	ffi,
 	target::os::TIOCGWINSZ,
 };
+use crate::std::error::IoError;
+use crate::std::Result;
 use ryvex_ui::graphics::Rect;
-use std::io;
 
 pub use fd::TtyFd as Handle;
 pub use fd::TtyFdSettings as HandleMode;
@@ -22,10 +23,11 @@ pub(crate) fn supports_ansi() -> bool {
 	true
 }
 
-pub fn get_terminal_size(fd: &fd::TtyFd) -> io::Result<Rect> {
+pub fn get_terminal_size(fd: &fd::TtyFd) -> Result<Rect> {
 	// unwrap is safe because we know that `TIOCGWINSZ` always fits into a
 	// `c_ulong`
-	let winsize = ffi::ioctl(fd, TIOCGWINSZ.try_into().unwrap())?;
+	let winsize = ffi::ioctl(fd, TIOCGWINSZ.try_into().unwrap())
+		.map_err(IoError::from)?;
 
 	Ok(Rect {
 		width:  winsize.ws_col,

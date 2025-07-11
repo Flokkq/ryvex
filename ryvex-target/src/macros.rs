@@ -23,7 +23,7 @@ macro_rules! queue {
         use ::std::io::Write;
 
         Ok($writer.by_ref())
-            $(.and_then(|writer| $crate::term::command::QueueableCommand::queue(writer, $command)))*
+            $(.and_then(|writer| $crate::term::command::QueueableCommand::queue(writer, $command).map_err($crate::std::error::IoError::from)))*
             .map(|_| ())
     }}
 }
@@ -36,7 +36,7 @@ macro_rules! execute {
         // Queue each command, then flush
         $crate::queue!($writer $(, $command)*)
             .and_then(|()| {
-                ::std::io::Write::flush($writer.by_ref())
+                ::std::io::Write::flush($writer.by_ref()).map_err($crate::std::error::IoError::from)
             })
     }}
 }

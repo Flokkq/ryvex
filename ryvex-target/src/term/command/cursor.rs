@@ -6,7 +6,7 @@ use super::WriteAnsi;
 pub struct MoveTo(pub u16, pub u16);
 
 impl WriteAnsi for MoveTo {
-	fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+	fn write_ansi(&self, f: &mut impl core::fmt::Write) -> core::fmt::Result {
 		write!(f, csi!("{};{}H"), self.0, self.1)
 	}
 }
@@ -17,7 +17,7 @@ impl WriteAnsi for MoveTo {
 pub struct MoveToNextLine(pub u16);
 
 impl WriteAnsi for MoveToNextLine {
-	fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+	fn write_ansi(&self, f: &mut impl core::fmt::Write) -> core::fmt::Result {
 		write!(f, csi!("{}E"), self.0)
 	}
 }
@@ -28,7 +28,7 @@ impl WriteAnsi for MoveToNextLine {
 pub struct MoveToPreviousLine(pub u16);
 
 impl WriteAnsi for MoveToPreviousLine {
-	fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+	fn write_ansi(&self, f: &mut impl core::fmt::Write) -> core::fmt::Result {
 		write!(f, csi!("{}F"), self.0)
 	}
 }
@@ -39,7 +39,7 @@ impl WriteAnsi for MoveToPreviousLine {
 pub struct MoveToColumn(pub u16);
 
 impl WriteAnsi for MoveToColumn {
-	fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+	fn write_ansi(&self, f: &mut impl core::fmt::Write) -> core::fmt::Result {
 		write!(f, csi!("{}G"), self.0 + 1)
 	}
 }
@@ -49,7 +49,7 @@ impl WriteAnsi for MoveToColumn {
 pub struct MoveToRow(pub u16);
 
 impl WriteAnsi for MoveToRow {
-	fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+	fn write_ansi(&self, f: &mut impl core::fmt::Write) -> core::fmt::Result {
 		write!(f, csi!("{}d"), self.0 + 1)
 	}
 }
@@ -59,7 +59,7 @@ impl WriteAnsi for MoveToRow {
 pub struct MoveUp(pub u16);
 
 impl WriteAnsi for MoveUp {
-	fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+	fn write_ansi(&self, f: &mut impl core::fmt::Write) -> core::fmt::Result {
 		write!(f, csi!("{}A"), self.0)
 	}
 }
@@ -70,7 +70,7 @@ impl WriteAnsi for MoveUp {
 pub struct MoveDown(pub u16);
 
 impl WriteAnsi for MoveDown {
-	fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+	fn write_ansi(&self, f: &mut impl core::fmt::Write) -> core::fmt::Result {
 		write!(f, csi!("{}B"), self.0)
 	}
 }
@@ -81,7 +81,7 @@ impl WriteAnsi for MoveDown {
 pub struct MoveLeft(pub u16);
 
 impl WriteAnsi for MoveLeft {
-	fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+	fn write_ansi(&self, f: &mut impl core::fmt::Write) -> core::fmt::Result {
 		write!(f, csi!("{}D"), self.0)
 	}
 }
@@ -92,7 +92,7 @@ impl WriteAnsi for MoveLeft {
 pub struct MoveRight(pub u16);
 
 impl WriteAnsi for MoveRight {
-	fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+	fn write_ansi(&self, f: &mut impl core::fmt::Write) -> core::fmt::Result {
 		write!(f, csi!("{}C"), self.0)
 	}
 }
@@ -101,7 +101,7 @@ impl WriteAnsi for MoveRight {
 pub struct SavePosition;
 
 impl WriteAnsi for SavePosition {
-	fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+	fn write_ansi(&self, f: &mut impl core::fmt::Write) -> core::fmt::Result {
 		write!(f, csi!("s"))
 	}
 }
@@ -110,7 +110,7 @@ impl WriteAnsi for SavePosition {
 pub struct RestorePosition;
 
 impl WriteAnsi for RestorePosition {
-	fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+	fn write_ansi(&self, f: &mut impl core::fmt::Write) -> core::fmt::Result {
 		write!(f, csi!("u"))
 	}
 }
@@ -119,7 +119,7 @@ impl WriteAnsi for RestorePosition {
 pub struct Show;
 
 impl WriteAnsi for Show {
-	fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+	fn write_ansi(&self, f: &mut impl core::fmt::Write) -> core::fmt::Result {
 		f.write_str(csi!("?25h"))
 	}
 }
@@ -128,7 +128,7 @@ impl WriteAnsi for Show {
 pub struct Hide;
 
 impl WriteAnsi for Hide {
-	fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+	fn write_ansi(&self, f: &mut impl core::fmt::Write) -> core::fmt::Result {
 		f.write_str(csi!("?25l"))
 	}
 }
@@ -137,7 +137,7 @@ impl WriteAnsi for Hide {
 pub struct EnableBlinking;
 
 impl WriteAnsi for EnableBlinking {
-	fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+	fn write_ansi(&self, f: &mut impl core::fmt::Write) -> core::fmt::Result {
 		f.write_str(csi!("?12h"))
 	}
 }
@@ -146,7 +146,7 @@ impl WriteAnsi for EnableBlinking {
 pub struct DisableBlinking;
 
 impl WriteAnsi for DisableBlinking {
-	fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+	fn write_ansi(&self, f: &mut impl core::fmt::Write) -> core::fmt::Result {
 		f.write_str(csi!("?12l"))
 	}
 }
@@ -171,7 +171,7 @@ pub enum SetCursorStyle {
 }
 
 impl WriteAnsi for SetCursorStyle {
-	fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+	fn write_ansi(&self, f: &mut impl core::fmt::Write) -> core::fmt::Result {
 		match self {
 			SetCursorStyle::DefaultUserShape => f.write_str("\x1b[0 q"),
 			SetCursorStyle::BlinkingBlock => f.write_str("\x1b[1 q"),

@@ -1,6 +1,5 @@
 use std::{
 	error::Error,
-	io,
 	os::fd::AsRawFd,
 	time::Duration,
 };
@@ -11,6 +10,10 @@ use super::{
 };
 use crate::{
 	key::AsciiKeyCode,
+	std::{
+		error::IoError,
+		Result,
+	},
 	term::{
 		console::Handle,
 		event::{
@@ -27,7 +30,7 @@ pub struct UnixEventSource {
 
 impl UnixEventSource {
 	/// Creates a new UnixEventSource by obtaining a tty file descriptor.
-	pub fn new() -> io::Result<Self> {
+	pub fn new() -> Result<Self> {
 		let tty = TtyFd::from_default_tty(false, true)?;
 
 		Ok(Self { tty })
@@ -38,14 +41,14 @@ impl EventSource for UnixEventSource {
 	fn try_read(
 		&mut self,
 		_timeout: Option<Duration>,
-	) -> io::Result<Option<Event>> {
+	) -> Result<Option<Event>> {
 		let mut buf = [0u8; 1];
 
 		match ffi::read(self.tty.inner().as_raw_fd(), &mut buf) {
 			Ok(0) => Ok(None),
 			Ok(_) => Ok(Some(Event::Key(AsciiKeyCode::from_ascii(buf[0])))),
 			Err(e) if is_would_block(&e) => Ok(None),
-			Err(e) => Err(e),
+			Err(e) => Err(IoError::from(e).into()),
 		}
 	}
 }

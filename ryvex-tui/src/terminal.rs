@@ -6,8 +6,9 @@ use ryvex_ui::graphics::{
 use crate::{
 	backend::Backend,
 	buffer::Buffer,
-	error::Result,
 };
+
+use ryvex_target::std::Result;
 
 pub struct Terminal<B: Backend> {
 	backend: B,
@@ -58,7 +59,7 @@ where
 		let current_buffer = &self.buffers[self.current];
 		let updates = previous_buffer.diff(current_buffer);
 
-		Ok(self.backend.draw(updates.into_iter())?)
+		self.backend.draw(updates.into_iter())
 	}
 
 	pub fn clear(&mut self) -> Result<()> {
@@ -72,6 +73,6 @@ where
 	}
 
 	pub fn size(&self) -> Result<Rect> {
-		Ok(self.backend.size()?)
+		self.backend.size()
 	}
 }
