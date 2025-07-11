@@ -9,7 +9,10 @@ use ryvex_target::{
 		TargetContext,
 		TargetFileSystem,
 	},
-	std::process::Shell,
+	std::process::{
+		Exitstatus,
+		Shell,
+	},
 };
 
 use super::{
@@ -131,7 +134,10 @@ impl Editor {
 		let _ = self.command_buffer.pop();
 	}
 
-	pub fn submit_command(&mut self, target: &TargetContext) -> Result<i32> {
+	pub fn submit_command(
+		&mut self,
+		target: &TargetContext,
+	) -> Result<Exitstatus> {
 		let input: String = self.command_buffer.trim().to_string();
 
 		if let Some(command) = input.strip_prefix('!') {
@@ -144,7 +150,7 @@ impl Editor {
 					.map_err(|_| CommandError::ExecutionFailed)
 					.map_err(RyvexError::from)?;
 
-				if !status == 0 {
+				if status.failure() {
 					return Err(CommandError::ExecutionFailed.into());
 				}
 
@@ -160,7 +166,7 @@ impl Editor {
 			_ => return Err(CommandError::InvalidCommand.into()),
 		}
 
-		Ok(0)
+		Ok(Exitstatus::Success)
 	}
 
 	pub fn enter_normal_mode(&mut self) {

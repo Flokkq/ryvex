@@ -1,0 +1,55 @@
+use core::fmt;
+use core::fmt::Debug;
+use core::fmt::Display;
+
+/// Simple trait for chaining errors
+pub trait Error: Debug + Display {
+	fn source(&self) -> Option<&(dyn Error + 'static)>;
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct IoError(pub IoErrorKind);
+
+impl Error for IoError {
+	fn source(&self) -> Option<&(dyn Error + 'static)> {
+		None
+	}
+}
+
+impl Display for IoError {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "io error: {}", self.0)
+	}
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum IoErrorKind {
+	NotFound,
+	PermissionDenied,
+	AlreadyExists,
+	InvalidInput,
+	UnexpectedEof,
+	WouldBlock,
+	Other,
+}
+
+impl fmt::Display for IoErrorKind {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		let s = match *self {
+			IoErrorKind::NotFound => "not found",
+			IoErrorKind::PermissionDenied => "permission denied",
+			IoErrorKind::AlreadyExists => "already exists",
+			IoErrorKind::InvalidInput => "invalid input",
+			IoErrorKind::UnexpectedEof => "unexpected EOF",
+			IoErrorKind::WouldBlock => "would block",
+			IoErrorKind::Other => "other error",
+		};
+		write!(f, "{}", s)
+	}
+}
+
+impl Error for core::str::Utf8Error {
+	fn source(&self) -> Option<&(dyn Error + 'static)> {
+		None
+	}
+}
