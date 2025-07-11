@@ -1,5 +1,4 @@
 use proc_macros::StackTraceDebug;
-use ryvex_std::error::StdError;
 use std::{
 	error::Error,
 	fmt::Display,
@@ -7,8 +6,8 @@ use std::{
 
 #[derive(StackTraceDebug)]
 pub enum DocumentError {
-	SaveError(StdError),
-	OpenError(StdError),
+	SaveError(std::io::Error),
+	OpenError(std::io::Error),
 }
 
 impl Error for DocumentError {

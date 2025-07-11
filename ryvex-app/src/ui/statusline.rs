@@ -30,7 +30,8 @@ impl Component for StatusLine {
 		frame.set_string(0, y, " ".repeat(width));
 
 		let path = if let Some(doc) = cx.editor.get_active_document() {
-			doc.diplay_path().unwrap_or("[No Name]".into())
+			doc.diplay_path(&cx.target_cx.fs)
+				.unwrap_or("[No Name]".into())
 		} else {
 			"[No Document]".to_string()
 		};

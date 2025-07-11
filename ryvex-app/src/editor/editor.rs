@@ -1,14 +1,16 @@
 use std::{
 	collections::BTreeMap,
 	num::NonZeroUsize,
-	process::{
-		Command,
-		ExitStatus,
-		Stdio,
-	},
 };
 
-use ryvex_target::key;
+use ryvex_target::{
+	key,
+	r#impl::{
+		TargetContext,
+		TargetFileSystem,
+	},
+	std::process::Shell,
+};
 
 use super::{
 	document::{
@@ -79,12 +81,13 @@ impl Editor {
 			.and_then(move |id| self.documents.get_mut(&id))
 	}
 
-	fn write_active_document(&mut self) {
+	fn write_active_document(&mut self, fs: &TargetFileSystem) {
 		if let Some(doc) = self.get_active_document() {
-			match doc.save() {
+			match doc.save(fs) {
 				Ok(_) => {
-					let path =
-						doc.diplay_path().unwrap_or_else(|| "[scratch]".into());
+					let path = doc
+						.diplay_path(fs)
+						.unwrap_or_else(|| "[scratch]".into());
 
 					let msg = format!(
 						"\"{path}\" {}L, {}B written",
@@ -128,22 +131,20 @@ impl Editor {
 		let _ = self.command_buffer.pop();
 	}
 
-	pub fn submit_command(&mut self) -> Result<ExitStatus> {
+	pub fn submit_command(&mut self, target: &TargetContext) -> Result<i32> {
 		let input: String = self.command_buffer.trim().to_string();
 
 		if let Some(command) = input.strip_prefix('!') {
 			let parts: Vec<&str> = command.split_whitespace().collect();
 
 			if !parts.is_empty() {
-				let status = Command::new(parts[0])
-					.args(&parts[1..])
-					.stdin(Stdio::null())
-					.stdout(Stdio::null())
-					.status()
+				let status = target
+					.shell
+					.status(parts[0], &parts[1..])
 					.map_err(|_| CommandError::ExecutionFailed)
 					.map_err(RyvexError::from)?;
 
-				if !status.success() {
+				if !status == 0 {
 					return Err(CommandError::ExecutionFailed.into());
 				}
 
@@ -155,11 +156,11 @@ impl Editor {
 
 		match input.as_str() {
 			"q" | "quit" => self.quit(),
-			"w" | "write" => self.write_active_document(),
+			"w" | "write" => self.write_active_document(&target.fs),
 			_ => return Err(CommandError::InvalidCommand.into()),
 		}
 
-		Ok(ExitStatus::default())
+		Ok(0)
 	}
 
 	pub fn enter_normal_mode(&mut self) {

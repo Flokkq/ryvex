@@ -2,6 +2,7 @@ use std::io;
 
 use log::warn;
 use ryvex_target::{
+	target::TargetContext,
 	target::{
 		self,
 		term::Handle,
@@ -31,12 +32,13 @@ pub struct Application {
 	editor:     Editor,
 	compositor: Compositor,
 	terminal:   Terminal<TerminalBackend>,
+	target_cx:  TargetContext,
 }
 
 impl Application {
-	pub fn build(args: Args) -> Result<Self> {
+	pub fn build(cx: TargetContext, args: Args) -> Result<Self> {
 		let mut editor = Editor::new();
-		let document = Document::new(args.file)?;
+		let document = Document::new(args.file, &cx.fs)?;
 		let _id = editor.new_document(document);
 
 		let handle = Handle::from_default_tty(true, false)?;
@@ -54,6 +56,7 @@ impl Application {
 			editor,
 			compositor,
 			terminal,
+			target_cx: cx,
 		})
 	}
 
@@ -95,7 +98,8 @@ impl Application {
 		self.terminal.clear().expect("Failed to clear terminal");
 
 		let mut cx = crate::compositor::Context {
-			editor: &mut self.editor,
+			editor:    &mut self.editor,
+			target_cx: &mut self.target_cx,
 		};
 
 		let area = self.terminal.size().expect("Failed to get terminal size");
@@ -109,7 +113,8 @@ impl Application {
 
 	fn handle_terminal_event(&mut self, event: Event) {
 		let mut cx = compositor::Context {
-			editor: &mut self.editor,
+			editor:    &mut self.editor,
+			target_cx: &mut self.target_cx,
 		};
 
 		let should_redraw = match event {

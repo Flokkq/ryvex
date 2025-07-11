@@ -1,3 +1,5 @@
+extern crate alloc;
+
 pub mod key;
 pub mod std;
 pub mod term;
