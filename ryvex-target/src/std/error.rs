@@ -44,6 +44,7 @@ pub enum IoErrorKind {
 	AlreadyExists,
 	InvalidInput,
 	UnexpectedEof,
+	Interrupted,
 	WouldBlock,
 	Other,
 }
@@ -56,6 +57,7 @@ impl fmt::Display for IoErrorKind {
 			IoErrorKind::AlreadyExists => "already exists",
 			IoErrorKind::InvalidInput => "invalid input",
 			IoErrorKind::UnexpectedEof => "unexpected EOF",
+			IoErrorKind::Interrupted => "interrupted",
 			IoErrorKind::WouldBlock => "would block",
 			IoErrorKind::Other => "other error",
 		};
