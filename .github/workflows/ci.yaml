@@ -3,8 +3,24 @@ name: ci
 on:
   push:
     branches: [main]
+    paths:
+      - Cargo.toml
+      - '**/Cargo.toml'
+      - Cargo.lock
+      - '**/Cargo.lock'
+      - .cargo/**
+      - '**/.cargo/**'
+      - '**/*.rs'
   pull_request:
     branches: [main]
+    paths:
+      - Cargo.toml
+      - '**/Cargo.toml'
+      - Cargo.lock
+      - '**/Cargo.lock'
+      - .cargo/**
+      - '**/.cargo/**'
+      - '**/*.rs'
 
 env:
   CARGO_TERM_COLOR: always
