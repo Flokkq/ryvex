@@ -1,3 +1,7 @@
+use alloc::{
+	format,
+	string::ToString,
+};
 use ryvex_target::{
 	key::AsciiKeyCode,
 	std::error::Error,

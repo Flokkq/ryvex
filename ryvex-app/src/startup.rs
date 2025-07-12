@@ -1,4 +1,3 @@
-use log::warn;
 use ryvex_target::{
 	target::TargetContext,
 	target::{
@@ -11,6 +10,8 @@ use ryvex_tui::{
 	backend::term::TerminalBackend,
 	terminal::Terminal,
 };
+
+use alloc::boxed::Box;
 
 use crate::{
 	args::Args,
@@ -84,9 +85,7 @@ impl Application {
 				Some(Ok(event)) => {
 					self.handle_terminal_event(event);
 				}
-				Some(Err(e)) => {
-					warn!("Could not recieve terminal event: '{:?}'", e);
-				}
+				Some(Err(_)) => {}
 				_ => continue,
 			}
 		}

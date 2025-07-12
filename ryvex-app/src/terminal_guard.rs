@@ -24,7 +24,7 @@ impl<'a> TerminalGuard<'a> {
 		Ok(TerminalGuard {
 			handle,
 			orig_console,
-			_phantom: std::marker::PhantomData,
+			_phantom: core::marker::PhantomData,
 		})
 	}
 

@@ -1,4 +1,5 @@
-extern crate alloc;
+#![cfg_attr(not(feature = "std"), no_std)]
+pub extern crate alloc;
 
 pub mod key;
 pub mod std;

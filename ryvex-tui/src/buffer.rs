@@ -1,4 +1,12 @@
-use std::fmt::Display;
+use alloc::{
+	string::{
+		String,
+		ToString,
+	},
+	vec,
+	vec::Vec,
+};
+use core::fmt;
 
 use ryvex_ui::graphics::Rect;
 
@@ -102,8 +110,8 @@ impl Cell {
 	}
 }
 
-impl Display for Cell {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for Cell {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "{}", self.symbol)
 	}
 }

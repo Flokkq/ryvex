@@ -1,10 +1,13 @@
-use std::fmt::Display;
-
 use super::{
 	error::Error,
 	Result,
 	StdError,
 };
+use alloc::{
+	format,
+	string::String,
+};
+use core::fmt::Display;
 
 pub trait Shell {
 	/// Executes a command and returns its status
@@ -39,7 +42,7 @@ impl Exitstatus {
 impl TryFrom<i32> for Exitstatus {
 	type Error = StdError;
 
-	fn try_from(value: i32) -> std::result::Result<Self, Self::Error> {
+	fn try_from(value: i32) -> core::result::Result<Self, Self::Error> {
 		Exitstatus::from_code(value)
 	}
 }
@@ -62,7 +65,7 @@ impl Error for ShellError {
 }
 
 impl Display for ShellError {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
 		let s = match self {
 			ShellError::ExecutionFailed(s) => {
 				format!("failed executing command '{}'", s)

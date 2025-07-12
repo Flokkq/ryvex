@@ -1,5 +1,5 @@
 use core::fmt;
-use std::fmt::Display;
+use core::fmt::Display;
 
 use crate::csi;
 

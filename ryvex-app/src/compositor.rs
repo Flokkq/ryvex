@@ -1,4 +1,8 @@
-use std::any::Any;
+use alloc::{
+	boxed::Box,
+	vec::Vec,
+};
+use core::any::Any;
 
 use crate::editor::editor::Editor;
 
@@ -114,9 +118,7 @@ impl dyn AnyComponent {
 		self.as_any_mut().downcast_mut()
 	}
 
-	pub fn downcast<T: Any>(
-		self: Box<Self>,
-	) -> std::result::Result<Box<T>, Box<Self>> {
+	pub fn downcast<T: Any>(self: Box<Self>) -> Result<Box<T>, Box<Self>> {
 		// Do the check here + unwrap, so the error
 		// value is `Self` and not `dyn Any`.
 		if self.as_any().is::<T>() {
@@ -151,7 +153,7 @@ pub trait Component: Any + AnyComponent {
 	fn render(&mut self, area: Rect, frame: &mut Buffer, cx: &mut Context);
 
 	fn type_name(&self) -> &'static str {
-		std::any::type_name::<Self>()
+		core::any::type_name::<Self>()
 	}
 
 	fn id(&self) -> Option<&'static str> {

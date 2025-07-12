@@ -11,10 +11,17 @@ authors.workspace = true
 name = "ryvex"
 path = "src/main.rs"
 
+[features]
+default = ["std"]
+std = [
+  "ryvex-target/std",
+  "ryvex-ui/std",
+  "ryvex-tui/std",
+  "proc-macros/std"
+]
+
 [dependencies]
-ryvex-target = { path = "../ryvex-target"}
-ryvex-ui = { path = "../ryvex-ui" }
-ryvex-tui = { path = "../ryvex-tui" }
-proc-macros = { path = "../proc-macros" }
-log.workspace = true
-env_logger = "=0.10.2"
+ryvex-target.workspace = true
+ryvex-ui.workspace = true
+ryvex-tui.workspace = true
+proc-macros.workspace = true

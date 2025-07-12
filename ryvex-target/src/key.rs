@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use core::fmt::Display;
 
 /// Represents an ASCII key code.
 ///
@@ -185,7 +185,7 @@ impl From<u8> for AsciiKeyCode {
 			// Safety: Since `KeyCode` is #[repr(u8)] and we have exactly 128
 			// variants declared in order (0 to 127), transmuting is safe for
 			// values 0–127.
-			unsafe { std::mem::transmute::<u8, Self>(ascii) }
+			unsafe { core::mem::transmute::<u8, Self>(ascii) }
 		} else {
 			// For any non-ASCII value, we default to Nul.
 			AsciiKeyCode::Nul
@@ -200,7 +200,7 @@ impl From<AsciiKeyCode> for char {
 }
 
 impl Display for AsciiKeyCode {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
 		match self {
 			AsciiKeyCode::Nul => write!(f, "<C-@>"),
 			AsciiKeyCode::Soh => write!(f, "<C-A>"),

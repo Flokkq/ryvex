@@ -1,11 +1,14 @@
-use alloc::string::String;
+use alloc::{
+	borrow::ToOwned,
+	string::String,
+};
+use core::{
+	convert::Infallible,
+	str::FromStr,
+};
 use core::{
 	fmt,
 	marker::PhantomData,
-};
-use std::{
-	convert::Infallible,
-	str::FromStr,
 };
 
 pub trait PathScheme {

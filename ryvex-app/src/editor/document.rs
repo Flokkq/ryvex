@@ -1,9 +1,15 @@
-use std::{
-	fmt::Display,
+use core::{
+	fmt::{
+		self,
+		Display,
+	},
 	num::NonZeroUsize,
 };
 
-use log::warn;
+use alloc::string::{
+	String,
+	ToString,
+};
 use ryvex_target::{
 	key,
 	r#impl::{
@@ -26,8 +32,8 @@ impl Default for DocumentId {
 	}
 }
 
-impl std::fmt::Display for DocumentId {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for DocumentId {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> fmt::Result {
 		f.write_fmt(format_args!("{}", self.0))
 	}
 }
@@ -85,10 +91,7 @@ impl Document {
 				Ok(())
 			}
 			// TODO: error because file doesnt exist
-			None => {
-				warn!("Attempted to save document with no path");
-				Ok(())
-			}
+			None => Ok(()),
 		}
 	}
 
@@ -116,7 +119,7 @@ pub enum Mode {
 }
 
 impl Display for Mode {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			Mode::Normal => f.write_str("NORMAL"),
 			Mode::Visual => f.write_str("VISUAL"),
