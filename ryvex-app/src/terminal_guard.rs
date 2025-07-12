@@ -1,4 +1,11 @@
-use core::marker::PhantomData;
+use core::{
+	marker::PhantomData,
+	ptr,
+	sync::atomic::{
+		AtomicPtr,
+		Ordering,
+	},
+};
 
 use ryvex_target::{
 	std::Result,
@@ -8,6 +15,9 @@ use ryvex_target::{
 	},
 	term::console::Console,
 };
+
+pub static TERMINAL_GUARD: AtomicPtr<TerminalGuard> =
+	AtomicPtr::new(ptr::null_mut());
 
 pub struct TerminalGuard<'a> {
 	handle:       Handle,
@@ -36,6 +46,8 @@ impl<'a> TerminalGuard<'a> {
 impl<'a> Drop for TerminalGuard<'a> {
 	fn drop(&mut self) {
 		let _ = self.restore();
+
+		TERMINAL_GUARD.store(core::ptr::null_mut(), Ordering::SeqCst);
 	}
 }
 

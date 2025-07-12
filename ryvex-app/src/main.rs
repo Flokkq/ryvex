@@ -2,15 +2,13 @@
 #![cfg_attr(not(feature = "std"), feature(core_intrinsics))]
 extern crate alloc;
 
+use core::sync::atomic::Ordering;
 #[cfg(not(feature = "std"))]
 use core::{
 	panic::PanicInfo,
 	ptr,
-	sync::atomic::{
-		AtomicPtr,
-		Ordering,
-	},
 };
+use ryvex_app::terminal_guard::TERMINAL_GUARD;
 
 use alloc::boxed::Box;
 
@@ -19,7 +17,10 @@ use ryvex_app::{
 		self,
 		Args,
 	},
-	error::Result,
+	error::{
+		Result,
+		RyvexError,
+	},
 	startup::Application,
 	terminal_guard::TerminalGuard,
 };
@@ -28,21 +29,9 @@ use ryvex_target::{
 	term::event::SyncEventStream,
 };
 
-#[cfg(not(feature = "std"))]
-static TERMINAL_GUARD: AtomicPtr<TerminalGuard> =
-	AtomicPtr::new(ptr::null_mut());
-
 fn main() -> ! {
-	let guard = Box::leak(Box::new(TerminalGuard::spawn().unwrap()));
-	#[cfg(not(feature = "std"))]
-	TERMINAL_GUARD.store(guard, Ordering::SeqCst);
-
-	#[cfg(feature = "std")]
-	setup_panic_handler(guard);
-
 	let exit_code: i32 = app_main().unwrap_or(1);
 
-	let _ = guard.restore();
 	ryvex_target::target::exit(exit_code)
 }
 
@@ -54,14 +43,27 @@ fn app_main() -> Result<i32> {
 		args::print_help(&cx.env);
 		return Ok(0);
 	}
-	// setup_logging(&cx.env, args.verbosity)?;
 
+	let guard = Box::new(TerminalGuard::spawn()?);
+	TERMINAL_GUARD
+		.store(&*guard as *const _ as *mut TerminalGuard, Ordering::SeqCst);
+
+	#[cfg(feature = "std")]
+	setup_panic_handler();
+
+	// setup_logging(&cx.env, args.verbosity)?;
 	let mut app = Application::build(cx, args)?;
+	error()?;
 
 	let mut event_stream = SyncEventStream::new()?;
 	let exit_code = app.run_until_stopped(&mut event_stream)?;
 
+	let _ = guard.restore();
 	Ok(exit_code)
+}
+
+fn error() -> Result<()> {
+	Err(RyvexError::LoggerError("Tja SChade".to_string()))
 }
 
 #[cfg(not(feature = "std"))]
@@ -76,11 +78,15 @@ fn panic(info: &PanicInfo) -> ! {
 }
 
 #[cfg(feature = "std")]
-fn setup_panic_handler(guard: &'static TerminalGuard<'static>) {
+fn setup_panic_handler() {
 	let original_hook = std::panic::take_hook();
 
 	std::panic::set_hook(Box::new(move |info| {
-		let _ = guard.restore();
+		let ptr = TERMINAL_GUARD.load(Ordering::SeqCst);
+
+		if !ptr.is_null() {
+			let _ = unsafe { (*ptr).restore() };
+		}
 
 		original_hook(info);
 	}));
