@@ -1,12 +1,17 @@
-use log::warn;
-use ryvex_term::{
-	event::Event,
-	sys::target::fd::TtyFd,
+use ryvex_target::{
+	target::TargetContext,
+	target::{
+		self,
+		term::Handle,
+	},
+	term::event::Event,
 };
 use ryvex_tui::{
 	backend::term::TerminalBackend,
 	terminal::Terminal,
 };
+
+use alloc::boxed::Box;
 
 use crate::{
 	args::Args,
@@ -26,16 +31,17 @@ pub struct Application {
 	editor:     Editor,
 	compositor: Compositor,
 	terminal:   Terminal<TerminalBackend>,
+	target_cx:  TargetContext,
 }
 
 impl Application {
-	pub fn build(args: Args) -> Result<Self> {
+	pub fn build(cx: TargetContext, args: Args) -> Result<Self> {
 		let mut editor = Editor::new();
-		let document = Document::new(args.file)?;
+		let document = Document::new(args.file, &cx.fs)?;
 		let _id = editor.new_document(document);
 
-		let fd = TtyFd::read()?;
-		let area = ryvex_term::sys::target::get_terminal_size(&fd)?;
+		let handle = Handle::from_default_tty(true, false)?;
+		let area = target::term::get_terminal_size(&handle)?;
 		let mut compositor = Compositor::new(area);
 
 		let editor_view = Box::new(ui::EditorView::new());
@@ -43,18 +49,19 @@ impl Application {
 		compositor.push(Box::new(ui::StatusLine::new()));
 		compositor.push(Box::new(ui::CommandLine::new()));
 
-		let terminal = Terminal::new(TerminalBackend::new(fd))?;
+		let terminal = Terminal::new(TerminalBackend::new(handle))?;
 
 		Ok(Application {
 			editor,
 			compositor,
 			terminal,
+			target_cx: cx,
 		})
 	}
 
 	pub fn run_until_stopped<S>(&mut self, input_stream: &mut S) -> Result<i32>
 	where
-		S: Iterator<Item = ryvex_term::error::Result<Event>>,
+		S: Iterator<Item = ryvex_target::std::Result<Event>>,
 	{
 		self.render();
 
@@ -67,7 +74,7 @@ impl Application {
 
 	fn main_loop<S>(&mut self, input_stream: &mut S) -> Result<bool>
 	where
-		S: Iterator<Item = ryvex_term::error::Result<Event>>,
+		S: Iterator<Item = ryvex_target::std::Result<Event>>,
 	{
 		loop {
 			if self.editor.should_close() {
@@ -78,9 +85,7 @@ impl Application {
 				Some(Ok(event)) => {
 					self.handle_terminal_event(event);
 				}
-				Some(Err(e)) => {
-					warn!("Could not recieve terminal event: '{:?}'", e);
-				}
+				Some(Err(_)) => {}
 				_ => continue,
 			}
 		}
@@ -90,7 +95,8 @@ impl Application {
 		self.terminal.clear().expect("Failed to clear terminal");
 
 		let mut cx = crate::compositor::Context {
-			editor: &mut self.editor,
+			editor:    &mut self.editor,
+			target_cx: &mut self.target_cx,
 		};
 
 		let area = self.terminal.size().expect("Failed to get terminal size");
@@ -104,7 +110,8 @@ impl Application {
 
 	fn handle_terminal_event(&mut self, event: Event) {
 		let mut cx = compositor::Context {
-			editor: &mut self.editor,
+			editor:    &mut self.editor,
+			target_cx: &mut self.target_cx,
 		};
 
 		let should_redraw = match event {

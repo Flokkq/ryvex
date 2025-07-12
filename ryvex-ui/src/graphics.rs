@@ -37,7 +37,7 @@ impl Rect {
 	}
 
 	pub fn clip_left(self, width: u16) -> Rect {
-		let width = std::cmp::min(width, self.width);
+		let width = core::cmp::min(width, self.width);
 		Rect {
 			x: self.x.saturating_add(width),
 			width: self.width.saturating_sub(width),
@@ -53,7 +53,7 @@ impl Rect {
 	}
 
 	pub fn clip_top(self, height: u16) -> Rect {
-		let height = std::cmp::min(height, self.height);
+		let height = core::cmp::min(height, self.height);
 		Rect {
 			y: self.y.saturating_add(height),
 			height: self.height.saturating_sub(height),

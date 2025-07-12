@@ -1,77 +1,53 @@
-use std::{
-	io::stdin,
+use core::{
 	marker::PhantomData,
+	ptr,
+	sync::atomic::{
+		AtomicPtr,
+		Ordering,
+	},
 };
 
-#[cfg(unix)]
-use std::os::unix::io::{
-	AsRawFd,
-	RawFd,
+use ryvex_target::{
+	std::Result,
+	target::term::{
+		ConsoleSettings,
+		Handle,
+	},
+	term::console::Console,
 };
 
-#[cfg(windows)]
-use std::os::windows::io::AsRawHandle;
-
-#[cfg(windows)]
-use ryvex_term::sys::windows::ConsoleHandle;
-
-use crate::error::Result;
-use ryvex_term::sys::target::termios::Termios;
+pub static TERMINAL_GUARD: AtomicPtr<TerminalGuard> =
+	AtomicPtr::new(ptr::null_mut());
 
 pub struct TerminalGuard<'a> {
-	#[cfg(unix)]
-	fd: RawFd,
+	handle:       Handle,
+	orig_console: ConsoleSettings,
 
-	#[cfg(windows)]
-	handle: ConsoleHandle,
-
-	orig_termios: Termios,
-	_phantom:     PhantomData<&'a ()>,
+	_phantom: PhantomData<&'a ()>,
 }
-impl<'a> TerminalGuard<'a> {
-	#[cfg(unix)]
-	pub fn spawn() -> Result<Self> {
-		let stdin = stdin();
-		let stdin_fd = stdin.as_raw_fd();
 
-		let mut termios = Termios::from_fd(stdin_fd)?;
-		let orig_termios = termios.raw(stdin_fd)?;
+impl<'a> TerminalGuard<'a> {
+	pub fn spawn() -> Result<Self> {
+		let (mut console, handle) = ConsoleSettings::init()?;
+		let orig_console = console.raw(&handle)?;
 
 		Ok(TerminalGuard {
-			fd: stdin_fd,
-			orig_termios,
-			_phantom: std::marker::PhantomData,
-		})
-	}
-
-	#[cfg(unix)]
-	pub fn restore(&self) -> Result<()> {
-		Ok(Termios::restore_terminal(self.fd, self.orig_termios)?)
-	}
-
-	#[cfg(windows)]
-	pub fn spawn() -> Result<Self> {
-		let handle = unsafe { ConsoleHandle::new(stdin().as_raw_handle()) };
-
-		let mut t = Termios::from_handle(handle)?;
-		let orig = t.raw(handle)?;
-
-		Ok(Self {
 			handle,
-			orig_termios: orig,
-			_phantom: PhantomData,
+			orig_console,
+			_phantom: core::marker::PhantomData,
 		})
 	}
 
-	#[cfg(windows)]
 	pub fn restore(&self) -> Result<()> {
-		Ok(Termios::restore_terminal(self.handle, self.orig_termios)?)
+		ConsoleSettings::restore(&self.handle, self.orig_console)
 	}
 }
 
 impl<'a> Drop for TerminalGuard<'a> {
 	fn drop(&mut self) {
 		let _ = self.restore();
+
+		TERMINAL_GUARD.store(core::ptr::null_mut(), Ordering::SeqCst);
 	}
 }
 

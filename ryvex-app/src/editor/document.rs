@@ -1,15 +1,25 @@
-use std::{
-	fmt::Display,
+use core::{
+	fmt::{
+		self,
+		Display,
+	},
 	num::NonZeroUsize,
-	path::PathBuf,
 };
 
-use log::warn;
-use ryvex_std::fs;
+use alloc::string::{
+	String,
+	ToString,
+};
+use ryvex_target::{
+	key,
+	r#impl::{
+		TargetFileSystem,
+		TargetPath,
+	},
+	std::fs::FileSystem,
+};
 
 use crate::error::Result;
-
-use super::error::DocumentError;
 
 // uses NonZeroUsize so Option<DocumentId> use a byte rather than two
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -22,8 +32,8 @@ impl Default for DocumentId {
 	}
 }
 
-impl std::fmt::Display for DocumentId {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for DocumentId {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> fmt::Result {
 		f.write_fmt(format_args!("{}", self.0))
 	}
 }
@@ -32,7 +42,7 @@ impl std::fmt::Display for DocumentId {
 pub struct Document {
 	pub id: DocumentId,
 	text:   String,
-	path:   Option<PathBuf>,
+	path:   Option<TargetPath>,
 }
 
 impl Default for Document {
@@ -50,13 +60,8 @@ impl Document {
 		}
 	}
 
-	pub fn open(path: PathBuf) -> Result<Self> {
-		let mut content = String::new();
-		ryvex_std::fs::read_from_file_if_exists(&path, &mut content)
-			.map_err(DocumentError::OpenError)?;
-
-		// TODO: does this break on windows?
-		content = content.replace("\n", "\r\n");
+	pub fn open(path: TargetPath, fs: &TargetFileSystem) -> Result<Self> {
+		let content = fs.read_to_string(&path).unwrap();
 
 		Ok(Self {
 			id:   DocumentId::default(),
@@ -65,9 +70,12 @@ impl Document {
 		})
 	}
 
-	pub fn new(path: Option<PathBuf>) -> Result<Self> {
+	pub fn new(
+		path: Option<TargetPath>,
+		fs: &TargetFileSystem,
+	) -> Result<Self> {
 		match path {
-			Some(path) => Self::open(path),
+			Some(path) => Self::open(path, fs),
 			None => Ok(Self::scratch()),
 		}
 	}
@@ -76,29 +84,29 @@ impl Document {
 		&self.text
 	}
 
-	pub fn save(&self) -> Result<()> {
+	pub fn save(&self, fs: &TargetFileSystem) -> Result<()> {
 		match &self.path {
-			Some(path) => ryvex_std::fs::write(&self.text, path)
-				.map_err(|err| DocumentError::SaveError(err).into()),
-			None => {
-				warn!("Attempted to save document with no path");
+			Some(path) => {
+				fs.write_all(path, self.text.as_bytes()).unwrap();
 				Ok(())
 			}
+			// TODO: error because file doesnt exist
+			None => Ok(()),
 		}
 	}
 
-	pub fn insert_character(&mut self, key: ryvex_term::key::AsciiKeyCode) {
+	pub fn insert_character(&mut self, key: key::AsciiKeyCode) {
 		self.text.push(key.to_char());
 	}
 
-	pub fn path(&self) -> Option<&PathBuf> {
+	pub fn path(&self) -> Option<&TargetPath> {
 		self.path.as_ref()
 	}
 
-	pub fn diplay_path(&self) -> Option<String> {
-		self.path.clone().map(|p| {
-			fs::expand(p.clone()).unwrap_or(p.to_string_lossy().to_string())
-		})
+	pub fn diplay_path(&self, fs: &TargetFileSystem) -> Option<String> {
+		self.path
+			.clone()
+			.map(|p| fs.expand(&p).unwrap_or(p).to_string())
 	}
 }
 
@@ -111,7 +119,7 @@ pub enum Mode {
 }
 
 impl Display for Mode {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			Mode::Normal => f.write_str("NORMAL"),
 			Mode::Visual => f.write_str("VISUAL"),

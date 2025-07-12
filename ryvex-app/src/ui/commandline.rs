@@ -1,6 +1,11 @@
-use ryvex_term::{
-	event::Event,
+use alloc::{
+	format,
+	string::ToString,
+};
+use ryvex_target::{
 	key::AsciiKeyCode,
+	std::error::Error,
+	term::event::Event,
 };
 use ryvex_tui::buffer::Buffer;
 use ryvex_ui::graphics::Rect;
@@ -61,10 +66,14 @@ impl Component for CommandLine {
 			match key {
 				AsciiKeyCode::Esc => cx.editor.exit_command_mode(),
 				AsciiKeyCode::CarriageReturn => {
-					let _ = cx
-						.editor
-						.submit_command()
-						.map_err(|err| cx.editor.log_error(err.to_string()));
+					let _ =
+						cx.editor.submit_command(cx.target_cx).map_err(|err| {
+							cx.editor.log_error(
+								err.root()
+									.map(|src| src.to_string())
+									.unwrap_or(err.to_string()),
+							)
+						});
 
 					cx.editor.enter_normal_mode();
 				}

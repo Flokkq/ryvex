@@ -1,22 +1,20 @@
-use std::{
+use alloc::{
+	format,
+	string::String,
+};
+use core::fmt::{
+	self,
+	Display,
+};
+
+use ryvex_target::std::{
 	error::Error,
-	fmt::Display,
+	StdError,
 };
 
-use proc_macros::StackTraceDebug;
-
-use crate::editor::error::{
-	CommandError,
-	DocumentError,
-};
-
-#[derive(StackTraceDebug)]
+#[derive(Clone, PartialEq)]
 pub enum RyvexError {
-	StdError(ryvex_std::error::StdError),
-	TermError(ryvex_term::error::TermError),
-	TuiError(ryvex_tui::error::TuiError),
-	DocumentError(DocumentError),
-	CommandError(CommandError),
+	StdError(StdError),
 	LoggerError(String),
 	ArgParseError(String),
 }
@@ -24,79 +22,33 @@ pub enum RyvexError {
 impl Error for RyvexError {
 	fn source(&self) -> Option<&(dyn Error + 'static)> {
 		match self {
-			RyvexError::StdError(error) => Some(error),
-			RyvexError::TermError(error) => Some(error),
-			RyvexError::TuiError(error) => Some(error),
-			RyvexError::DocumentError(error) => Some(error),
-			RyvexError::CommandError(error) => Some(error),
+			RyvexError::StdError(err) => Some(err),
 			RyvexError::LoggerError(_) => None,
 			RyvexError::ArgParseError(_) => None,
 		}
 	}
-
-	fn description(&self) -> &str {
-		"description() is deprecated; use Display"
-	}
-
-	fn cause(&self) -> Option<&dyn Error> {
-		self.source()
-	}
 }
 
 impl Display for RyvexError {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		match self {
-			RyvexError::StdError(err) => write!(f, "ryvex-std error: {}", err),
-			RyvexError::TermError(err) => {
-				write!(f, "ryvex-term error: {}", err)
-			}
-			RyvexError::TuiError(err) => {
-				write!(f, "ryvex-tui error: {}", err)
-			}
-			RyvexError::DocumentError(err) => {
-				write!(f, "Document error: {}", err)
-			}
-			RyvexError::CommandError(err) => {
-				write!(f, "Command error: {}", err)
-			}
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> fmt::Result {
+		let s = match self {
+			RyvexError::StdError(_) => "std error",
 			RyvexError::LoggerError(msg) => {
-				write!(f, "Error while initializing logger: {}", msg)
+				&format!("failed initializing logger '{}'", msg)
 			}
 			RyvexError::ArgParseError(msg) => {
-				write!(f, "Error while parsing arguments: {}", msg)
+				&format!("failed parsing arguments '{}'", msg)
 			}
-		}
+		};
+
+		write!(f, "{}", s)
 	}
 }
 
-impl From<ryvex_std::error::StdError> for RyvexError {
-	fn from(error: ryvex_std::error::StdError) -> Self {
-		RyvexError::StdError(error)
+impl From<StdError> for RyvexError {
+	fn from(value: StdError) -> Self {
+		Self::StdError(value)
 	}
 }
 
-impl From<ryvex_term::error::TermError> for RyvexError {
-	fn from(error: ryvex_term::error::TermError) -> Self {
-		RyvexError::TermError(error)
-	}
-}
-
-impl From<ryvex_tui::error::TuiError> for RyvexError {
-	fn from(error: ryvex_tui::error::TuiError) -> Self {
-		RyvexError::TuiError(error)
-	}
-}
-
-impl From<DocumentError> for RyvexError {
-	fn from(error: DocumentError) -> Self {
-		RyvexError::DocumentError(error)
-	}
-}
-
-impl From<CommandError> for RyvexError {
-	fn from(error: CommandError) -> Self {
-		RyvexError::CommandError(error)
-	}
-}
-
-pub type Result<T> = std::result::Result<T, RyvexError>;
+pub type Result<T> = core::result::Result<T, RyvexError>;

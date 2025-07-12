@@ -1,26 +1,37 @@
-use std::{
+use alloc::{
 	collections::BTreeMap,
-	num::NonZeroUsize,
-	process::{
-		Command,
-		ExitStatus,
-		Stdio,
+	format,
+	string::{
+		String,
+		ToString,
+	},
+	vec::Vec,
+};
+use core::num::NonZeroUsize;
+
+use ryvex_target::{
+	key,
+	r#impl::{
+		TargetContext,
+		TargetFileSystem,
+	},
+	std::{
+		process::{
+			Exitstatus,
+			Shell,
+			ShellError,
+		},
+		StdError,
 	},
 };
 
-use super::{
-	document::{
-		Document,
-		DocumentId,
-		Mode,
-	},
-	error::CommandError,
+use super::document::{
+	Document,
+	DocumentId,
+	Mode,
 };
 
-use crate::error::{
-	Result,
-	RyvexError,
-};
+use crate::error::Result;
 
 #[derive(Debug)]
 pub struct Editor {
@@ -77,12 +88,13 @@ impl Editor {
 			.and_then(move |id| self.documents.get_mut(&id))
 	}
 
-	fn write_active_document(&mut self) {
+	fn write_active_document(&mut self, fs: &TargetFileSystem) {
 		if let Some(doc) = self.get_active_document() {
-			match doc.save() {
+			match doc.save(fs) {
 				Ok(_) => {
-					let path =
-						doc.diplay_path().unwrap_or_else(|| "[scratch]".into());
+					let path = doc
+						.diplay_path(fs)
+						.unwrap_or_else(|| "[scratch]".into());
 
 					let msg = format!(
 						"\"{path}\" {}L, {}B written",
@@ -100,7 +112,7 @@ impl Editor {
 		self.log_warn("No open document".to_string());
 	}
 
-	pub fn insert_character(&mut self, key: ryvex_term::key::AsciiKeyCode) {
+	pub fn insert_character(&mut self, key: key::AsciiKeyCode) {
 		if self.mode == Mode::Command {
 			self.push_command_char(key.to_char());
 		} else if let Some(document) = self.get_active_document_mut() {
@@ -126,38 +138,44 @@ impl Editor {
 		let _ = self.command_buffer.pop();
 	}
 
-	pub fn submit_command(&mut self) -> Result<ExitStatus> {
+	pub fn submit_command(
+		&mut self,
+		target: &TargetContext,
+	) -> Result<Exitstatus> {
 		let input: String = self.command_buffer.trim().to_string();
 
 		if let Some(command) = input.strip_prefix('!') {
 			let parts: Vec<&str> = command.split_whitespace().collect();
 
 			if !parts.is_empty() {
-				let status = Command::new(parts[0])
-					.args(&parts[1..])
-					.stdin(Stdio::null())
-					.stdout(Stdio::null())
-					.status()
-					.map_err(|_| CommandError::ExecutionFailed)
-					.map_err(RyvexError::from)?;
+				let status = target.shell.status(parts[0], &parts[1..])?;
 
-				if !status.success() {
-					return Err(CommandError::ExecutionFailed.into());
+				if status.failure() {
+					return Err(StdError::Shell(ShellError::ExecutionFailed(
+						input,
+					))
+					.into());
 				}
 
 				return Ok(status);
 			}
 
-			return Err(CommandError::InvalidCommand.into());
+			return Err(
+				StdError::Shell(ShellError::CommandNotFound(input)).into()
+			);
 		}
 
 		match input.as_str() {
 			"q" | "quit" => self.quit(),
-			"w" | "write" => self.write_active_document(),
-			_ => return Err(CommandError::InvalidCommand.into()),
+			"w" | "write" => self.write_active_document(&target.fs),
+			_ => {
+				return Err(
+					StdError::Shell(ShellError::CommandNotFound(input)).into()
+				)
+			}
 		}
 
-		Ok(ExitStatus::default())
+		Ok(Exitstatus::Success)
 	}
 
 	pub fn enter_normal_mode(&mut self) {

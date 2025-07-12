@@ -1,43 +1,52 @@
 use super::Backend;
-use ryvex_term::{
-	cursor::{
-		Hide,
-		MoveTo,
-		SetCursorStyle,
-		Show,
-	},
+use ryvex_target::{
 	execute,
 	queue,
-	sys::target::fd::TtyFd,
-	terminal::{
-		Clear,
-		ClearType,
-		Print,
+	r#impl::TargetOutWriter,
+	std::{
+		error::IoError,
+		write::Write,
+	},
+	target::{
+		self,
+		term::Handle,
+	},
+	term::command::{
+		cursor::{
+			Hide,
+			MoveTo,
+			SetCursorStyle,
+			Show,
+		},
+		terminal::{
+			Clear,
+			ClearType,
+			Print,
+		},
 	},
 };
 use ryvex_ui::graphics::CursorKind;
-use std::io::Write;
 
 pub struct TerminalBackend {
-	buffer: std::io::Stdout,
-	fd:     TtyFd,
+	buffer: TargetOutWriter,
+	fd:     Handle,
 }
 
 impl TerminalBackend {
-	pub fn new(fd: TtyFd) -> Self {
+	pub fn new(fd: Handle) -> Self {
 		Self {
 			fd,
-			buffer: std::io::stdout(),
+			buffer: TargetOutWriter::default(),
 		}
 	}
 }
 
-impl std::io::Write for TerminalBackend {
-	fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+impl Write for TerminalBackend {
+	fn write(&mut self, buf: &[u8]) -> Result<usize, IoError> {
 		self.buffer.write(buf)
 	}
 
-	fn flush(&mut self) -> std::io::Result<()> {
+	fn flush(&mut self) -> Result<(), IoError> {
 		self.buffer.flush()
 	}
 }
@@ -94,7 +103,7 @@ impl Backend for TerminalBackend {
 	}
 
 	fn size(&self) -> super::Result<ryvex_ui::graphics::Rect> {
-		Ok(ryvex_term::sys::target::get_terminal_size(&self.fd)?)
+		target::term::get_terminal_size(&self.fd)
 	}
 
 	fn flush(&mut self) -> super::Result<()> {

@@ -1,20 +1,33 @@
+use alloc::format;
+use core::str::FromStr;
+
+use ryvex_target::{
+	execute,
+	r#impl::{
+		TargetEnvironment,
+		TargetOutWriter,
+		TargetPath,
+	},
+	std::env::Environment,
+	term::command::terminal::Print,
+};
+
 use crate::error::{
 	Result,
 	RyvexError,
 };
-use std::path::PathBuf;
 
 #[derive(Default)]
 pub struct Args {
 	pub verbosity: usize,
-	pub file:      Option<PathBuf>,
+	pub file:      Option<TargetPath>,
 	pub help_flag: bool,
 }
 
 impl Args {
-	pub fn parse_args() -> Result<Args> {
+	pub fn parse_args(env: &TargetEnvironment) -> Result<Args> {
 		let mut args = Args::default();
-		let mut argv = std::env::args().peekable();
+		let mut argv = env.args().into_iter().peekable();
 
 		argv.next();
 		for arg in argv.by_ref() {
@@ -43,22 +56,25 @@ impl Args {
 					}
 				}
 				_ => {
-					args.file = Some(PathBuf::from(arg));
+					args.file =
+						Some(TargetPath::from_str(arg.as_str()).unwrap());
 					break;
 				}
 			}
 		}
 
 		if args.file.is_none() {
-			args.file = argv.next().map(PathBuf::from)
+			args.file = argv
+				.next()
+				.map(|f| TargetPath::from_str(f.as_str()).unwrap())
 		};
 
 		Ok(args)
 	}
 }
 
-pub fn print_help() {
-	println!(
+pub fn print_help(env: &TargetEnvironment) {
+	let help = format!(
 		r#"
 {} {}
 {}
@@ -72,9 +88,11 @@ FLAGS:
     -h, --help          Prints help information
     -v                  Increase verbosity
 "#,
-		env!("CARGO_PKG_NAME"),
-		env!("CARGO_PKG_VERSION"),
-		env!("CARGO_PKG_AUTHORS"),
-		env!("CARGO_PKG_DESCRIPTION")
+		env.var("CARGO_PKG_NAME").unwrap_or_default(),
+		env.var("CARGO_PKG_VERSION").unwrap_or_default(),
+		env.var("CARGO_PKG_AUTHORS").unwrap_or_default(),
+		env.var("CARGO_PKG_DESCRIPTION").unwrap_or_default()
 	);
+
+	let _ = execute!(TargetOutWriter::default(), Print(help));
 }
