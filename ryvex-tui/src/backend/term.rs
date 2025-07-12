@@ -2,7 +2,11 @@ use super::Backend;
 use ryvex_target::{
 	execute,
 	queue,
-	std::error::IoError,
+	r#impl::TargetOutWriter,
+	std::{
+		error::IoError,
+		write::Write,
+	},
 	target::{
 		self,
 		term::Handle,
@@ -22,10 +26,9 @@ use ryvex_target::{
 	},
 };
 use ryvex_ui::graphics::CursorKind;
-use std::io::Write;
 
 pub struct TerminalBackend {
-	buffer: std::io::Stdout,
+	buffer: TargetOutWriter,
 	fd:     Handle,
 }
 
@@ -33,17 +36,17 @@ impl TerminalBackend {
 	pub fn new(fd: Handle) -> Self {
 		Self {
 			fd,
-			buffer: std::io::stdout(),
+			buffer: TargetOutWriter::default(),
 		}
 	}
 }
 
-impl std::io::Write for TerminalBackend {
-	fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+impl Write for TerminalBackend {
+	fn write(&mut self, buf: &[u8]) -> Result<usize, IoError> {
 		self.buffer.write(buf)
 	}
 
-	fn flush(&mut self) -> std::io::Result<()> {
+	fn flush(&mut self) -> Result<(), IoError> {
 		self.buffer.flush()
 	}
 }
@@ -104,7 +107,7 @@ impl Backend for TerminalBackend {
 	}
 
 	fn flush(&mut self) -> super::Result<()> {
-		Ok(self.buffer.flush().map_err(IoError::from)?)
+		Ok(self.buffer.flush()?)
 	}
 
 	fn hide_cursor(&mut self) -> super::Result<()> {

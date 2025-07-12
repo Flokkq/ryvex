@@ -1,10 +1,12 @@
-use std::fmt;
-use std::io::{
-	self,
-	Write,
-};
+use core::fmt;
 
-use crate::target;
+use crate::{
+	std::{
+		error::IoError,
+		write::Write,
+	},
+	target,
+};
 
 pub mod cursor;
 pub mod terminal;
@@ -24,7 +26,7 @@ pub trait WriteAnsi {
 pub trait ExecuteApi {
 	/// Execute this command using platform-specific APIs.
 	#[inline]
-	fn execute_api(&self) -> io::Result<()> {
+	fn execute_api(&self) -> Result<(), IoError> {
 		Ok(())
 	}
 
@@ -44,7 +46,7 @@ impl<T: WriteAnsi + ?Sized> WriteAnsi for &T {
 
 impl<T: ExecuteApi + ?Sized> ExecuteApi for &T {
 	#[inline]
-	fn execute_api(&self) -> io::Result<()> {
+	fn execute_api(&self) -> Result<(), IoError> {
 		(**self).execute_api()
 	}
 
@@ -55,15 +57,15 @@ impl<T: ExecuteApi + ?Sized> ExecuteApi for &T {
 }
 
 pub trait QueueableCommand {
-	fn queue(&mut self, command: impl Command) -> io::Result<&mut Self>;
+	fn queue(&mut self, command: impl Command) -> Result<&mut Self, IoError>;
 }
 
 pub trait ExecutableCommand {
-	fn execute(&mut self, command: impl Command) -> io::Result<&mut Self>;
+	fn execute(&mut self, command: impl Command) -> Result<&mut Self, IoError>;
 }
 
 impl<T: Write + ?Sized> QueueableCommand for T {
-	fn queue(&mut self, command: impl Command) -> io::Result<&mut Self> {
+	fn queue(&mut self, command: impl Command) -> Result<&mut Self, IoError> {
 		if !command.is_ansi_code_supported() {
 			// There may be queued commands in this writer, but `execute_api`
 			// will execute the command immediately. To prevent commands
@@ -79,7 +81,7 @@ impl<T: Write + ?Sized> QueueableCommand for T {
 }
 
 impl<T: Write + ?Sized> ExecutableCommand for T {
-	fn execute(&mut self, command: impl Command) -> io::Result<&mut Self> {
+	fn execute(&mut self, command: impl Command) -> Result<&mut Self, IoError> {
 		self.queue(command)?;
 		self.flush()?;
 		Ok(self)
@@ -87,12 +89,12 @@ impl<T: Write + ?Sized> ExecutableCommand for T {
 }
 
 fn write_command_ansi<C: Command>(
-	io: &mut (impl io::Write + ?Sized),
+	io: &mut (impl Write + ?Sized),
 	command: C,
-) -> io::Result<()> {
+) -> Result<(), IoError> {
 	struct Adapter<T> {
 		inner: T,
-		res:   io::Result<()>,
+		res:   Result<(), IoError>,
 	}
 
 	impl<T: Write> fmt::Write for Adapter<T> {
