@@ -11,7 +11,14 @@ default-members = [
   "ryvex-app"
 ]
 
+[workspace.dependencies]
+ryvex-target = { path = "ryvex-target", default-features = false }
+ryvex-ui     = { path = "ryvex-ui",     default-features = false }
+ryvex-tui    = { path = "ryvex-tui",    default-features = false }
+proc-macros  = { path = "proc-macros",  default-features = false }
+
 [profile.dev]
+panic = "unwind"
 incremental = true
 opt-level = 2
 
@@ -20,6 +27,4 @@ opt-level = 3
 
 [profile.release]
 opt-level = 3
-
-[workspace.dependencies]
-log = "0.4.21"
+panic = "abort"

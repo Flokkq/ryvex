@@ -4,7 +4,11 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 
+[features]
+default = ["std"]
+std = []
+
 [dependencies]
-ryvex-ui = { path = "../ryvex-ui" }
-ryvex-target = { path = "../ryvex-target" }
-proc-macros = { path = "../proc-macros"}
+ryvex-ui.workspace = true
+ryvex-target.workspace = true
+proc-macros.workspace = true

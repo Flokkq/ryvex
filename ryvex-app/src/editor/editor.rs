@@ -1,7 +1,13 @@
-use std::{
+use alloc::{
 	collections::BTreeMap,
-	num::NonZeroUsize,
+	format,
+	string::{
+		String,
+		ToString,
+	},
+	vec::Vec,
 };
+use core::num::NonZeroUsize;
 
 use ryvex_target::{
 	key,

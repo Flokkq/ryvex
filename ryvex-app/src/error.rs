@@ -1,4 +1,11 @@
-use std::fmt::Display;
+use alloc::{
+	format,
+	string::String,
+};
+use core::fmt::{
+	self,
+	Display,
+};
 
 use proc_macros::StackTraceDebug;
 use ryvex_target::std::{
@@ -24,7 +31,7 @@ impl Error for RyvexError {
 }
 
 impl Display for RyvexError {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> fmt::Result {
 		let s = match self {
 			RyvexError::StdError(_) => "std error",
 			RyvexError::LoggerError(msg) => {
@@ -45,4 +52,4 @@ impl From<StdError> for RyvexError {
 	}
 }
 
-pub type Result<T> = std::result::Result<T, RyvexError>;
+pub type Result<T> = core::result::Result<T, RyvexError>;

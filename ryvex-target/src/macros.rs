@@ -20,7 +20,7 @@ macro_rules! c {
 #[macro_export]
 macro_rules! queue {
     ($writer:expr $(, $command:expr)* $(,)?) => {{
-        use ::std::io::Write;
+        use $crate::std::write::Write;
 
         Ok($writer.by_ref())
             $(.and_then(|writer| $crate::term::command::QueueableCommand::queue(writer, $command).map_err($crate::std::error::IoError::from)))*
@@ -31,7 +31,7 @@ macro_rules! queue {
 #[macro_export]
 macro_rules! execute {
     ($writer:expr $(, $command:expr)* $(,)? ) => {{
-        use ::std::io::Write;
+        use $crate::std::write::Write;
 
         // Queue each command, then flush
         $crate::queue!($writer $(, $command)*)

@@ -8,5 +8,7 @@ pub mod windows;
 #[cfg(target_os = "windows")]
 pub use windows::*;
 
+#[cfg(feature = "std")]
 pub mod std;
+#[cfg(feature = "std")]
 pub use std::*;

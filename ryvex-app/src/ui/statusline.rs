@@ -1,3 +1,7 @@
+use alloc::{
+	format,
+	string::ToString,
+};
 use ryvex_target::term::event::Event;
 use ryvex_tui::buffer::Buffer;
 use ryvex_ui::graphics::Rect;

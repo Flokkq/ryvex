@@ -11,7 +11,10 @@ use super::{
 	Result,
 	StdError,
 };
-use alloc::string::String;
+use alloc::{
+	format,
+	string::String,
+};
 use core::{
 	fmt,
 	str,
@@ -124,7 +127,7 @@ impl Error for FsError {
 }
 
 impl fmt::Display for FsError {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
 		let s = match self {
 			FsError::Expand(s) => format!("could not expand path '{}'", s),
 		};

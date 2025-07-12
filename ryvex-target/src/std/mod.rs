@@ -1,4 +1,4 @@
-use std::{
+use core::{
 	fmt::Display,
 	str::Utf8Error,
 };
@@ -32,7 +32,7 @@ impl Error for StdError {
 }
 
 impl Display for StdError {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
 		let s = match self {
 			StdError::Fs(_) => "fs-error",
 			StdError::Shell(_) => "shell error",

@@ -68,3 +68,7 @@ impl Write for StdOutWriter {
 		self.0.flush().map_err(IoError::from)
 	}
 }
+
+pub fn exit(code: i32) -> ! {
+	std::process::exit(code)
+}

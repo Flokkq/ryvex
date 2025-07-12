@@ -1,4 +1,7 @@
-use core::fmt;
+use core::{
+	any,
+	fmt,
+};
 
 use crate::{
 	std::{
@@ -116,7 +119,7 @@ fn write_command_ansi<C: Command>(
 		.map_err(|fmt::Error| match adapter.res {
 			Ok(()) => panic!(
 				"<{}>::write_ansi incorrectly errored",
-				std::any::type_name::<C>()
+				any::type_name::<C>()
 			),
 			Err(e) => e,
 		})

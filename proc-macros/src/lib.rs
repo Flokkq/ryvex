@@ -1,3 +1,4 @@
+#![cfg_attr(not(feature = "std"), no_std)]
 extern crate proc_macro;
 use proc_macro::TokenStream;
 use quote::quote;
@@ -12,8 +13,8 @@ pub fn stack_trace_debug_derive(input: TokenStream) -> TokenStream {
 	let name = input.ident;
 
 	let expanded = quote! {
-		impl std::fmt::Debug for #name {
-			fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		impl core::fmt::Debug for #name {
+			fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
 				writeln!(f, "{}\n\t", self)?;
 
 				let mut current = self.source();

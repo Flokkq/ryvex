@@ -1,3 +1,8 @@
+use alloc::{
+	string::String,
+	vec::Vec,
+};
+
 pub trait Environment {
 	fn var(&self, key: &str) -> Option<String>;
 
