@@ -7,12 +7,9 @@ use crate::{
 		EventSource,
 	},
 };
-use std::{
-	io,
-	time::{
-		Duration,
-		Instant,
-	},
+use std::time::{
+	Duration,
+	Instant,
 };
 
 pub struct WindowsEventSource;
