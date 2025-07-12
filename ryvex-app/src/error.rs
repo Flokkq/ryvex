@@ -7,13 +7,12 @@ use core::fmt::{
 	Display,
 };
 
-use proc_macros::StackTraceDebug;
 use ryvex_target::std::{
 	error::Error,
 	StdError,
 };
 
-#[derive(StackTraceDebug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub enum RyvexError {
 	StdError(StdError),
 	LoggerError(String),

@@ -5,7 +5,7 @@ authors = ["Flokkq <webcla21@htl-kaindorf.at>"]
 
 [workspace]
 resolver = "2"
-members = ["ryvex-app", "proc-macros", "ryvex-ui", "ryvex-tui", "ryvex-target"]
+members = ["ryvex-app", "ryvex-ui", "ryvex-tui", "ryvex-target"]
 
 default-members = [
   "ryvex-app"
@@ -15,7 +15,6 @@ default-members = [
 ryvex-target = { path = "ryvex-target", default-features = false }
 ryvex-ui     = { path = "ryvex-ui",     default-features = false }
 ryvex-tui    = { path = "ryvex-tui",    default-features = false }
-proc-macros  = { path = "proc-macros",  default-features = false }
 
 [profile.dev]
 panic = "unwind"

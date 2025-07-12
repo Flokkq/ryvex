@@ -5,6 +5,7 @@ extern crate alloc;
 use core::sync::atomic::Ordering;
 #[cfg(not(feature = "std"))]
 use core::{
+	error::Error,
 	panic::PanicInfo,
 	ptr,
 };
@@ -17,10 +18,7 @@ use ryvex_app::{
 		self,
 		Args,
 	},
-	error::{
-		Result,
-		RyvexError,
-	},
+	error::Result,
 	startup::Application,
 	terminal_guard::TerminalGuard,
 };
@@ -53,17 +51,12 @@ fn app_main() -> Result<i32> {
 
 	// setup_logging(&cx.env, args.verbosity)?;
 	let mut app = Application::build(cx, args)?;
-	error()?;
 
 	let mut event_stream = SyncEventStream::new()?;
 	let exit_code = app.run_until_stopped(&mut event_stream)?;
 
 	let _ = guard.restore();
 	Ok(exit_code)
-}
-
-fn error() -> Result<()> {
-	Err(RyvexError::LoggerError("Tja SChade".to_string()))
 }
 
 #[cfg(not(feature = "std"))]

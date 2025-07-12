@@ -1,9 +1,10 @@
 use core::fmt;
 use core::fmt::Debug;
 use core::fmt::Display;
+use core::fmt::Formatter;
 
 /// Simple trait for chaining errors
-pub trait Error: Debug + Display {
+pub trait Error: Display {
 	fn source(&self) -> Option<&(dyn Error + 'static)>;
 
 	fn root(&self) -> Option<&(dyn Error + 'static)>
@@ -19,6 +20,19 @@ pub trait Error: Debug + Display {
 		}
 
 		last
+	}
+}
+
+impl fmt::Debug for dyn Error {
+	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+		writeln!(f, "{}", self)?;
+
+		let mut current = self.source();
+		while let Some(cause) = current {
+			writeln!(f, "Caused by:\n\t{}", cause)?;
+			current = cause.source();
+		}
+		Ok(())
 	}
 }
 

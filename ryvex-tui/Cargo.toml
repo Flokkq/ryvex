@@ -11,4 +11,3 @@ std = []
 [dependencies]
 ryvex-ui.workspace = true
 ryvex-target.workspace = true
-proc-macros.workspace = true

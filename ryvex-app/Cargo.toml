@@ -17,11 +17,9 @@ std = [
   "ryvex-target/std",
   "ryvex-ui/std",
   "ryvex-tui/std",
-  "proc-macros/std"
 ]
 
 [dependencies]
 ryvex-target.workspace = true
 ryvex-ui.workspace = true
 ryvex-tui.workspace = true
-proc-macros.workspace = true
