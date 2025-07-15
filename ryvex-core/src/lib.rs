@@ -17,7 +17,6 @@ impl Cursor {
 	}
 }
 
-/// Trait für PieceTables mit Zeilen/Spalten‐Funktionen
 pub trait TextBuffer {
 	fn len(&self) -> usize;
 	fn is_empty(&self) -> bool;
@@ -32,4 +31,24 @@ pub trait TextBuffer {
 	fn pos_from(&self, rc: RowCol) -> usize;
 	fn lines(&self) -> usize;
 	fn line_len(&self, row: usize) -> usize;
+}
+
+#[derive(Default, Clone, Debug)]
+pub struct MarkTable {
+	slots: [Option<RowCol>; 26],
+}
+
+impl MarkTable {
+	pub fn set(&mut self, ch: char, pos: RowCol) {
+		if ch.is_ascii_lowercase() {
+			self.slots[(ch as u8 - b'a') as usize] = Some(pos);
+		}
+	}
+	pub fn get(&self, ch: char) -> Option<RowCol> {
+		if ch.is_ascii_lowercase() {
+			self.slots[(ch as u8 - b'a') as usize]
+		} else {
+			None
+		}
+	}
 }
