@@ -10,8 +10,15 @@ use alloc::string::{
 	String,
 	ToString,
 };
+use ryvex_core::{
+	piece_table::{
+		PieceTable,
+		RowCol,
+	},
+	MarkTable,
+	TextBuffer,
+};
 use ryvex_target::{
-	key,
 	r#impl::{
 		TargetFileSystem,
 		TargetPath,
@@ -41,8 +48,12 @@ impl core::fmt::Display for DocumentId {
 #[derive(Debug)]
 pub struct Document {
 	pub id: DocumentId,
-	text:   String,
 	path:   Option<TargetPath>,
+
+	buffer: PieceTable,
+	cursor: RowCol,
+	mark:   Option<RowCol>,
+	marks:  MarkTable,
 }
 
 impl Default for Document {
@@ -54,20 +65,37 @@ impl Default for Document {
 impl Document {
 	pub fn scratch() -> Self {
 		Self {
-			id:   DocumentId::default(),
-			text: String::new(),
-			path: None,
+			id:     DocumentId::default(),
+			path:   None,
+			buffer: PieceTable::new(String::new()),
+			cursor: RowCol { row: 0, col: 0 },
+			mark:   None,
+			marks:  MarkTable::default(),
 		}
 	}
 
 	pub fn open(path: TargetPath, fs: &TargetFileSystem) -> Result<Self> {
-		let content = fs.read_to_string(&path).unwrap();
+		let content = fs.read_to_string(&path)?;
 
 		Ok(Self {
-			id:   DocumentId::default(),
-			text: content,
-			path: Some(path),
+			id:     DocumentId::default(),
+			path:   Some(path),
+			buffer: PieceTable::new(content),
+			cursor: RowCol { row: 0, col: 0 },
+			mark:   None,
+			marks:  MarkTable::default(),
 		})
+	}
+
+	pub fn scratch_from_string(text: String) -> Self {
+		Self {
+			id:     DocumentId::default(),
+			path:   None,
+			buffer: PieceTable::new(text),
+			cursor: RowCol { row: 0, col: 0 },
+			mark:   None,
+			marks:  MarkTable::default(),
+		}
 	}
 
 	pub fn new(
@@ -80,14 +108,14 @@ impl Document {
 		}
 	}
 
-	pub fn text(&self) -> &str {
-		&self.text
+	pub fn content(&self) -> String {
+		self.buffer.slice(0, self.buffer.len())
 	}
 
 	pub fn save(&self, fs: &TargetFileSystem) -> Result<()> {
 		match &self.path {
 			Some(path) => {
-				fs.write_all(path, self.text.as_bytes()).unwrap();
+				fs.write_all(path, self.content().as_bytes())?;
 				Ok(())
 			}
 			// TODO: error because file doesnt exist
@@ -95,8 +123,36 @@ impl Document {
 		}
 	}
 
-	pub fn insert_character(&mut self, key: key::AsciiKeyCode) {
-		self.text.push(key.to_char());
+	pub fn current_row(&self) -> usize {
+		self.cursor.row
+	}
+	pub fn current_col(&self) -> usize {
+		self.cursor.col
+	}
+	pub fn total_lines(&self) -> usize {
+		self.buffer.lines()
+	}
+
+	pub fn rows(&self) -> usize {
+		self.content().lines().count()
+	}
+
+	pub fn len(&self) -> usize {
+		self.buffer.len()
+	}
+
+	pub fn insert_character(&mut self, ch: char) {
+		// 1) map (row,col) → byte offset
+		let pos = self.buffer.pos_from(self.cursor);
+		// 2) insert into piece-table
+		self.buffer.insert(pos, &ch.to_string());
+		// 3) advance cursor
+		if ch == '\n' {
+			self.cursor.row += 1;
+			self.cursor.col = 0;
+		} else {
+			self.cursor.col += 1;
+		}
 	}
 
 	pub fn path(&self) -> Option<&TargetPath> {
@@ -107,6 +163,32 @@ impl Document {
 		self.path
 			.clone()
 			.map(|p| fs.expand(&p).unwrap_or(p).to_string())
+	}
+
+	pub fn buffer(&self) -> &PieceTable {
+		&self.buffer
+	}
+
+	pub fn cursor(&self) -> RowCol {
+		self.cursor
+	}
+
+	pub fn delete_at_cursor(&mut self) {
+		let mut pos = self.buffer.pos_from(self.cursor);
+
+		if pos == self.buffer.len() && pos > 0 {
+			let mut start = pos - 1;
+			while start > 0 && self.buffer.char_at(start).is_none() {
+				start -= 1;
+			}
+			pos = start;
+		}
+
+		if let Some(ch) = self.buffer.char_at(pos) {
+			let end = pos + ch.len_utf8();
+			self.buffer.delete(pos, end);
+			self.cursor = self.buffer.rowcol_at(pos);
+		}
 	}
 }
 

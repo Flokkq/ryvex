@@ -8,9 +8,13 @@ use alloc::{
 	vec::Vec,
 };
 use core::num::NonZeroUsize;
+use ryvex_core::TextBuffer;
 
 use ryvex_target::{
-	key,
+	key::{
+		self,
+		AsciiKeyCode,
+	},
 	r#impl::{
 		TargetContext,
 		TargetFileSystem,
@@ -98,8 +102,8 @@ impl Editor {
 
 					let msg = format!(
 						"\"{path}\" {}L, {}B written",
-						doc.text().lines().count(),
-						doc.text().len()
+						doc.rows(),
+						doc.len()
 					);
 
 					self.log_info(msg);
@@ -112,11 +116,18 @@ impl Editor {
 		self.log_warn("No open document".to_string());
 	}
 
-	pub fn insert_character(&mut self, key: key::AsciiKeyCode) {
+	pub fn insert_character(&mut self, key: char) {
 		if self.mode == Mode::Command {
-			self.push_command_char(key.to_char());
+			self.push_command_char(key);
 		} else if let Some(document) = self.get_active_document_mut() {
 			document.insert_character(key);
+		}
+	}
+
+	pub fn delete_at_cursor(&mut self) {
+		self.log_info("Deleting character");
+		if let Some(d) = self.get_active_document_mut() {
+			d.delete_at_cursor();
 		}
 	}
 

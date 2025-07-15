@@ -44,9 +44,8 @@ impl Component for StatusLine {
 		frame.set_string(0, y, &file[..file.len().min(width)]);
 
 		if let Some(doc) = cx.editor.get_active_document() {
-			let row = doc.text().lines().count();
-			let col = doc.text().chars().count() -
-				doc.text().rfind('\n').map(|i| i + 1).unwrap_or(0);
+			let row = doc.current_row();
+			let col = doc.current_col();
 
 			let right = format!("{row}|{col}");
 			let start = area.width.saturating_sub(right.len() as u16);

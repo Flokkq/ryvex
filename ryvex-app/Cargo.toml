@@ -17,9 +17,11 @@ std = [
   "ryvex-target/std",
   "ryvex-ui/std",
   "ryvex-tui/std",
+  "ryvex-core/std",
 ]
 
 [dependencies]
 ryvex-target.workspace = true
 ryvex-ui.workspace = true
 ryvex-tui.workspace = true
+ryvex-core.workspace = true

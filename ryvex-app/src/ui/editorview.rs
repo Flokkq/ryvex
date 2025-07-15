@@ -39,7 +39,7 @@ impl EditorView {
 		area: ryvex_ui::graphics::Rect,
 	) {
 		let max_rows = area.height.saturating_sub(2);
-		for (row_idx, line) in doc.text().lines().enumerate() {
+		for (row_idx, line) in doc.content().lines().enumerate() {
 			if row_idx as u16 >= max_rows {
 				break;
 			}
@@ -52,9 +52,14 @@ impl EditorView {
 	pub fn insert(&self, key: AsciiKeyCode, cx: &mut Context) {
 		match key {
 			AsciiKeyCode::Esc => cx.editor.enter_normal_mode(),
+			AsciiKeyCode::Space => cx.editor.insert_character(' '),
+			AsciiKeyCode::Backspace | AsciiKeyCode::Del => {
+				cx.editor.delete_at_cursor()
+			}
+			AsciiKeyCode::CarriageReturn => cx.editor.insert_character('\n'),
 			_control_char if key.is_control_character() => {}
 			_seperator if key.is_seperator() => {}
-			_printable_character => cx.editor.insert_character(key),
+			_printable_character => cx.editor.insert_character(key.to_char()),
 		}
 	}
 
