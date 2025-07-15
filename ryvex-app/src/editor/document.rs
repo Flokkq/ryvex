@@ -141,6 +141,10 @@ impl Document {
 		self.buffer.len()
 	}
 
+	pub fn is_empty(&self) -> bool {
+		self.buffer.is_empty()
+	}
+
 	pub fn insert_character(&mut self, ch: char) {
 		// 1) map (row,col) → byte offset
 		let pos = self.buffer.pos_from(self.cursor);

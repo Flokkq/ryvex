@@ -8,13 +8,8 @@ use alloc::{
 	vec::Vec,
 };
 use core::num::NonZeroUsize;
-use ryvex_core::TextBuffer;
 
 use ryvex_target::{
-	key::{
-		self,
-		AsciiKeyCode,
-	},
 	r#impl::{
 		TargetContext,
 		TargetFileSystem,

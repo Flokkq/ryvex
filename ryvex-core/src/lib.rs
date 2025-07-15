@@ -20,6 +20,7 @@ impl Cursor {
 /// Trait für PieceTables mit Zeilen/Spalten‐Funktionen
 pub trait TextBuffer {
 	fn len(&self) -> usize;
+	fn is_empty(&self) -> bool;
 	fn char_at(&self, idx: usize) -> Option<char>;
 	fn slice(&self, start: usize, end: usize) -> String;
 

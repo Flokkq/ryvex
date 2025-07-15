@@ -145,6 +145,10 @@ impl TextBuffer for PieceTable {
 		self.pieces.iter().map(|p| p.len).sum()
 	}
 
+	fn is_empty(&self) -> bool {
+		self.len() == 0
+	}
+
 	fn char_at(&self, idx: usize) -> Option<char> {
 		if idx >= self.len() {
 			return None;
@@ -181,7 +185,7 @@ impl TextBuffer for PieceTable {
 		let limit = self.len().saturating_sub(pattern.len());
 		let mut idx = from.min(limit);
 		while idx <= limit {
-			if &self.slice(idx, idx + pattern.len()) == pattern {
+			if self.slice(idx, idx + pattern.len()) == pattern {
 				return Some(idx);
 			}
 			idx += 1;
