@@ -1,4 +1,34 @@
 #![cfg_attr(not(feature = "std"), no_std)]
+
+use piece_table::RowCol;
 pub extern crate alloc;
 
 pub mod motion;
+pub mod piece_table;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Cursor {
+	pub pos: usize,
+}
+
+impl Cursor {
+	pub fn clamp(&mut self, buf: &impl TextBuffer) {
+		self.pos = self.pos.min(buf.len());
+	}
+}
+
+/// Trait für PieceTables mit Zeilen/Spalten‐Funktionen
+pub trait TextBuffer {
+	fn len(&self) -> usize;
+	fn char_at(&self, idx: usize) -> Option<char>;
+	fn slice(&self, start: usize, end: usize) -> String;
+
+	fn insert(&mut self, idx: usize, text: &str);
+	fn delete(&mut self, start: usize, end: usize);
+	fn find(&self, pattern: &str, from: usize) -> Option<usize>;
+
+	fn rowcol_at(&self, idx: usize) -> RowCol;
+	fn pos_from(&self, rc: RowCol) -> usize;
+	fn lines(&self) -> usize;
+	fn line_len(&self, row: usize) -> usize;
+}
