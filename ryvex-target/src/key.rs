@@ -169,13 +169,19 @@ impl AsciiKeyCode {
 	pub fn is_control_character(self) -> bool {
 		let n = self as u8;
 
-		0 < n && n < 28
+		AsciiKeyCode::Nul as u8 <= n && n <= AsciiKeyCode::Esc as u8
 	}
 
 	pub fn is_seperator(self) -> bool {
 		let n = self as u8;
 
-		27 < n && n < 33
+		AsciiKeyCode::Fs as u8 <= n && n <= AsciiKeyCode::Space as u8
+	}
+
+	pub fn is_digit(self) -> bool {
+		let n = self as u8;
+
+		AsciiKeyCode::Zero as u8 <= n && n <= AsciiKeyCode::Nine as u8
 	}
 }
 

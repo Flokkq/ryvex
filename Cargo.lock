@@ -15,6 +15,9 @@ dependencies = [
 [[package]]
 name = "ryvex-core"
 version = "0.1.0"
+dependencies = [
+ "ryvex-target",
+]
 
 [[package]]
 name = "ryvex-target"

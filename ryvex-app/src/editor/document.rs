@@ -194,6 +194,10 @@ impl Document {
 			self.cursor = self.buffer.rowcol_at(pos);
 		}
 	}
+
+	pub fn buffer_mut(&mut self) -> &mut PieceTable {
+		&mut self.buffer
+	}
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

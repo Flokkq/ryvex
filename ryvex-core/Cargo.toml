@@ -9,3 +9,4 @@ default = ["std"]
 std = []
 
 [dependencies]
+ryvex-target.workspace = true

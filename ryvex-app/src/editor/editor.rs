@@ -8,6 +8,7 @@ use alloc::{
 	vec::Vec,
 };
 use core::num::NonZeroUsize;
+use ryvex_core::piece_table::PieceTable;
 
 use ryvex_target::{
 	r#impl::{
@@ -30,7 +31,10 @@ use super::document::{
 	Mode,
 };
 
-use crate::error::Result;
+use crate::{
+	compositor::EventResult,
+	error::Result,
+};
 
 #[derive(Debug)]
 pub struct Editor {
@@ -193,8 +197,7 @@ impl Editor {
 	}
 
 	pub fn quit(&mut self) {
-		self.documents.clear();
-		self.active_document = None;
+		self.should_close = true;
 	}
 
 	pub fn should_close(&self) -> bool {
@@ -227,6 +230,21 @@ impl Editor {
 
 	pub fn last_message(&self) -> Option<&LogMessage> {
 		self.last_message.as_ref()
+	}
+
+	pub fn run_ex_command(
+		&mut self,
+		name: &str,
+		args: &str,
+	) -> crate::compositor::EventResult {
+		self.command_buffer = format!("{name} {args}");
+		self.exit_command_mode();
+		EventResult::Consumed(None)
+	}
+
+	pub fn buffer_mut(&mut self) -> &mut PieceTable {
+		let doc = self.get_active_document_mut().unwrap();
+		doc.buffer_mut()
 	}
 }
 
