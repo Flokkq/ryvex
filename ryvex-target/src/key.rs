@@ -1,4 +1,7 @@
-use core::fmt::Display;
+use core::{
+	fmt::Display,
+	str::FromStr,
+};
 
 /// Represents an ASCII key code.
 ///
@@ -183,6 +186,81 @@ impl AsciiKeyCode {
 
 		AsciiKeyCode::Zero as u8 <= n && n <= AsciiKeyCode::Nine as u8
 	}
+
+	pub fn parse_human_str(s: &str) -> Result<Vec<AsciiKeyCode>, String> {
+		let mut iter = s.chars().peekable();
+		let mut codes = Vec::new();
+
+		while let Some(ch) = iter.next() {
+			if ch == '<' {
+				let mut token = String::from("<");
+
+				while let Some(&next) = iter.peek() {
+					token.push(next);
+					iter.next();
+
+					if next == '>' {
+						break;
+					}
+				}
+
+				if !token.ends_with('>') {
+					return Err(format!("unterminated '<' in `{}`", s));
+				}
+				codes.push(AsciiKeyCode::from_str(&token)?);
+				continue;
+			}
+
+			if !ch.is_ascii() {
+				return Err(format!("non-ASCII char '{}' in `{}`", ch, s));
+			}
+
+			codes.push(AsciiKeyCode::from_ascii(ch as u8));
+		}
+
+		Ok(codes)
+	}
+
+	pub fn to_human_readable(self) -> String {
+		let s = match self {
+			AsciiKeyCode::Nul => "<C-@>",
+			AsciiKeyCode::Soh => "<C-A>",
+			AsciiKeyCode::Stx => "<C-B>",
+			AsciiKeyCode::Etx => "<C-C>",
+			AsciiKeyCode::Eot => "<C-D>",
+			AsciiKeyCode::Enq => "<C-E>",
+			AsciiKeyCode::Ack => "<C-F>",
+			AsciiKeyCode::Bell => "<C-G>",
+			AsciiKeyCode::Backspace => "<C-H>",
+			AsciiKeyCode::Tab => "<C-I>",
+			AsciiKeyCode::LineFeed => "<C-J>",
+			AsciiKeyCode::Vt => "<C-K>",
+			AsciiKeyCode::Ff => "<C-L>",
+			AsciiKeyCode::CarriageReturn => "<C-M>",
+			AsciiKeyCode::So => "<C-N>",
+			AsciiKeyCode::Si => "<C-O>",
+			AsciiKeyCode::Dle => "<C-P>",
+			AsciiKeyCode::Dc1 => "<C-Q>",
+			AsciiKeyCode::Dc2 => "<C-R>",
+			AsciiKeyCode::Dc3 => "<C-S>",
+			AsciiKeyCode::Dc4 => "<C-T>",
+			AsciiKeyCode::Nak => "<C-U>",
+			AsciiKeyCode::Syn => "<C-V>",
+			AsciiKeyCode::Etb => "<C-W>",
+			AsciiKeyCode::Can => "<C-X>",
+			AsciiKeyCode::Em => "<C-Y>",
+			AsciiKeyCode::Sub => "<C-Z>",
+			AsciiKeyCode::Esc => "<C-[>",
+			AsciiKeyCode::Fs => "<C-\\>",
+			AsciiKeyCode::Gs => "<C-]>",
+			AsciiKeyCode::Rs => "<C-^>",
+			AsciiKeyCode::Us => "<C-_>",
+			AsciiKeyCode::Del => "<Del>",
+			_printable_key_code => &self.to_char().to_string(),
+		};
+
+		s.to_string()
+	}
 }
 
 impl From<u8> for AsciiKeyCode {
@@ -205,44 +283,56 @@ impl From<AsciiKeyCode> for char {
 	}
 }
 
+impl FromStr for AsciiKeyCode {
+	type Err = String;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		if s.len() == 1 && s.is_ascii() {
+			let byte = s.as_bytes()[0];
+			return Ok(AsciiKeyCode::from_ascii(byte));
+		}
+
+		if !s.starts_with('<') || !s.ends_with('>') {
+			return Err(format!(
+				"invalid format: expected single char or <...>, got '{}'",
+				s
+			));
+		}
+
+		let inner = &s[1..s.len() - 1];
+
+		if inner == "Del" {
+			return Ok(AsciiKeyCode::Del);
+		}
+
+		if let Some(rest) = inner.strip_prefix("C-") {
+			if rest.chars().count() == 1 {
+				let byte = rest.as_bytes()[0];
+
+				if (b'@'..=b'_').contains(&byte) {
+					let ctrl = byte & 0x1F;
+					return Ok(AsciiKeyCode::from_ascii(ctrl));
+				} else {
+					return Err(format!(
+						"invalid control character '{}', must be between @ \
+						 and _",
+						byte as char
+					));
+				}
+			}
+		}
+
+		Err(format!(
+			"invalid AsciiKeyCode literal '{}'; expected either a single \
+			 ASCII char, '<Del>', or '<C-?>'",
+			s
+		))
+	}
+}
+
 impl Display for AsciiKeyCode {
 	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-		match self {
-			AsciiKeyCode::Nul => write!(f, "<C-@>"),
-			AsciiKeyCode::Soh => write!(f, "<C-A>"),
-			AsciiKeyCode::Stx => write!(f, "<C-B>"),
-			AsciiKeyCode::Etx => write!(f, "<C-C>"),
-			AsciiKeyCode::Eot => write!(f, "<C-D>"),
-			AsciiKeyCode::Enq => write!(f, "<C-E>"),
-			AsciiKeyCode::Ack => write!(f, "<C-F>"),
-			AsciiKeyCode::Bell => write!(f, "<C-G>"),
-			AsciiKeyCode::Backspace => write!(f, "<C-H>"),
-			AsciiKeyCode::Tab => write!(f, "<C-I>"),
-			AsciiKeyCode::LineFeed => write!(f, "<C-J>"),
-			AsciiKeyCode::Vt => write!(f, "<C-K>"),
-			AsciiKeyCode::Ff => write!(f, "<C-L>"),
-			AsciiKeyCode::CarriageReturn => write!(f, "<C-M>"),
-			AsciiKeyCode::So => write!(f, "<C-N>"),
-			AsciiKeyCode::Si => write!(f, "<C-O>"),
-			AsciiKeyCode::Dle => write!(f, "<C-P>"),
-			AsciiKeyCode::Dc1 => write!(f, "<C-Q>"),
-			AsciiKeyCode::Dc2 => write!(f, "<C-R>"),
-			AsciiKeyCode::Dc3 => write!(f, "<C-S>"),
-			AsciiKeyCode::Dc4 => write!(f, "<C-T>"),
-			AsciiKeyCode::Nak => write!(f, "<C-U>"),
-			AsciiKeyCode::Syn => write!(f, "<C-V>"),
-			AsciiKeyCode::Etb => write!(f, "<C-W>"),
-			AsciiKeyCode::Can => write!(f, "<C-X>"),
-			AsciiKeyCode::Em => write!(f, "<C-Y>"),
-			AsciiKeyCode::Sub => write!(f, "<C-Z>"),
-			AsciiKeyCode::Esc => write!(f, "<C-[>"),
-			AsciiKeyCode::Fs => write!(f, "<C-\\>"),
-			AsciiKeyCode::Gs => write!(f, "<C-]>"),
-			AsciiKeyCode::Rs => write!(f, "<C-^>"),
-			AsciiKeyCode::Us => write!(f, "<C-_>"),
-			AsciiKeyCode::Del => write!(f, "<Del>"),
-			_printable_key_code => write!(f, "{}", self.to_char()),
-		}
+		write!(f, "{}", self.to_human_readable())
 	}
 }
 

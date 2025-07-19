@@ -91,7 +91,7 @@ impl Editor {
 			.and_then(move |id| self.documents.get_mut(&id))
 	}
 
-	fn write_active_document(&mut self, fs: &TargetFileSystem) {
+	pub fn write_active_document(&mut self, fs: &TargetFileSystem) {
 		if let Some(doc) = self.get_active_document() {
 			match doc.save(fs) {
 				Ok(_) => {
