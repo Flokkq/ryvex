@@ -1,12 +1,5 @@
-use alloc::{
-	format,
-	string::ToString,
-};
-use ryvex_target::{
-	key::AsciiKeyCode,
-	std::error::Error,
-	term::event::Event,
-};
+use alloc::format;
+use ryvex_target::term::event::Event;
 use ryvex_tui::buffer::Buffer;
 use ryvex_ui::graphics::Rect;
 
@@ -57,37 +50,12 @@ impl Component for CommandLine {
 		}
 	}
 
-	fn handle_event(&mut self, event: &Event, cx: &mut Context) -> EventResult {
-		if cx.editor.mode != Mode::Command {
-			return EventResult::Ignored(None);
-		}
-
-		if let Event::Key(key) = event {
-			match key {
-				AsciiKeyCode::Esc => cx.editor.exit_command_mode(),
-				AsciiKeyCode::CarriageReturn => {
-					let _ =
-						cx.editor.submit_command(cx.target_cx).map_err(|err| {
-							cx.editor.log_error(
-								err.root()
-									.map(|src| src.to_string())
-									.unwrap_or(err.to_string()),
-							)
-						});
-
-					cx.editor.enter_normal_mode();
-				}
-				AsciiKeyCode::Backspace => cx.editor.pop_command_char(),
-				_other
-					if !key.is_control_character() && !key.is_seperator() =>
-				{
-					cx.editor.push_command_char(key.to_char());
-				}
-				_ => {}
-			}
-		}
-
-		EventResult::Consumed(None)
+	fn handle_event(
+		&mut self,
+		_event: &Event,
+		_cx: &mut Context,
+	) -> EventResult {
+		EventResult::Ignored(None)
 	}
 
 	fn should_update(&self) -> bool {

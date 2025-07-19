@@ -124,8 +124,9 @@ impl Editor {
 	}
 
 	pub fn delete_at_cursor(&mut self) {
-		self.log_info("Deleting character");
-		if let Some(d) = self.get_active_document_mut() {
+		if self.mode == Mode::Command {
+			self.pop_command_char();
+		} else if let Some(d) = self.get_active_document_mut() {
 			d.delete_at_cursor();
 		}
 	}

@@ -6,6 +6,7 @@ use ryvex_core::motion::{
 };
 use ryvex_target::{
 	key::AsciiKeyCode,
+	std::error::Error,
 	term::event::Event,
 };
 
@@ -42,56 +43,72 @@ impl Default for EditorView {
 }
 
 define_keymaps! {
-			normal {
-				"i"  => EditorCommand::Static {
-					fun: |cx| { cx.editor.enter_insert_mode(); EventResult::Consumed(None) },
-					doc: "insert mode"
-				},
-				":"  => EditorCommand::Static {
-					fun: |cx| { cx.editor.enter_command_mode(); EventResult::Consumed(None) },
-					doc: "insert mode"
-				},
-				"q"  => EditorCommand::Static {
-					fun: |cx| { cx.editor.quit(); EventResult::Consumed(None) },
-					doc: "quit editor"
-				},
-				"w"  => EditorCommand::Static {
-					fun: |cx| { cx.editor.write_active_document(&cx.target_cx.fs); EventResult::Consumed(None) },
-					doc: "quit editor"
-				},
-				"h"  => EditorCommand::Motion(
-					Motion::NavigationOnly { nav: NavigationMotion::CharBackward, count: 1 }),
-				"j"  => EditorCommand::Motion(
-					Motion::NavigationOnly { nav: NavigationMotion::LineForward, count: 1 }),
-				"k"  => EditorCommand::Motion(
-					Motion::NavigationOnly { nav: NavigationMotion::LineBackward, count: 1 }),
-				"l"  => EditorCommand::Motion(
-					Motion::NavigationOnly { nav: NavigationMotion::CharForward,  count: 1 }),
-				"dw" => EditorCommand::Motion(
-					Motion::OperatedNavigation {
-						motion_type: MotionType::Delete,
-						nav: NavigationMotion::WordForward,
-						count: 1
-					}),
-			}
+	normal {
+		"i"  => EditorCommand::Static {
+			fun: |cx| { cx.editor.enter_insert_mode(); EventResult::Consumed(None) },
+			doc: "insert mode"
+		},
+		":"  => EditorCommand::Static {
+			fun: |cx| { cx.editor.enter_command_mode(); EventResult::Consumed(None) },
+			doc: "insert mode"
+		},
+		"q"  => EditorCommand::Static {
+			fun: |cx| { cx.editor.quit(); EventResult::Consumed(None) },
+			doc: "quit editor"
+		},
+		"w"  => EditorCommand::Static {
+			fun: |cx| { cx.editor.write_active_document(&cx.target_cx.fs); EventResult::Consumed(None) },
+			doc: "quit editor"
+		},
+		"h"  => EditorCommand::Motion(
+			Motion::NavigationOnly { nav: NavigationMotion::CharBackward, count: 1 }),
+		"j"  => EditorCommand::Motion(
+			Motion::NavigationOnly { nav: NavigationMotion::LineForward, count: 1 }),
+		"k"  => EditorCommand::Motion(
+			Motion::NavigationOnly { nav: NavigationMotion::LineBackward, count: 1 }),
+		"l"  => EditorCommand::Motion(
+			Motion::NavigationOnly { nav: NavigationMotion::CharForward,  count: 1 }),
+		"dw" => EditorCommand::Motion(
+			Motion::OperatedNavigation {
+				motion_type: MotionType::Delete,
+				nav: NavigationMotion::WordForward,
+				count: 1
+			}),
+	}
 
-			insert {
-				"<C-[>" => EditorCommand::Static {
-					fun: |cx| { cx.editor.enter_normal_mode(); EventResult::Consumed(None) },
-					doc: "normal mode"
-				},
-			}
+	insert {
+		"<C-[>" => EditorCommand::Static {
+			fun: |cx| { cx.editor.enter_normal_mode(); EventResult::Consumed(None) },
+			doc: "normal mode"
+		},
+	}
 
-			command {
-				"<C-[>" => EditorCommand::Static {
-					fun: |cx| { cx.editor.enter_normal_mode(); cx.editor.log_info("Entering command mode"); EventResult::Consumed(None) },
-					doc: "normal mode"
-				},
-				"<C-M>" => EditorCommand::Static {
-					fun: |cx| { let _ = cx.editor.submit_command(cx.target_cx); cx.editor.log_info("Exectuing command"); EventResult::Consumed(None) },
-					doc: "submit command"
-				},
-			}
+	command {
+		"<C-[>" => EditorCommand::Static {
+			fun: |cx| { cx.editor.enter_normal_mode(); EventResult::Consumed(None) },
+			doc: "normal mode"
+		},
+		"<C-M>" => EditorCommand::Static {
+			fun: |cx| {
+				let _ =
+					cx.editor.submit_command(cx.target_cx).map_err(|err| {
+						cx.editor.log_error(
+							err.root()
+								.map(|src| src.to_string())
+								.unwrap_or(err.to_string()),
+						)
+					});
+
+				cx.editor.enter_normal_mode();
+				EventResult::Consumed(None)
+			},
+			doc: "submit command"
+		},
+		"<C-J>" => EditorCommand::Static {
+			fun: |cx| { let _ = cx.editor.submit_command(cx.target_cx); EventResult::Consumed(None) },
+			doc: "submit command"
+		},
+	}
 }
 
 impl EditorView {
@@ -204,7 +221,7 @@ impl Component for EditorView {
 				let mode_before = cx.editor.mode;
 				self.switch_keymap(mode_before);
 
-				if mode_before == Mode::Insert {
+				if mode_before == Mode::Insert || mode_before == Mode::Command {
 					let parse_res = self.parser.feed(*key);
 
 					match parse_res {
