@@ -1,12 +1,15 @@
-use ryvex_core::motion::{
-	self,
-	Motion,
-	MotionType,
-	NavigationMotion,
+use ryvex_core::{
+	log_error_chain,
+	motion::{
+		self,
+		Motion,
+		MotionType,
+		NavigationMotion,
+	},
+	warn,
 };
 use ryvex_target::{
 	key::AsciiKeyCode,
-	std::error::Error,
 	term::event::Event,
 };
 
@@ -92,9 +95,7 @@ define_keymaps! {
 			fun: |cx| {
 				let _ =
 					cx.editor.submit_command(cx.target_cx).map_err(|err| {
-						cx.editor.log_error(
-							err.root().to_string()
-						)
+						log_error_chain!(&err, "frailed executing command");
 					});
 
 				cx.editor.enter_normal_mode();
@@ -252,7 +253,7 @@ impl Component for EditorView {
 						return res;
 					}
 					ParseResult::Error => {
-						cx.editor.log_warn(format!("Unknown mapping: {}", key));
+						warn!("Unknown mapping: {}", key);
 						return EventResult::Consumed(None);
 					}
 				}
@@ -282,6 +283,7 @@ fn scaled_motion(m: &Motion, mult: u32) -> Motion {
 	if mult <= 1 {
 		return m.clone();
 	}
+
 	match m {
 		Motion::NavigationOnly { nav, count } => Motion::NavigationOnly {
 			nav:   *nav,

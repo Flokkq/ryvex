@@ -30,7 +30,6 @@ use ryvex_core::{
 	},
 };
 use ryvex_target::{
-	r#impl::TargetOutWriter,
 	target::TargetContext,
 	term::event::SyncEventStream,
 };
@@ -101,8 +100,8 @@ fn setup_panic_handler() {
 }
 
 fn setup_logging(verbosity: usize) {
-	let writer = TargetOutWriter::default();
-	LOGGER.init_with_target_out(writer);
+	// let writer = TargetOutWriter::default();
+	// LOGGER.init_with_target_out(writer);
 
 	apply_verbosity(verbosity);
 

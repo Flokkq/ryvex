@@ -8,7 +8,12 @@ use alloc::{
 	vec::Vec,
 };
 use core::num::NonZeroUsize;
-use ryvex_core::piece_table::PieceTable;
+use ryvex_core::{
+	info,
+	log_error_chain,
+	piece_table::PieceTable,
+	warn,
+};
 
 use ryvex_target::{
 	r#impl::{
@@ -45,7 +50,6 @@ pub struct Editor {
 	pub mode: Mode,
 
 	command_buffer: String,
-	last_message:   Option<LogMessage>,
 
 	should_close: bool,
 }
@@ -64,7 +68,6 @@ impl Editor {
 			next_document_id: DocumentId::default(),
 			mode:             Mode::Normal,
 			command_buffer:   String::new(),
-			last_message:     None,
 			should_close:     false,
 		}
 	}
@@ -99,20 +102,14 @@ impl Editor {
 						.diplay_path(fs)
 						.unwrap_or_else(|| "[scratch]".into());
 
-					let msg = format!(
-						"\"{path}\" {}L, {}B written",
-						doc.rows(),
-						doc.len()
-					);
-
-					self.log_info(msg);
+					info!("\"{path}\" {}L, {}B written", doc.rows(), doc.len());
 				}
-				Err(e) => self.log_error(format!("write failed: {e}")),
+				Err(e) => log_error_chain!(&e, "write failed"),
 			}
 			return;
 		}
 
-		self.log_warn("No open document".to_string());
+		warn!("No open document");
 	}
 
 	pub fn insert_character(&mut self, key: char) {
@@ -205,32 +202,8 @@ impl Editor {
 		self.should_close
 	}
 
-	pub fn log_info<S: Into<String>>(&mut self, msg: S) {
-		self.last_message = Some(LogMessage {
-			level: LogLevel::Info,
-			text:  msg.into(),
-		})
-	}
-	pub fn log_warn<I: Into<String>>(&mut self, msg: I) {
-		self.last_message = Some(LogMessage {
-			level: LogLevel::Warn,
-			text:  msg.into(),
-		})
-	}
-
-	pub fn log_error<S: Into<String>>(&mut self, msg: S) {
-		self.last_message = Some(LogMessage {
-			level: LogLevel::Error,
-			text:  msg.into(),
-		})
-	}
-
 	pub fn command_buffer(&self) -> &str {
 		&self.command_buffer
-	}
-
-	pub fn last_message(&self) -> Option<&LogMessage> {
-		self.last_message.as_ref()
 	}
 
 	pub fn run_ex_command(
@@ -247,17 +220,4 @@ impl Editor {
 		let doc = self.get_active_document_mut().unwrap();
 		doc.buffer_mut()
 	}
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum LogLevel {
-	Info,
-	Warn,
-	Error,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct LogMessage {
-	pub level: LogLevel,
-	pub text:  String,
 }

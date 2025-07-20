@@ -32,21 +32,9 @@ impl Component for CommandLine {
 		let width = area.width as usize;
 		frame.set_string(0, y, " ".repeat(width));
 
-		match cx.editor.mode {
-			Mode::Command => {
-				let text = format!(":{}", cx.editor.command_buffer());
-				frame.set_string(0, y, &text[..text.len().min(width)]);
-			}
-
-			_ => {
-				if let Some(msg) = &cx.editor.last_message() {
-					frame.set_string(
-						0,
-						y,
-						&msg.text[..msg.text.len().min(width)],
-					);
-				}
-			}
+		if cx.editor.mode == Mode::Command {
+			let text = format!(":{}", cx.editor.command_buffer());
+			frame.set_string(0, y, &text[..text.len().min(width)]);
 		}
 	}
 
