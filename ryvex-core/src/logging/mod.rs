@@ -83,7 +83,7 @@ impl<const N: usize> Logger<N> {
 		self.sink.lock().set_writer(writer);
 	}
 
-	pub fn sink_control(&self) -> LogSinkControl {
+	pub fn sink_control(&self) -> LogSinkControl<'_> {
 		LogSinkControl { sink: &self.sink }
 	}
 
