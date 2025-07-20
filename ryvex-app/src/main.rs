@@ -109,7 +109,6 @@ fn setup_logging(verbosity: usize) {
 }
 
 fn apply_verbosity(verbosity: usize) {
-	LOGGER.set_enabled(LogLevel::Info, verbosity >= 1);
-	LOGGER.set_enabled(LogLevel::Debug, verbosity >= 2);
-	LOGGER.set_enabled(LogLevel::Trace, verbosity >= 3);
+	LOGGER.set_enabled(LogLevel::Debug, verbosity >= 1);
+	LOGGER.set_enabled(LogLevel::Trace, verbosity >= 2);
 }
