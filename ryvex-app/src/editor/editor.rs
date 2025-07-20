@@ -9,8 +9,8 @@ use alloc::{
 };
 use core::num::NonZeroUsize;
 use ryvex_core::{
+	error_chain,
 	info,
-	log_error_chain,
 	piece_table::PieceTable,
 	warn,
 };
@@ -104,7 +104,7 @@ impl Editor {
 
 					info!("\"{path}\" {}L, {}B written", doc.rows(), doc.len());
 				}
-				Err(e) => log_error_chain!(&e, "write failed"),
+				Err(e) => error_chain!(&e, "write failed"),
 			}
 			return;
 		}

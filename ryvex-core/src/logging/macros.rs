@@ -25,7 +25,7 @@ macro_rules! debug { ($($t:tt)*) => { $crate::log!($crate::logging::record::LogL
 macro_rules! trace { ($($t:tt)*) => { $crate::log!($crate::logging::record::LogLevel::Trace, $($t)*) }; }
 
 #[macro_export]
-macro_rules! log_error_chain {
+macro_rules! error_chain {
     ($err:expr) => {
         $crate::logging::log_error_chain(
             $err,

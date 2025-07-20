@@ -1,10 +1,7 @@
 use ryvex_core::{
-	log_error_chain,
 	motion::{
 		self,
 		Motion,
-		MotionType,
-		NavigationMotion,
 	},
 	warn,
 };
@@ -14,12 +11,12 @@ use ryvex_target::{
 };
 
 use crate::{
+	commands::KeyMaps,
 	compositor::{
 		Component,
 		Context,
 		EventResult,
 	},
-	define_keymaps,
 	editor::{
 		document::{
 			Document,
@@ -42,71 +39,6 @@ pub struct EditorView {
 impl Default for EditorView {
 	fn default() -> Self {
 		Self::new()
-	}
-}
-
-define_keymaps! {
-	normal {
-		"i"  => EditorCommand::Static {
-			fun: |cx| { cx.editor.enter_insert_mode(); EventResult::Consumed(None) },
-			doc: "insert mode"
-		},
-		":"  => EditorCommand::Static {
-			fun: |cx| { cx.editor.enter_command_mode(); EventResult::Consumed(None) },
-			doc: "insert mode"
-		},
-		"q"  => EditorCommand::Static {
-			fun: |cx| { cx.editor.quit(); EventResult::Consumed(None) },
-			doc: "quit editor"
-		},
-		"w"  => EditorCommand::Static {
-			fun: |cx| { cx.editor.write_active_document(&cx.target_cx.fs); EventResult::Consumed(None) },
-			doc: "quit editor"
-		},
-		"h"  => EditorCommand::Motion(
-			Motion::NavigationOnly { nav: NavigationMotion::CharBackward, count: 1 }),
-		"j"  => EditorCommand::Motion(
-			Motion::NavigationOnly { nav: NavigationMotion::LineForward, count: 1 }),
-		"k"  => EditorCommand::Motion(
-			Motion::NavigationOnly { nav: NavigationMotion::LineBackward, count: 1 }),
-		"l"  => EditorCommand::Motion(
-			Motion::NavigationOnly { nav: NavigationMotion::CharForward,  count: 1 }),
-		"dw" => EditorCommand::Motion(
-			Motion::OperatedNavigation {
-				motion_type: MotionType::Delete,
-				nav: NavigationMotion::WordForward,
-				count: 1
-			}),
-	}
-
-	insert {
-		"<C-[>" => EditorCommand::Static {
-			fun: |cx| { cx.editor.enter_normal_mode(); EventResult::Consumed(None) },
-			doc: "normal mode"
-		},
-	}
-
-	command {
-		"<C-[>" => EditorCommand::Static {
-			fun: |cx| { cx.editor.enter_normal_mode(); EventResult::Consumed(None) },
-			doc: "normal mode"
-		},
-		"<C-M>" => EditorCommand::Static {
-			fun: |cx| {
-				let _ =
-					cx.editor.submit_command(cx.target_cx).map_err(|err| {
-						log_error_chain!(&err, "frailed executing command");
-					});
-
-				cx.editor.enter_normal_mode();
-				EventResult::Consumed(None)
-			},
-			doc: "submit command"
-		},
-		"<C-J>" => EditorCommand::Static {
-			fun: |cx| { let _ = cx.editor.submit_command(cx.target_cx); EventResult::Consumed(None) },
-			doc: "submit command"
-		},
 	}
 }
 

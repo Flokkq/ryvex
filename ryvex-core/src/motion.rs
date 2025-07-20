@@ -215,5 +215,5 @@ impl AsKey for Scope {
 }
 
 pub fn apply(_buffer: &mut PieceTable, _motion: Motion) -> Option<String> {
-	unimplemented!()
+	None
 }

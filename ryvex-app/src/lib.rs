@@ -2,6 +2,7 @@
 pub extern crate alloc;
 
 pub mod args;
+pub mod commands;
 pub mod compositor;
 pub mod editor;
 pub mod error;

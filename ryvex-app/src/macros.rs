@@ -7,6 +7,12 @@ macro_rules! define_keymaps {
             $( pub $mode: $crate::keymap::KeyNode, )*
         }
 
+        impl Default for KeyMaps {
+            fn default() -> Self {
+                Self::new()
+            }
+        }
+
         impl KeyMaps {
             pub fn new() -> Self {
                 let mut km = Self {
