@@ -22,7 +22,15 @@ use ryvex_app::{
 	startup::Application,
 	terminal_guard::TerminalGuard,
 };
+use ryvex_core::{
+	info,
+	logging::{
+		record::LogLevel,
+		LOGGER,
+	},
+};
 use ryvex_target::{
+	r#impl::TargetOutWriter,
 	target::TargetContext,
 	term::event::SyncEventStream,
 };
@@ -49,12 +57,13 @@ fn app_main() -> Result<i32> {
 	#[cfg(feature = "std")]
 	setup_panic_handler();
 
-	// setup_logging(&cx.env, args.verbosity)?;
+	setup_logging(args.verbosity);
 	let mut app = Application::build(cx, args)?;
 
 	let mut event_stream = SyncEventStream::new()?;
 	let exit_code = app.run_until_stopped(&mut event_stream)?;
 
+	LOGGER.flush();
 	let _ = guard.restore();
 	Ok(exit_code)
 }
@@ -62,6 +71,9 @@ fn app_main() -> Result<i32> {
 #[cfg(not(feature = "std"))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
+	ryvex_core::error!("panic: {}", info);
+	LOGGER.flush();
+
 	let ptr = TERMINAL_GUARD.load(Ordering::SeqCst);
 	if !ptr.is_null() {
 		unsafe { (&*ptr).restore() };
@@ -75,6 +87,9 @@ fn setup_panic_handler() {
 	let original_hook = std::panic::take_hook();
 
 	std::panic::set_hook(Box::new(move |info| {
+		ryvex_core::error!("panic: {}", info);
+		LOGGER.flush();
+
 		let ptr = TERMINAL_GUARD.load(Ordering::SeqCst);
 
 		if !ptr.is_null() {
@@ -85,12 +100,17 @@ fn setup_panic_handler() {
 	}));
 }
 
-// fn setup_logging(env: &TargetEnvironment, verbosity: usize) -> Result<()> {
-// 	match verbosity {
-// 		0 => env.set_var("RUST_LOG", "warn"),
-// 		1 => env.set_var("RUST_LOG", "info"),
-// 		2 => env.set_var("RUST_LOG", "debug"),
-// 		_3_or_more => env.set_var("RUST_LOG", "trace"),
-// 	}
-// 	logger::init()
-// }
+fn setup_logging(verbosity: usize) {
+	let writer = TargetOutWriter::default();
+	LOGGER.init_with_target_out(writer);
+
+	apply_verbosity(verbosity);
+
+	info!("logging initialized (verbosity={})", verbosity);
+}
+
+fn apply_verbosity(verbosity: usize) {
+	LOGGER.set_enabled(LogLevel::Info, verbosity >= 1);
+	LOGGER.set_enabled(LogLevel::Debug, verbosity >= 2);
+	LOGGER.set_enabled(LogLevel::Trace, verbosity >= 3);
+}

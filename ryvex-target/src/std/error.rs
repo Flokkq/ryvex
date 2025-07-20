@@ -7,19 +7,17 @@ use core::fmt::Formatter;
 pub trait Error: Display {
 	fn source(&self) -> Option<&(dyn Error + 'static)>;
 
-	fn root(&self) -> Option<&(dyn Error + 'static)>
+	fn root(&self) -> &(dyn Error + 'static)
 	where
 		Self: 'static + Sized,
 	{
 		let mut current: &(dyn Error + 'static) = self;
-		let mut last: Option<&(dyn Error + 'static)> = None;
 
 		while let Some(src) = current.source() {
-			last = Some(src);
 			current = src;
 		}
 
-		last
+		current
 	}
 }
 

@@ -3,6 +3,7 @@
 use piece_table::RowCol;
 pub extern crate alloc;
 
+pub mod logging;
 pub mod motion;
 pub mod piece_table;
 

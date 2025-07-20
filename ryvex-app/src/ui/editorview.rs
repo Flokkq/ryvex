@@ -93,9 +93,7 @@ define_keymaps! {
 				let _ =
 					cx.editor.submit_command(cx.target_cx).map_err(|err| {
 						cx.editor.log_error(
-							err.root()
-								.map(|src| src.to_string())
-								.unwrap_or(err.to_string()),
+							err.root().to_string()
 						)
 					});
 
