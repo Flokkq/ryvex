@@ -21,18 +21,22 @@ pub enum LogLevel {
 }
 
 impl LogLevel {
-	pub fn as_char(self) -> char {
-		match self {
-			LogLevel::Error => 'E',
-			LogLevel::Warn => 'W',
-			LogLevel::Info => 'I',
-			LogLevel::Debug => 'D',
-			LogLevel::Trace => 'T',
-		}
-	}
-
 	pub const fn bit(self) -> u8 {
 		1 << (self as u8)
+	}
+}
+
+impl Display for LogLevel {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+		let s = match self {
+			LogLevel::Error => "ERROR",
+			LogLevel::Warn => "WARN",
+			LogLevel::Info => "INFO",
+			LogLevel::Debug => "DEBUG",
+			LogLevel::Trace => "TRACE",
+		};
+
+		write!(f, "{}", s)
 	}
 }
 
@@ -118,7 +122,7 @@ impl Display for OwnedRecord {
 		let mut line = format!(
 			"[{}] {} {} {}:{} - {}\n",
 			self.seq,
-			self.level.as_char(),
+			self.level,
 			self.module_path,
 			self.file,
 			self.line,

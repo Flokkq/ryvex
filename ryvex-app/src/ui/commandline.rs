@@ -30,9 +30,9 @@ impl Component for CommandLine {
 	fn render(&mut self, area: Rect, frame: &mut Buffer, cx: &mut Context) {
 		let y = area.y + area.height.saturating_sub(1);
 		let width = area.width as usize;
-		frame.set_string(0, y, " ".repeat(width));
 
 		if cx.editor.mode == Mode::Command {
+			frame.set_string(0, y, " ".repeat(width));
 			let text = format!(":{}", cx.editor.command_buffer());
 			frame.set_string(0, y, &text[..text.len().min(width)]);
 		}
