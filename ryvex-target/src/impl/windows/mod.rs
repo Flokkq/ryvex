@@ -11,6 +11,8 @@ impl crate::std::path::PathScheme for WindowsScheme {
 	const EXTENSION_SEPARATOR: char = '.';
 	const CURRENT_DIR: &'static str = ".";
 	const PARENT_DIR: &'static str = "..";
+	const LOG_DIR: &'static str = "ryvex";
+	const LOG_DIR_BASE: &'static str = "C:\\var\\log";
 }
 
 pub use WindowsScheme as TargetPathScheme;

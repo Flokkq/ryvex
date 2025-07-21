@@ -23,13 +23,19 @@ use ryvex_app::{
 	terminal_guard::TerminalGuard,
 };
 use ryvex_core::{
-	info,
+	debug,
+	error_chain,
 	logging::{
 		record::LogLevel,
 		LOGGER,
 	},
 };
 use ryvex_target::{
+	r#impl::{
+		TargetFileSystem,
+		TargetLoggingWriter,
+	},
+	std::error::Error,
 	target::TargetContext,
 	term::event::SyncEventStream,
 };
@@ -56,7 +62,7 @@ fn app_main() -> Result<i32> {
 	#[cfg(feature = "std")]
 	setup_panic_handler();
 
-	setup_logging(args.verbosity);
+	setup_logging(&cx.fs, args.verbosity);
 	let mut app = Application::build(cx, args)?;
 
 	let mut event_stream = SyncEventStream::new()?;
@@ -99,13 +105,25 @@ fn setup_panic_handler() {
 	}));
 }
 
-fn setup_logging(verbosity: usize) {
-	// let writer = TargetOutWriter::default();
-	// LOGGER.init_with_target_out(writer);
+fn setup_logging(fs: &TargetFileSystem, verbosity: usize) {
+	let maybe_writer = TargetLoggingWriter::try_init(fs);
+
+	match maybe_writer {
+		Ok(writer) => {
+			LOGGER.init_with_target_out(writer);
+		}
+		Err(e) => {
+			error_chain!(
+				&e,
+				"failed to initialize persistant logging sink: {}",
+				&e.source().unwrap_or(&e)
+			);
+		}
+	}
 
 	apply_verbosity(verbosity);
 
-	info!("logging initialized (verbosity={})", verbosity);
+	debug!("logging initialized (verbosity={})", verbosity);
 }
 
 fn apply_verbosity(verbosity: usize) {

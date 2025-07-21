@@ -27,15 +27,25 @@ pub trait FileSystem<S: PathScheme> {
 
 	fn metadata(&self, path: &Path<S>) -> Result<Metadata>;
 
-	fn create(path: &Path<S>) -> Result<Self::File>;
+	fn create(&self, path: &Path<S>) -> Result<Self::File>;
 
 	fn open(&self, path: &Path<S>, opts: OpenOptions) -> Result<Self::File>;
+
+	fn create_dir_all(&self, path: &Path<S>) -> Result<()>;
+
+	fn canonicalize(&self, path: &Path<S>) -> Result<Path<S>> {
+		let expanded = self.expand(path)?;
+		if expanded.as_str().is_empty() {
+			return Err(StdError::Io(IoError(IoErrorKind::InvalidInput)));
+		}
+		Ok(expanded)
+	}
 
 	fn read_to_string(&self, path: &Path<S>) -> Result<String> {
 		let mut file = match self.open(path, OpenOptions::read_only()) {
 			Ok(f) => f,
 			Err(StdError::Io(IoError(IoErrorKind::NotFound))) => {
-				let _ = Self::create(path)?;
+				let _ = self.create(path)?;
 				self.open(path, OpenOptions::read_only())?
 			}
 			Err(e) => return Err(e),

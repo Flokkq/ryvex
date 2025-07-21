@@ -17,6 +17,8 @@ pub trait PathScheme {
 	const EXTENSION_SEPARATOR: char;
 	const CURRENT_DIR: &'static str;
 	const PARENT_DIR: &'static str;
+	const LOG_DIR_BASE: &'static str;
+	const LOG_DIR: &'static str;
 }
 
 #[derive(Clone, PartialEq, Eq)]

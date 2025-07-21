@@ -50,6 +50,7 @@ impl<S: PathScheme> FileSystem<S> for StdFileSystem<S> {
 
 	fn expand(&self, raw: &Path<S>) -> Result<Path<S>> {
 		let p = StdPath::new(raw.as_str());
+
 		let abs = if p.is_absolute() {
 			p.to_path_buf()
 		} else {
@@ -71,6 +72,16 @@ impl<S: PathScheme> FileSystem<S> for StdFileSystem<S> {
 		})
 	}
 
+	fn create(&self, path: &Path<S>) -> Result<Self::File> {
+		let f = fs::File::create(StdPath::new(path.as_str()))
+			.map_err(IoError::from)?;
+
+		Ok(StdFileHandle {
+			inner:   f,
+			_scheme: PhantomData,
+		})
+	}
+
 	fn open(&self, path: &Path<S>, opts: OpenOptions) -> Result<Self::File> {
 		let f = fs::OpenOptions::new()
 			.read(opts.read)
@@ -86,14 +97,10 @@ impl<S: PathScheme> FileSystem<S> for StdFileSystem<S> {
 		})
 	}
 
-	fn create(path: &Path<S>) -> Result<Self::File> {
-		let f = fs::File::create(StdPath::new(path.as_str()))
-			.map_err(IoError::from)?;
+	fn create_dir_all(&self, path: &Path<S>) -> Result<()> {
+		let std_path = std::path::Path::new(path.as_str());
 
-		Ok(StdFileHandle {
-			inner:   f,
-			_scheme: PhantomData,
-		})
+		Ok(std::fs::create_dir_all(std_path).map_err(IoError::from)?)
 	}
 }
 
@@ -106,5 +113,11 @@ impl<S: PathScheme> File<S> for StdFileHandle<S> {
 	}
 	fn flush(&mut self) -> Result<()> {
 		Ok(self.inner.flush().map_err(IoError::from)?)
+	}
+}
+
+impl<S: PathScheme> StdFileHandle<S> {
+	pub fn into_inner(self) -> fs::File {
+		self.inner
 	}
 }
