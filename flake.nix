@@ -1,5 +1,5 @@
 {
-  description = "Basic Rust flake for smd-store";
+  description = "Basic Rust flake for ryvex";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
