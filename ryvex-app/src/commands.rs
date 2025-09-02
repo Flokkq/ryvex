@@ -1,13 +1,10 @@
+use crate::compositor::{
+	Context,
+	EventResult,
+};
 use crate::keymap::EditorCommand::{
 	self,
 	*,
-};
-use crate::{
-	compositor::{
-		Context,
-		EventResult,
-	},
-	define_keymaps,
 };
 use ryvex_core::motion::NavigationMotion;
 use ryvex_core::{
@@ -15,7 +12,6 @@ use ryvex_core::{
 	motion::{
 		Motion::*,
 		MotionType::*,
-		NavigationMotion::*,
 	},
 };
 
@@ -73,25 +69,10 @@ pub fn delete(nav: NavigationMotion) -> EditorCommand {
 	})
 }
 
-define_keymaps! {
-	normal {
-		"i" => cmd(to_insert_mode,"enter insert mode"),
-		":" => cmd(to_command_mode,"enter command mode"),
-
-		"q" => cmd(quit_editor,"quit editor"),
-		"w" => cmd(write_active_document,"save active document"),
-
-		"h" => nav(CharBackward),
-		"j" => nav(LineForward),
-		"k" => nav(LineBackward),
-		"l" => nav(CharForward),
-		"dw" => delete(WordForward),
-	}
-	insert {
-		"<C-[>"=> cmd(to_normal_mode,"normal mode")
-	}
-	command {
-		"<C-[>"=> cmd(to_normal_mode,"normal mode"),
-		"<C-M>"=> cmd(submit_command, "submit command"),
-	}
+pub fn delete_range(range: ryvex_core::motion::Range) -> EditorCommand {
+	Motion(OperatedRange {
+		motion_type: Delete,
+		range,
+		count: 1,
+	})
 }

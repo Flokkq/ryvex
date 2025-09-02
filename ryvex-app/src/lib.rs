@@ -4,6 +4,7 @@ pub extern crate alloc;
 pub mod args;
 pub mod commands;
 pub mod compositor;
+pub mod config;
 pub mod editor;
 pub mod error;
 pub mod keymap;

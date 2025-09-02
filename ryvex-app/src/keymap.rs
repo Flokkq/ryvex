@@ -26,6 +26,8 @@ pub enum EditorCommand {
 pub struct KeyNode {
 	pub command: Option<EditorCommand>,
 	pub next:    Vec<(AsciiKeyCode, Box<KeyNode>)>,
+
+	pub fallback: Option<EditorCommand>,
 }
 
 impl KeyNode {
@@ -58,6 +60,22 @@ impl KeyNode {
 		let keys: Vec<AsciiKeyCode> =
 			seq.bytes().map(AsciiKeyCode::from).collect();
 		self.bind(&keys, cmd);
+	}
+
+	fn node_at_mut(&mut self, seq: &[AsciiKeyCode]) -> &mut KeyNode {
+		let mut node = self;
+		for &k in seq {
+			node = node.child_mut(k);
+		}
+		node
+	}
+
+	pub fn bind_fallback_at(&mut self, prefix: &str, cmd: EditorCommand) {
+		let keys: Vec<AsciiKeyCode> =
+			prefix.bytes().map(AsciiKeyCode::from).collect();
+
+		let node = self.node_at_mut(&keys);
+		node.fallback = Some(cmd);
 	}
 }
 
@@ -103,8 +121,14 @@ impl<'a> KeyParser<'a> {
 				}
 			}
 			None => {
-				self.reset();
-				ParseResult::Error
+				if let Some(cmd) = &self.cursor.fallback {
+					let repeat = self.count.take();
+					self.reset();
+					ParseResult::Command(cmd, repeat)
+				} else {
+					self.reset();
+					ParseResult::Error
+				}
 			}
 		}
 	}

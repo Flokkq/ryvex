@@ -11,12 +11,12 @@ use ryvex_target::{
 };
 
 use crate::{
-	commands::KeyMaps,
 	compositor::{
 		Component,
 		Context,
 		EventResult,
 	},
+	config::KeyMaps,
 	editor::{
 		document::{
 			Document,
